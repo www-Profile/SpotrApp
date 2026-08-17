@@ -1125,12 +1125,15 @@ body {
     color: #EF4444;
 }
 
-/* ===== ПУСТЫЕ СОСТОЯНИЯ ===== */
+/* ===== ПУСТЫЕ СОСТОЯНИЯ (без тени) ===== */
 #profileTab-friends .empty-state {
     text-align: center;
     padding: 1rem 0;
     color: var(--slate);
     font-size: 0.9rem;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 /* ===== АДАПТАЦИЯ ===== */
@@ -1356,10 +1359,10 @@ body {
         height: 24px;
     }
     .level-card .level-info h3 {
-        font-size: 0.7rem;
+        font-size: 0.8rem;
     }
     .level-card .level-info p {
-        font-size: 0.6rem;
+        font-size: 0.7rem;
     }
     .history-scroll-wrapper { max-height: 200px; }
     .hero h1 { font-size: 2.8rem; }
