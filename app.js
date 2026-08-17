@@ -573,11 +573,157 @@ let isLoggingIn = false;
 window.statsEditor = null;
 window.workoutsEditor = null;
 
+// ФЛАГИ ДЛЯ БЛОКИРОВКИ НАВИГАЦИИ
+let isEditingWorkout = false;
+let isEditingProfile = false;
+
+// =================== СИСТЕМА УВЕДОМЛЕНИЙ ===================
+const NOTIFICATIONS_KEY = 'notificationsSeen';
+const LAST_VISIT_KEY = 'lastVisitDate';
+const LAST_WORLD_RANK_KEY = 'lastWorldRank';
+const LAST_FRIENDS_RANK_KEY = 'lastFriendsRank';
+
+let notificationQueue = [];
+let isNotificationShowing = false;
+
+// Временный Set для отслеживания уже показанных уведомлений в текущей сессии
+const shownThisSession = new Set();
+
+// Элементы уведомлений
+const notificationContainer = document.getElementById('notificationContainer');
+const notificationCard = document.getElementById('notificationCard');
+const notificationIcon = document.getElementById('notificationIcon');
+const notificationText = document.getElementById('notificationText');
+const notificationOkBtn = document.getElementById('notificationOkBtn');
+
+// Показывать на всех страницах — контейнер всегда активен
+notificationContainer.style.display = 'block';
+
+// Закрыть по клику на "ОК"
+notificationOkBtn.addEventListener('click', function() {
+    hideNotification();
+});
+
+function showNotification(icon, text, actionCallback) {
+    const notificationId = text + icon;
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    if (seen.includes(notificationId)) {
+        console.log('Уведомление уже показано:', text);
+        return;
+    }
+
+    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
+    
+    if (!isNotificationShowing) {
+        processNotificationQueue();
+    }
+}
+
+// =================== УВЕДОМЛЕНИЕ О ЗАЯВКЕ ===================
+function showFriendRequestNotification(icon, text, requestId) {
+    // Проверяем, не было ли уже уведомление для этой заявки (localStorage + сессия)
+    const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+    if (shownRequests.includes(requestId) || shownThisSession.has(requestId)) {
+        console.log('⚠️ Уведомление для заявки уже было показано (сессия или localStorage):', requestId);
+        return;
+    }
+    
+    // Добавляем в сессионный Set, чтобы не показывать повторно ДО нажатия ОК
+    shownThisSession.add(requestId);
+    
+    notificationQueue.push({ 
+        icon, 
+        text, 
+        actionCallback: null, 
+        id: null, 
+        isFriendRequest: true,
+        requestId: requestId 
+    });
+    
+    if (!isNotificationShowing) {
+        processNotificationQueue();
+    }
+}
+
+function processNotificationQueue() {
+    if (notificationQueue.length === 0 || isNotificationShowing) return;
+    
+    isNotificationShowing = true;
+    const notification = notificationQueue.shift();
+    
+    notificationIcon.textContent = notification.icon;
+    notificationText.textContent = notification.text;
+    
+    notificationOkBtn.textContent = 'ОК';
+    notificationOkBtn.onclick = function() {
+        if (notification.actionCallback) notification.actionCallback();
+        hideNotification();
+        
+        // Сохраняем ID заявки, чтобы не показывать повторно
+        if (notification.isFriendRequest && notification.requestId) {
+            const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+            if (!shownRequests.includes(notification.requestId)) {
+                shownRequests.push(notification.requestId);
+                localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                console.log('✅ Заявка сохранена в показанные после ОК:', notification.requestId);
+            }
+            // Удаляем из сессионного Set
+            shownThisSession.delete(notification.requestId);
+        }
+        
+        if (!notification.isFriendRequest && notification.id) {
+            markNotificationSeen(notification.id);
+        }
+    };
+    
+    notificationCard.classList.remove('show');
+    notificationCard.style.transform = 'translateY(-120px)';
+    notificationCard.style.opacity = '0';
+    
+    setTimeout(() => {
+        notificationCard.classList.add('show');
+        notificationCard.style.transform = '';
+        notificationCard.style.opacity = '';
+    }, 100);
+}
+
+function hideNotification() {
+    notificationCard.classList.remove('show');
+    isNotificationShowing = false;
+    notificationOkBtn.onclick = null;
+    
+    // Не скрываем контейнер, только карточку
+    setTimeout(() => {
+        if (notificationQueue.length > 0) {
+            processNotificationQueue();
+        }
+    }, 400);
+}
+
+function markNotificationSeen(id) {
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    if (!seen.includes(id)) {
+        seen.push(id);
+        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(seen));
+    }
+}
+
+function isNotificationSeen(id) {
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    return seen.includes(id);
+}
+
+function clearSeenNotifications() {
+    localStorage.removeItem(NOTIFICATIONS_KEY);
+    localStorage.removeItem('shownFriendRequests');
+    console.log('✅ История уведомлений очищена');
+}
+
 // =================== ДЕФОЛТНЫЕ ЛЕЙАУТЫ ===================
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['workouts', 'minutes', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело']
     };
@@ -684,6 +830,29 @@ function applySavedStatsOrder() {
         items.forEach(name => {
             if (childMap[name]) list.appendChild(childMap[name]);
         });
+    });
+}
+
+function applySavedWorldStatsOrder() {
+    const layout = JSON.parse(localStorage.getItem('worldStatsLayout'));
+    if (!layout) return;
+
+    const container = document.getElementById('worldStatsBlocksContainer');
+    if (!container) return;
+
+    const items = layout['worldStatsBlocksContainer'] || [];
+    if (items.length === 0) return;
+
+    const childMap = {};
+    container.querySelectorAll('.block-base').forEach(el => {
+        const id = el.dataset.blockId;
+        if (id) childMap[id] = el;
+    });
+
+    items.forEach(id => {
+        if (childMap[id]) {
+            container.appendChild(childMap[id]);
+        }
     });
 }
 
@@ -1000,6 +1169,32 @@ setTheme(savedColor);
 
 // ===================НАВИГАЦИЯ ===================
 window.navigateTo = function(page, params) {
+    // === БЛОКИРОВКА НАВИГАЦИИ ===
+    if (isEditingWorkout) {
+        // Разрешаем переходы, связанные с редактированием
+        const allowedPages = ['exercise-list', 'workout-edit', 'workout-detail'];
+        if (allowedPages.includes(page)) {
+            // Разрешаем, но не сбрасываем флаг
+        } else {
+            showToast('⚠️ Сначала завершите редактирование тренировки');
+            return;
+        }
+    }
+    if (isEditingProfile) {
+        showToast('⚠️ Сначала завершите редактирование профиля');
+        return;
+    }
+    // Проверка открытых модальных окон
+    const modalIds = ['exerciseModal', 'createExerciseModal', 'quickEditModal'];
+    for (const id of modalIds) {
+        const modal = document.getElementById(id);
+        if (modal && modal.style.display === 'flex') {
+            showToast('⚠️ Сначала закройте модальное окно');
+            return;
+        }
+    }
+
+    // Проверка редактирования страниц (с тостом)
     if (window.statsEditor && window.statsEditor.isEditing) {
         showToast('⚠️ Сначала завершите редактирование страницы статистики');
         return;
@@ -1009,6 +1204,7 @@ window.navigateTo = function(page, params) {
         return;
     }
 
+    // === ОСНОВНАЯ ЛОГИКА ПЕРЕХОДА ===
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
@@ -1042,22 +1238,21 @@ window.navigateTo = function(page, params) {
         renderMyWorkouts();
     }
     if (page === 'exercise-list') renderExerciseListPage();
-    if (page === 'stats') {
-        if (window.statsEditor && window.statsEditor.isEditing) {
-            showToast('⚠️ Сначала завершите редактирование страницы статистики');
-            return;
-        }
-        applyStatsTab(activeStatsTab);
-        if (activeStatsTab === 'world') loadWorldLeaderboard();
-        else loadStats();
+if (page === 'stats') {
+    applyStatsTab(activeStatsTab);
+    if (activeStatsTab === 'world') {
+        loadWorldLeaderboard();
+        loadFriendsLeaderboard();
+        setTimeout(applySavedWorldStatsOrder, 100);
+    } else {
+        loadStats();
     }
-    if (page === 'training-session') {
-        document.getElementById('bottomNav').style.display = 'none';
-        // ничего не делаем, просто показываем страницу
-    }
-    if (page !== 'training-session') {
+}
+if (page === 'training-session' || page === 'finish') {
+    document.getElementById('bottomNav').style.display = 'none';
+} else {
     document.getElementById('bottomNav').style.display = 'block';
-    }
+}
 };
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -1104,9 +1299,20 @@ function initTabs(containerSelector, tabSelector, activeTab, loaders) {
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
 window.switchStatsTab = function(tab) {
+    // Проверяем, активна ли уже эта вкладка
+    const activeTab = document.querySelector('#page-stats .tab-btn.active');
+    if (activeTab && activeTab.dataset.tab === tab) {
+        return; // ← НЕ ПЕРЕКЛЮЧАЕМ, ЕСЛИ УЖЕ АКТИВНА
+    }
+    
     applyStatsTab(tab);
-    if (tab === 'world') loadWorldLeaderboard();
-    else if (tab === 'personal') loadStats();
+    if (tab === 'world') {
+        loadWorldLeaderboard();
+        loadFriendsLeaderboard();
+        setTimeout(applySavedWorldStatsOrder, 100);
+    } else if (tab === 'personal') {
+        loadStats();
+    }
 };
 
 // ===================ВКЛАДКИ ТРЕНИРОВОК ===================
@@ -1142,7 +1348,10 @@ function applyStatsTab(tab) {
 // Инициализация вкладок статистики
 initTabs('#page-stats .tabs-container', '.tab-btn', 'personal', {
     personal: loadStats,
-    world: loadWorldLeaderboard
+    world: function() {
+        loadWorldLeaderboard();
+        loadFriendsLeaderboard();
+    }
 });
 
 // Вкладки тренировок – отдельный обработчик (без загрузки данных)
@@ -1182,7 +1391,7 @@ function loadLevelSelect(category) {
         }
     }
     const titleEl = document.getElementById('levelSelectTitle');
-    if (titleEl) titleEl.textContent = 'ТРЕНИРОВКА - ' + category.toUpperCase();
+    if (titleEl) titleEl.textContent = 'ТРЕНИРОВКА';
     let isPremium = false;
     if (parentCategory && exercisesData[parentCategory] && exercisesData[parentCategory][category]) {
         isPremium = exercisesData[parentCategory][category]._premium || false;
@@ -1364,11 +1573,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
 
     const titleEl = document.getElementById('workoutDetailTitle');
     if (titleEl) {
-        if (isCustom) {
-            titleEl.textContent = 'ТРЕНИРОВКА - ' + currentCategory.toUpperCase();
-        } else {
-            titleEl.textContent = 'ТРЕНИРОВКА - ' + displayTitle.toUpperCase();
-        }
+        titleEl.textContent = 'ТРЕНИРОВКА';
     }
 
     const container = document.getElementById('exercisesContainer');
@@ -1506,7 +1711,6 @@ function startTrainingSession(exercises, title, category) {
 
     console.log('startTrainingSession получила категорию:', sessionCategory);
 
-    document.getElementById('trainingSessionTitle').textContent = title;
     closeModal('sessionExitModal');
     window.navigateTo('training-session');
 
@@ -1563,12 +1767,26 @@ function updateSessionButtons() {
     const nextBtn = document.getElementById('sessionNextBtn');
     const mainBtn = document.getElementById('sessionMainBtn');
 
-    prevBtn.style.display = isFirst ? 'none' : 'flex';
-    nextBtn.style.display = isLast ? 'none' : 'flex';
+    // Кнопки всегда видны, но неактивны на крайних упражнениях
+    if (isFirst) {
+        prevBtn.style.visibility = 'visible';
+        prevBtn.style.pointerEvents = 'none';
+        prevBtn.style.opacity = '0.3';
+    } else {
+        prevBtn.style.visibility = 'visible';
+        prevBtn.style.pointerEvents = 'auto';
+        prevBtn.style.opacity = '1';
+    }
 
     if (isLast) {
+        nextBtn.style.visibility = 'visible';
+        nextBtn.style.pointerEvents = 'none';
+        nextBtn.style.opacity = '0.3';
         mainBtn.textContent = 'ФИНИШ';
     } else {
+        nextBtn.style.visibility = 'visible';
+        nextBtn.style.pointerEvents = 'auto';
+        nextBtn.style.opacity = '1';
         mainBtn.textContent = 'ГОТОВО';
     }
 }
@@ -1647,10 +1865,15 @@ document.getElementById('sessionCloseBtn')?.addEventListener('click', function()
     const completed = sessionCompleted.size;
     const mins = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
     const secs = String(sessionSeconds % 60).padStart(2, '0');
+    
+    // Вычисляем XP
+    const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
+    const xpEarned = calculateWorkoutXp(completedExercises);
 
     document.getElementById('sessionExitTitle').textContent = sessionWorkoutTitle;
     document.getElementById('exitExercises').textContent = `${completed}/${total}`;
     document.getElementById('exitMinutes').textContent = `${mins}:${secs}`;
+    document.getElementById('exitXp').textContent = `+${Math.round(xpEarned)} XP`;  // ← ДОБАВИТЬ ЭТУ СТРОКУ
     openModal('sessionExitModal');
 });
 
@@ -1895,6 +2118,7 @@ let editingExerciseIndex = null;
 let editLevel = '1 LVL';
 
 function loadEditPage(category, isCustom, id, level, exercises) {
+    isEditingWorkout = true;
     editCategory = category;
     editIsCustom = isCustom;
     editWorkoutId = id;
@@ -1928,7 +2152,7 @@ function loadEditPage(category, isCustom, id, level, exercises) {
 
     const titleEl = document.getElementById('editTitle');
     if (titleEl) {
-        titleEl.textContent = (id === 'new') ? 'СОЗДАНИЕ ТРЕНИРОВКИ' : 'РЕДАКТИРОВАТЬ - ' + category.toUpperCase() + ' ' + editLevel;
+        titleEl.textContent = (id === 'new') ? 'СОЗДАНИЕ ТРЕНИРОВКИ' : 'РЕДАКТИРОВАТЬ';
     }
     const resetBtn = document.getElementById('resetWorkoutBtn');
     if (resetBtn) resetBtn.style.display = (isCustom || id === 'new') ? 'none' : 'block';
@@ -2003,7 +2227,7 @@ function renderEditExercises() {
     const maxExercises = getMaxExercisesForLevel(editLevel, editIsCustom);
     const currentCount = editExercises.length;
     let headerHtml = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; padding:0 0.2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0rem; padding:0 0.2rem;">
             <span style="font-weight:600; font-size:1rem; color:var(--dark);">Упражнения</span>
             <span style="font-weight:500; font-size:0.9rem; color:var(--slate);">${currentCount}/${maxExercises}</span>
         </div>
@@ -2244,6 +2468,9 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
     const icon = selectedIcon ? selectedIcon.dataset.icon : 'bodybuilding';
     const success = saveWorkoutData(editCategory, editLevel, editIsCustom, editWorkoutId, title, icon, editExercises);
     if (success) {
+        // Сначала сбрасываем флаг, чтобы navigateTo работал
+        isEditingWorkout = false;
+        
         showToast('✅ Тренировка сохранена!');
         localStorage.removeItem('temp_edit_name');
         localStorage.removeItem('temp_edit_exercises');
@@ -2264,12 +2491,16 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
 });
 
 document.getElementById('cancelEditBtn')?.addEventListener('click', function() {
+    // Сначала сбрасываем флаг, чтобы navigateTo работал
+    isEditingWorkout = false;
+    
     localStorage.removeItem('temp_edit_name');
     localStorage.removeItem('temp_edit_exercises');
     localStorage.removeItem('temp_edit_category');
     localStorage.removeItem('temp_edit_level');
     localStorage.removeItem('temp_edit_isCustom');
     localStorage.removeItem('temp_edit_id');
+    
     if (editIsCustom || editWorkoutId === 'new') {
         const id = editWorkoutId === 'new' ? null : editWorkoutId;
         if (id) {
@@ -2292,45 +2523,69 @@ function resetWorkout() {
         return;
     }
 
-    showConfirmModal(
-        'Сбросить тренировку?',
-        'Все изменения будут потеряны.',
-        function() {
-            const category = editCategory;
-            const level = editLevel || '1 LVL';
-            let parentCategory = null;
-            for (const parent in exercisesDataDefault) {
-                if (exercisesDataDefault[parent] && exercisesDataDefault[parent][category]) {
-                    parentCategory = parent;
-                    break;
-                }
+    // СОЗДАЁМ КАСТОМНУЮ МОДАЛКУ С КРАСНОЙ КНОПКОЙ
+    const oldModal = document.getElementById('resetConfirmModal');
+    if (oldModal) oldModal.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'resetConfirmModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:420px; width:95%;">
+            <div class="modal-title">Сбросить тренировку?</div>
+            <p style="color:var(--slate); font-size:0.95rem; margin:0.5rem 0 1.5rem 0; text-align:center;">Тренировка вернется к исходному виду.</p>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="modal-btn modal-btn-danger" id="resetConfirmYes" style="flex:1;">
+                    Сбросить
+                </button>
+                <button class="modal-btn modal-btn-primary" id="resetConfirmNo" style="flex:1;">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('resetConfirmYes').addEventListener('click', function() {
+        overlay.remove();
+        // ЛОГИКА СБРОСА
+        const category = editCategory;
+        const level = editLevel || '1 LVL';
+        let parentCategory = null;
+        for (const parent in exercisesDataDefault) {
+            if (exercisesDataDefault[parent] && exercisesDataDefault[parent][category]) {
+                parentCategory = parent;
+                break;
             }
-            if (parentCategory) {
-                const defaultExercises = exercisesDataDefault[parentCategory][category][level];
-                if (defaultExercises) {
-                    editExercises = JSON.parse(JSON.stringify(defaultExercises));
-                    const nameInput = document.getElementById('editWorkoutName');
-                    if (nameInput) nameInput.value = category + ' ' + level;
-                    renderEditExercises();
-                    showToast('✅ Тренировка сброшена к исходному состоянию');
-                    return;
-                }
+        }
+        if (parentCategory) {
+            const defaultExercises = exercisesDataDefault[parentCategory][category][level];
+            if (defaultExercises) {
+                editExercises = JSON.parse(JSON.stringify(defaultExercises));
+                const nameInput = document.getElementById('editWorkoutName');
+                if (nameInput) nameInput.value = category + ' ' + level;
+                renderEditExercises();
+                showToast('✅ Тренировка сброшена к исходному состоянию');
+                return;
             }
-            if (exercisesDataDefault[category] && exercisesDataDefault[category][level]) {
-                const defaultExercises = exercisesDataDefault[category][level];
-                if (defaultExercises) {
-                    editExercises = JSON.parse(JSON.stringify(defaultExercises));
-                    const nameInput = document.getElementById('editWorkoutName');
-                    if (nameInput) nameInput.value = category + ' ' + level;
-                    renderEditExercises();
-                    showToast('✅ Тренировка сброшена к исходному состоянию');
-                    return;
-                }
+        }
+        if (exercisesDataDefault[category] && exercisesDataDefault[category][level]) {
+            const defaultExercises = exercisesDataDefault[category][level];
+            if (defaultExercises) {
+                editExercises = JSON.parse(JSON.stringify(defaultExercises));
+                const nameInput = document.getElementById('editWorkoutName');
+                if (nameInput) nameInput.value = category + ' ' + level;
+                renderEditExercises();
+                showToast('✅ Тренировка сброшена к исходному состоянию');
+                return;
             }
-            showToast('❌ Не удалось найти исходные данные для этой тренировки');
-        },
-        'Сбросить'
-    );
+        }
+        showToast('❌ Не удалось найти исходные данные для этой тренировки');
+    });
+
+    document.getElementById('resetConfirmNo').addEventListener('click', function() {
+        overlay.remove();
+    });
 }
 
 // ===================МОИ ТРЕНИРОВКИ (localStorage) ===================
@@ -2530,7 +2785,14 @@ async function loadStats() {
                 const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
                 const xpEarned = w.xpEarned || 0;
                 const minutes = Math.floor((w.durationSeconds || 0) / 60);
-                return `<div><div style="display:flex;justify-content:space-between;align-items:center;"><strong>${w.title}</strong><span style="color:var(--slate);font-size:0.9rem;">${new Date(w.date).toLocaleDateString('ru-RU')}</span></div><div style="color:var(--slate);font-size:0.9rem;margin-top:0.3rem;">${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP</div></div>`;
+                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP`;
+                return `<div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+                        <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${w.title}</strong>
+                        <span style="color:var(--slate);font-size:0.8rem;flex-shrink:0;">${new Date(w.date).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                    <div style="color:var(--slate);font-size:0.8rem;margin-top:0.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${detailsText}</div>
+                </div>`;
             }).join('');
         }
     }
@@ -2614,12 +2876,39 @@ async function loadProfile() {
     document.getElementById('levelTitle').textContent = currentLevel.name;
     document.getElementById('levelProgressText').textContent = progressText;
     document.getElementById('levelFill').style.width = progress + '%';
-    await renderFriendsInProfile();
+    
+    // === УВЕДОМЛЕНИЕ: НОВЫЙ УРОВЕНЬ ===
+    const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
+    if (currentLevel.id > prevLevel) {
+        const id = 'new_level_' + currentLevel.id;
+        if (!isNotificationSeen(id)) {
+            showNotification(
+                '🎉',
+                `Поздравляем! Вы достигли уровня ${currentLevel.id} — ${currentLevel.name}!`,
+                null
+            );
+        }
+        localStorage.setItem('prevLevel', String(currentLevel.id));
+    }
+    
+    // === УВЕДОМЛЕНИЕ: ВОЗВРАЩЕНИЕ ПОСЛЕ 7+ ДНЕЙ ===
+    const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+    if (lastVisit) {
+        const daysDiff = Math.floor((Date.now() - parseInt(lastVisit)) / (1000 * 60 * 60 * 24));
+        if (daysDiff >= 7) {
+            const id = 'welcome_back_' + Date.now();
+            if (!isNotificationSeen(id)) {
+                showNotification('👋', 'Давно не виделись, с возвращением!', null);
+            }
+        }
+    }
+    localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
     initProfileBlocks();
 }
 
 // ===================ПРОФИЛЬ - РЕДАКТИРОВАНИЕ ===================
 document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+    isEditingProfile = true;
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('profileEdit').style.display = 'block';
     const currentName = document.getElementById('profileName').textContent;
@@ -2627,6 +2916,7 @@ document.getElementById('editProfileBtn')?.addEventListener('click', () => {
     document.getElementById('editNameError').textContent = '';
 });
 document.getElementById('cancelProfileEditBtn')?.addEventListener('click', () => {
+    isEditingProfile = false; // <-- СБРАСЫВАЕМ ПЕРЕД ПЕРЕХОДОМ
     document.getElementById('profileView').style.display = 'block';
     document.getElementById('profileEdit').style.display = 'none';
     loadProfile();
@@ -2646,6 +2936,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
     nameInput.classList.remove('error');
 
     if (name === currentName) {
+        isEditingProfile = false; // <-- СБРАСЫВАЕМ ПЕРЕД ПЕРЕХОДОМ
         document.getElementById('profileView').style.display = 'block';
         document.getElementById('profileEdit').style.display = 'none';
         return;
@@ -2654,6 +2945,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
     const user = await getFirebaseUser();
     if (user) {
         await updateUserProfile(user.uid, { displayName: name });
+        isEditingProfile = false; // <-- СБРАСЫВАЕМ ПОСЛЕ СОХРАНЕНИЯ
         loadProfile();
         showToast('✅ Профиль обновлен');
     }
@@ -2710,6 +3002,10 @@ firebase.auth().onAuthStateChanged(async (user) => {
             await renderCalendar(currentMonth, currentYear);
             updatePremiumUI();
             initProfileBlocks();
+
+            // ✅ СЮДА ВСТАВЬ ЭТУ СТРОКУ — ПОСЛЕ ЗАГРУЗКИ ПРОФИЛЯ
+            // При загрузке профиля — вкладка "Мой" активна по умолчанию
+            switchProfileTab('my');
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
 
@@ -2936,9 +3232,9 @@ function clearAuthFields() {
 
 // ===================ВЫХОД ===================
 async function logout() {
-    showConfirmModal(
+    showConfirmWithPasswordModal(
         'Выйти из аккаунта?',
-        'Вы будете перенаправлены на страницу входа.',
+        'Введите пароль для подтверждения выхода из аккаунта.',
         function() {
             firebase.auth().signOut();
         },
@@ -3078,6 +3374,30 @@ async function acceptFriendRequest(requestId, fromUserId) {
         await firebase.firestore().collection('friendRequests').doc(requestId).update({ status: 'accepted' });
         await firebase.firestore().collection('users').doc(user.uid).update({ friends: firebase.firestore.FieldValue.arrayUnion(fromUserId) });
         await firebase.firestore().collection('users').doc(fromUserId).update({ friends: firebase.firestore.FieldValue.arrayUnion(user.uid) });
+        
+        // Удаляем ID заявки из списка показанных
+        const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+        const updated = shownRequests.filter(id => id !== requestId);
+        localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
+        
+        // Получаем данные нового друга
+        const friendProfile = await getUserProfile(fromUserId);
+        const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
+        
+        // Обновляем список друзей для уведомлений
+        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        if (!shownFriendNotifications.includes(fromUserId)) {
+            showNotification(
+                '👤',
+                `У вас новый друг — ${friendName}!`,  // ✅ Исправлено: имя нового друга
+                null
+            );
+            shownFriendNotifications.push(fromUserId);
+            localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
+        }
+        
+        await renderFriendsInProfile();
+        
         return { success: true };
     } catch (error) {
         console.error('Ошибка принятия заявки:', error);
@@ -3087,10 +3407,34 @@ async function acceptFriendRequest(requestId, fromUserId) {
 
 async function rejectFriendRequest(requestId) {
     try {
+        // Получаем данные заявки, чтобы узнать имя отправителя
+        const requestDoc = await firebase.firestore().collection('friendRequests').doc(requestId).get();
+        const requestData = requestDoc.data();
+        let senderName = 'Пользователь';
+        
+        if (requestData && requestData.from) {
+            const senderProfile = await getUserProfile(requestData.from);
+            if (senderProfile.success) {
+                senderName = senderProfile.data.displayName || 'Пользователь';
+            }
+        }
+        
         await firebase.firestore().collection('friendRequests').doc(requestId).delete();
+        
+        // Удаляем ID заявки из списка показанных
+        const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+        const updated = shownRequests.filter(id => id !== requestId);
+        localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
+        
+        await renderFriendsInProfile();
+        
+        // ПОКАЗЫВАЕМ ТОСТ
+        showToast(`❌ Заявка от ${senderName} отклонена`);
+        
         return { success: true };
     } catch (error) {
         console.error('Ошибка отклонения заявки:', error);
+        showToast('❌ Ошибка при отклонении заявки');
         return { success: false, error: error.message };
     }
 }
@@ -3116,11 +3460,21 @@ async function getFriendsList() {
 
 // ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
 async function renderFriendsInProfile() {
+    // Проверяем, что мы на нужной вкладке
+    const friendsTab = document.getElementById('profileTab-friends');
+    if (!friendsTab || !friendsTab.classList.contains('active')) {
+        console.log('Вкладка "Друзья" не активна, рендер отложен');
+        return;
+    }
+    
     const searchBtn = document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('searchResults');
     const requestsDiv = document.getElementById('friendRequests');
     const friendsDiv = document.getElementById('friendsList');
+    const requestsCount = document.getElementById('requestsCount');
+    const friendsCount = document.getElementById('friendsCount');
+    
     if (searchBtn) {
         searchBtn.onclick = async () => {
             const query = searchInput.value.trim();
@@ -3146,30 +3500,84 @@ async function renderFriendsInProfile() {
         };
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
     }
+    
+    // === ЗАЯВКИ ===
     const requests = await getFriendRequests();
-    let requestsHtml = `<p class="friends-subtitle">Заявки</p>`;
+    let requestsHtml = '';
+    let requestsCountValue = 0;
+    
     if (requests.success && requests.data.length > 0) {
+        requestsCountValue = requests.data.length;
+        const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+        const newRequests = requests.data.filter(r => !shownRequests.includes(r.id));
+        
+        newRequests.forEach(r => {
+            const fromUser = r.fromUser || {};
+            const name = fromUser.displayName || 'Пользователь';
+            showFriendRequestNotification(
+                '📧',
+                `У вас новая заявка в друзья от ${name}`,
+                r.id
+            );
+        });
+        
         requestsHtml += requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
             return `<div class="friend-request-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${fromUser.displayName || 'Пользователь'}</strong><span>${fromUser.email || ''}</span></div><div><button class="btn-primary btn-sm" onclick="acceptFriend('${r.id}','${r.from}')">Принять</button><button class="btn-secondary btn-sm" onclick="rejectFriend('${r.id}')">Отклонить</button></div></div>`;
         }).join('');
     } else {
-        requestsHtml += '<p style="color:var(--slate);font-size:0.9rem;">Нет заявок</p>';
+        requestsHtml = '<p class="empty-state">Нет заявок</p>';
     }
     requestsDiv.innerHTML = requestsHtml;
+    if (requestsCount) requestsCount.textContent = requestsCountValue;
+    
+    // === ДРУЗЬЯ ===
     const friends = await getFriendsList();
-    let friendsHtml = `<p class="friends-subtitle">Друзья</p>`;
+    let friendsHtml = '';
+    let friendsCountValue = 0;
+    
     if (friends.success && friends.data.length > 0) {
+        friendsCountValue = friends.data.length;
+        const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
+        const prevFriendIds = prevFriends.map(f => f.id);
+        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        
+        friends.data.forEach(f => {
+            const friendId = f.id;
+            if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
+                showNotification(
+                    '👤',
+                    `У вас новый друг — ${f.displayName || 'Пользователь'}!`,
+                    null
+                );
+                shownFriendNotifications.push(friendId);
+                localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
+            }
+        });
+        
+        localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
+        
+        // !!! ВАЖНО: Добавлен onclick на весь блок друга !!!
         friendsHtml += friends.data.map(f => {
             const initial = (f.displayName || 'П')[0].toUpperCase();
             const level = getCurrentLevel(f.totalXp || 0).id;
-            return `<div class="friend-item"><div class="friend-avatar">${initial}</div><div class="friend-info"><strong>${f.displayName || 'Пользователь'}</strong><span>Уровень ${level} · ${(f.totalXp || 0).toFixed(1)} XP</span></div><button class="friend-delete-btn" onclick="removeFriend('${f.id}')" title="Удалить друга"><i class="fa-regular fa-trash-can"></i></button></div>`;
+            return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
+                <div class="friend-avatar">${initial}</div>
+                <div class="friend-info">
+                    <strong>${f.displayName || 'Пользователь'}</strong>
+                    <span>Уровень ${level} · ${(f.totalXp || 0).toFixed(1)} XP</span>
+                </div>
+                <button class="friend-delete-btn" onclick="event.stopPropagation(); removeFriend('${f.id}')" title="Удалить друга">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+            </div>`;
         }).join('');
     } else {
-        friendsHtml += '<p style="color:var(--slate);font-size:0.9rem;">У вас пока нет друзей</p>';
+        friendsHtml = '<p class="empty-state">У вас пока нет друзей</p>';
     }
     friendsDiv.innerHTML = friendsHtml;
+    if (friendsCount) friendsCount.textContent = friendsCountValue;
 }
 
 // ===================ДРУЗЬЯ - ГЛОБАЛЬНЫЕ КНОПКИ ===================
@@ -3203,27 +3611,47 @@ window.removeFriend = async function(friendId) {
     showConfirmModal(
         'Удалить друга?',
         'Вы больше не будете видеть его в списке друзей.',
-        function() {
-            // Код удаления друга
+        async function() {
+            const user = await getFirebaseUser();
+            if (!user) { 
+                showToast('❌ Пользователь не авторизован'); 
+                return; 
+            }
+            try {
+                // ПОЛУЧАЕМ ИМЯ ДРУГА ДО УДАЛЕНИЯ
+                const friendProfile = await getUserProfile(friendId);
+                const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
+                
+                // Удаляем у текущего пользователя
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                const currentFriends = userDoc.data()?.friends || [];
+                const updatedFriends = currentFriends.filter(id => id !== friendId);
+                await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
+                
+                // Удаляем у друга
+                const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
+                const friendFriends = friendDoc.data()?.friends || [];
+                const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
+                await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
+                
+                // Очищаем локальные списки
+                const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+                const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
+                localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
+                
+                const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
+                const updatedPrev = prevFriends.filter(f => f.id !== friendId);
+                localStorage.setItem('prevFriendsList', JSON.stringify(updatedPrev));
+                
+                await renderFriendsInProfile();
+                showToast(`✅ ${friendName} удалён из друзей`);
+            } catch (error) {
+                console.error('Ошибка удаления друга:', error);
+                showToast('❌ Ошибка при удалении друга');
+            }
         },
         'Удалить'
     );
-    const user = await getFirebaseUser();
-    if (!user) { showToast('❌ Пользователь не авторизован'); return; }
-    try {
-        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-        const currentFriends = userDoc.data()?.friends || [];
-        const updatedFriends = currentFriends.filter(id => id !== friendId);
-        await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
-        const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
-        const friendFriends = friendDoc.data()?.friends || [];
-        const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
-        await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
-        await renderFriendsInProfile();
-    } catch (error) {
-        console.error('Ошибка удаления друга:', error);
-        showToast('❌ Ошибка при удалении друга');
-    }
 };
 
 // ===================ВСЕ УПРАЖНЕНИЯ ДЛЯ СПИСКА ===================
@@ -3261,6 +3689,7 @@ function openExerciseList() {
     currentCategoryFilter = 'all';
     currentSearchQuery = '';
     document.getElementById('exerciseSearchInput').value = '';
+    // Флаг isEditingWorkout уже true, мы просто переходим на страницу списка
     window.navigateTo('exercise-list');
 }
 
@@ -3348,6 +3777,7 @@ function addExerciseFromList(name, sets, reps) {
         localStorage.setItem('temp_edit_id', editWorkoutId || '');
     }
 
+    // Возвращаемся на страницу редактирования
     window.navigateTo('workout-edit', {
         category: editCategory,
         isCustom: editIsCustom,
@@ -3494,6 +3924,13 @@ async function loadWorldLeaderboard() {
             container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Пока нет пользователей</div>';
             return;
         }
+        
+        // === УВЕДОМЛЕНИЕ: РЕЙТИНГ (МИРОВОЙ) ===
+        const currentRank = users.findIndex(u => u.id === user.uid) + 1;
+        if (currentRank > 0) {
+            checkRankNotification(currentRank, 'world');
+        }
+        
         container.innerHTML = users.map((userData, index) => {
             const position = index + 1;
             const level = getCurrentLevel(userData.totalXp || 0);
@@ -3515,6 +3952,82 @@ async function loadWorldLeaderboard() {
             message = 'Для рейтинга требуется создать индекс в Firebase. Обратитесь к администратору.';
         }
         container.innerHTML = `<div style="text-align:center;color:#EF4444;padding:2rem 0;">${message}</div>`;
+    }
+}
+
+// =================== РЕЙТИНГ ДРУЗЕЙ ===================
+async function loadFriendsLeaderboard() {
+    const container = document.getElementById('friendsLeaderboard');
+    if (!container) {
+        console.warn('Контейнер friendsLeaderboard не найден');
+        return;
+    }
+    
+    container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Загрузка рейтинга друзей...</div>';
+    
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Авторизуйтесь, чтобы увидеть рейтинг друзей</div>';
+            return;
+        }
+
+        const friendsResult = await getFriendsList();
+        if (!friendsResult.success) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Ошибка загрузки друзей</div>';
+            return;
+        }
+
+        const friends = friendsResult.data || [];
+
+        const userProfileResult = await getUserProfile(user.uid);
+        if (!userProfileResult.success) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Ошибка загрузки профиля</div>';
+            return;
+        }
+
+        let allUsers = [
+            { id: user.uid, ...userProfileResult.data, isCurrentUser: true }
+        ];
+        
+        friends.forEach(friend => {
+            allUsers.push({ ...friend, isCurrentUser: false });
+        });
+
+        allUsers.sort((a, b) => (b.totalXp || 0) - (a.totalXp || 0));
+
+        // === УВЕДОМЛЕНИЕ: РЕЙТИНГ (ДРУЖЕСКИЙ) ===
+        const currentRank = allUsers.findIndex(u => u.id === user.uid) + 1;
+        if (currentRank > 0) {
+            checkRankNotification(currentRank, 'friends');
+        }
+
+        let html = allUsers.map((userData, index) => {
+            const position = index + 1;
+            const level = getCurrentLevel(userData.totalXp || 0);
+            const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
+            const isCurrentUser = userData.isCurrentUser;
+            const name = userData.displayName || 'Пользователь';
+            
+            return `<div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                <div class="leaderboard-position">${position}</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">${name}</div>
+                    <div class="leaderboard-details"><span>Уровень ${level.id}</span><span>·</span><span><i class="fa-regular fa-calendar"></i> ${date}</span></div>
+                </div>
+                <div class="leaderboard-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+            </div>`;
+        }).join('');
+
+        if (friends.length === 0) {
+            html += `<div style="text-align:center;color:var(--slate);padding:1.5rem 0 0.5rem 0;font-size:0.9rem;">У вас пока нет друзей</div>`;
+        }
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Ошибка загрузки рейтинга друзей:', error);
+        container.innerHTML = `<div style="text-align:center;color:#EF4444;padding:2rem 0;">Ошибка загрузки. Проверьте интернет.</div>`;
     }
 }
 
@@ -3566,6 +4079,7 @@ async function performRefresh() {
             await renderCalendar(currentMonth, currentYear);
             if (document.getElementById('stats-world')?.classList.contains('active')) {
                 await loadWorldLeaderboard();
+                await loadFriendsLeaderboard();
             }
             if (typeof syncPendingWorkouts === 'function') await syncPendingWorkouts();
             showToast('✅ Данные обновлены');
@@ -3713,7 +4227,7 @@ function createTutorialOverlay(step) {
     `;
     document.body.appendChild(tooltip);
 
-    const autoSteps = [1, 5, 9, 11];
+    const autoSteps = [1, 6, 10, 11, 16, 17];
     const isAuto = autoSteps.includes(step.id) && highlightElements.length > 0;
 
     if (isAuto) {
@@ -3825,24 +4339,31 @@ const tutorialSteps = [
     {
         id: 4,
         page: 'stats',
-        highlight: ['#page-stats .tab-btn[data-tab="world"]', '#worldLeaderboard'],
-        text: 'В мировой статистике находится\nрейтинг пользователей.',
+        highlight: ['#page-stats .tab-btn[data-tab="world"]', '.block-base[data-block-id="world-leaderboard"]'],
+        text: 'В мировой статистике находится рейтинг пользователей.',
         action: () => { switchStatsTab('world'); }
     },
     {
         id: 5,
         page: 'stats',
+        highlight: '.block-base[data-block-id="friends-leaderboard"]',
+        text: 'Также есть рейтинг ваших друзей.\nЗдесь вы можете увидеть, кто из ваших друзей больше всех тренируется и соревноваться с ними.',
+        action: () => { switchStatsTab('world'); }
+    },
+    {
+        id: 6,
+        page: 'stats',
         highlight: '#editStatsBtn',
         text: 'Также вы можете редактировать страницы.\nВы можете как передвигать местами сами разделы, так и содержание этих разделов.\nТакже это доступно на странице тренировок.',
     },
     {
-        id: 6,
+        id: 7,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '#page-workouts .tab-btn[data-tab="my"]'],
         text: 'Страница тренировок делится на два раздела:\nготовые и личные.'
     },
     {
-        id: 7,
+        id: 8,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '.category-card[data-category="Руки"]'],
         text: 'Здесь уже собраны готовые тренировки.',
@@ -3852,7 +4373,7 @@ const tutorialSteps = [
         }
     },
     {
-        id: 8,
+        id: 9,
         page: 'level-select',
         highlight: '.level-card',
         text: 'Каждая тренировка разделена на 3 уровня сложности.\nВы сможете найти подходящий для себя.',
@@ -3860,40 +4381,39 @@ const tutorialSteps = [
             window.navigateTo('level-select', { category: 'Руки' });
         }
     },
-    {
-        id: 9,
-        page: 'workout-detail',
-        highlight: '#actionButton',
-        text: 'После выбора уровня вы переходите в саму тренировку,\nгде видите полный список упражнений для этой тренировки.\nСнизу нажимаете "Начать тренировку" и начинаете тренироваться.',
-        action: () => {
-            window.navigateTo('workout-detail', {
-                category: 'Руки',
-                level: '1 LVL',
-                parentCategory: 'Силовые'
-            });
+{
+    id: 10,
+    page: 'workout-detail',
+    highlight: '#actionButton',
+    text: 'После выбора уровня вы переходите в саму тренировку,\nгде видите полный список упражнений для этой тренировки.\nСнизу нажимаете "Начать тренировку" и начинаете тренироваться.',
+    action: () => {
+        window.navigateTo('workout-detail', {
+            category: 'Руки',
+            level: '1 LVL',
+            parentCategory: 'Силовые'
+        });
+    }
+},
+{
+    id: 11,
+    page: 'workout-detail',
+    highlight: '#editWorkoutBtn',
+    text: 'Вы можете редактировать тренировку.\nМенять название, добавлять и удалять упражнения.',
+    action: () => {
+        const editWorkoutBtn = document.getElementById('editWorkoutBtn');
+        if (editWorkoutBtn) {
+            editWorkoutBtn.style.display = 'block';
         }
-    },
+    }
+},
+{
+    id: 12,
+    page: 'workout-detail',
+    highlight: null,
+    text: 'Очень просим вас редактировать количество подходов и повторений/секунд,\nи честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
+},
     {
-        id: 10,
-        page: 'workout-detail',
-        highlight: '.level-card:first-child',
-        text: 'Очень просим вас редактировать количество подходов и повторений/секунд,\nи честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
-        action: () => {}
-    },
-    {
-        id: 11,
-        page: 'workout-detail',
-        highlight: '#editWorkoutBtn',
-        text: 'Также вы можете редактировать тренировку.\nМенять название, добавлять и удалять упражнения.',
-        action: () => {
-            const editWorkoutBtn = document.getElementById('editWorkoutBtn');
-            if (editWorkoutBtn) {
-                editWorkoutBtn.style.display = 'block';
-            }
-        }
-    },
-    {
-        id: 12,
+        id: 13,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="my"]', '.custom-workout .btn-primary'],
         text: 'Здесь вы можете создавать свои собственные тренировки\nи редактировать их.',
@@ -3903,31 +4423,41 @@ const tutorialSteps = [
         }
     },
     {
-        id: 13,
+        id: 14,
         page: 'profile',
-        highlight: '.profile-block',
+        highlight: ['.profile-block', '.profile-tab-btn[data-tab="my"]'],
         text: 'Это ваш профиль :)'
     },
     {
-        id: 14,
+        id: 15,
         page: 'profile',
         highlight: '.level-block',
         text: 'Это система уровней.\nПо ней вы будете соревноваться с друзьями и другими пользователями.\nЧтобы повысить уровень, нужно тренироваться.'
     },
     {
-        id: 15,
-        page: 'profile',
-        highlight: '.friends-block',
-        text: 'Здесь вы можете найти своих друзей.'
-    },
-    {
         id: 16,
         page: 'profile',
-        highlight: '.settings-block-main',
-        text: 'Это дополнительные настройки.\nЗдесь вы можете подключить PREMIUM, изменить акцентный цвет,\nпройти это обучение еще раз,\nвключать и выключать кнопки редактирования.'
+        highlight: '#ettings-block-main .settings-block',
+        text: 'Это дополнительные настройки.\nЗдесь вы можете подключить PREMIUM, изменить акцентный цвет,пройти это обучение еще раз,включать и выключать кнопки редактирования.'
     },
     {
         id: 17,
+        page: 'profile',
+        highlight: '#dangerSettings .settings-block',
+        text: 'Это невозвратные настройки.\nЗдесь вы можете сбросить весь свой прогресс — это действие безвозвратно удалит всю вашу статистику и обнулит XP.\nТакже здесь можно выйти из аккаунта или полностью удалить свой профиль со всеми данными.\nБудьте осторожны с этими действиями!'
+    },
+    {
+        id: 18,
+        page: 'profile',
+        highlight: '.profile-tab-btn[data-tab="friends"]',
+        text: 'Здесь вы можете найти своих друзей.\nДобавляйте их в друзья, чтобы соревноваться и видеть их прогресс в рейтинге.',
+        action: () => {
+            switchProfileTab('friends');
+                renderFriendsInProfile();
+        }
+    },
+    {
+        id: 19,
         page: 'workouts',
         highlight: null,
         text: 'Пара важных правил!\nОтмечайте только те упражнения, которые действительно выполнили.\nРегулируйте количество подходов и повторений под себя.\nОт вашей честности зависит точность расчёта XP.\nТренируйтесь с умом и достигайте своих целей!',
@@ -3974,7 +4504,7 @@ function updatePremiumUI() {
     const premium = hasPremium();
     const statusEl = document.getElementById('premiumStatus');
     if (statusEl) {
-        statusEl.textContent = premium ? 'Открыты все особые тренировки' : 'Откройте все особые тренировки';
+        statusEl.textContent = premium ? 'Активирован' : 'Откройте все особые тренировки';
     }
     const icon = document.querySelector('.settings-item .fa-crown');
     if (icon) {
@@ -4100,8 +4630,12 @@ function toggleEditWorkout() {
 }
 
 // ===================ИНИЦИАЛИЗАЦИЯ ===================
+// Очищаем сессионный Set при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     console.log('SportApp загружен!');
+    // Очищаем сессионный Set при загрузке
+    shownThisSession.clear();
+    
     updatePremiumUI();
     if (navigator.onLine) {
         syncPendingWorkouts();
@@ -4111,6 +4645,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadEditSettings();
     initAccordion();
+
+    applySavedWorldStatsOrder();
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -4204,10 +4740,10 @@ function showConfirmModal(title, message, onConfirm, confirmText = 'Да') {
 // ===================НЕВОЗВРАТНЫЕ НАСТРОЙКИ ===================
 function confirmResetProgress() {
     showConfirmWithPasswordModal(
-        'Вы подтверждаете свое действие?',
-        'Введите пароль для подтверждения. Это действие нельзя отменить.',
+        'Сбросить прогресс?',
+        'Это действие безвозвратно удалит статистику тренировок и обнулит прогресс.',
         resetProgress,
-        'Да'
+        'Сбросить'
     );
 }
 
@@ -4219,23 +4755,55 @@ async function resetProgress() {
     }
 
     try {
+        // ===== УДАЛЯЕМ ТОЛЬКО ВЫПОЛНЕННЫЕ ТРЕНИРОВКИ (статистику) =====
         const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
         if (workoutsResult.success) {
             const workouts = workoutsResult.data;
             for (const workout of workouts) {
                 await firebase.firestore().collection('workouts').doc(workout.id).delete();
             }
+            console.log(`✅ Удалено ${workouts.length} выполненных тренировок`);
         }
 
-        await updateUserProfile(user.uid, { totalXp: 0, level: 1 });
+        // ===== ОБНУЛЯЕМ XP В ПРОФИЛЕ =====
+        await updateUserProfile(user.uid, { totalXp: 0 });
 
+        // ===== СОХРАНЯЕМ ВСЁ, ЧТО НУЖНО СОХРАНИТЬ =====
         const theme = localStorage.getItem('themeColor') || 'red';
         const premium = localStorage.getItem(PREMIUM_KEY) || 'false';
+        
+        // СОХРАНЯЕМ ШАБЛОНЫ ТРЕНИРОВОК (изменённые готовые тренировки)
+        const exercisesDataRaw = localStorage.getItem(STORAGE_KEY); // 'sportapp_exercisesData'
+        
+        // СОХРАНЯЕМ ЛИЧНЫЕ ТРЕНИРОВКИ
+        const myWorkouts = localStorage.getItem('myCustomWorkouts');
+        
+        // СОХРАНЯЕМ ОФЛАЙН-ОЧЕРЕДЬ (если есть несинхронизированные тренировки)
+        const pendingWorkouts = localStorage.getItem('pendingWorkouts');
+
+        // ===== ОЧИЩАЕМ LOCALSTORAGE =====
         localStorage.clear();
+
+        // ===== ВОССТАНАВЛИВАЕМ =====
         localStorage.setItem('themeColor', theme);
         localStorage.setItem(PREMIUM_KEY, premium);
+        
+        // Восстанавливаем шаблоны тренировок (изменённые готовые тренировки)
+        if (exercisesDataRaw) {
+            localStorage.setItem(STORAGE_KEY, exercisesDataRaw);
+        }
+        
+        // Восстанавливаем личные тренировки
+        if (myWorkouts) {
+            localStorage.setItem('myCustomWorkouts', myWorkouts);
+        }
+        
+        // Восстанавливаем офлайн-очередь
+        if (pendingWorkouts) {
+            localStorage.setItem('pendingWorkouts', pendingWorkouts);
+        }
 
-        showToast('✅ Прогресс сброшен');
+        showToast('✅ Статистика сброшена');
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -4247,10 +4815,10 @@ async function resetProgress() {
 
 function confirmDeleteAccount() {
     showConfirmWithPasswordModal(
-        'Вы подтверждаете свое действие?',
-        'Введите пароль для подтверждения. Это действие нельзя отменить.',
+        'Удалить аккаунт?',
+        'Это действие безвозвратно удалит ваш профиль и все данные.',
         deleteAccount,
-        'Да'
+        'Удалить'
     );
 }
 
@@ -4391,8 +4959,9 @@ class PageEditor {
     }
 
     disableEdit(save = false) {
+        // ВСЕГДА сбрасываем флаг
         this.isEditing = false;
-
+        
         const page = document.getElementById(this.pageId);
         page.classList.remove('editing');
 
@@ -4437,38 +5006,30 @@ class PageEditor {
     }
 
     blockNavigation() {
-        const selectors = [
-            '.nav-item', '.tab-btn', '.level-card',
-            '.custom-workout .btn-primary', '.btn-primary', '.btn-secondary',
-            '.btn-primary-center', '.friend-delete-btn', '.friend-result-item .btn-sm',
-            '.workout-delete', '#editProfileBtn', '.settings-item'
-        ];
-
-        document.querySelectorAll(selectors.join(',')).forEach(el => {
-            if (el.closest('#statsEditActions') ||
-                el.closest('#workoutsEditActions') ||
-                el.id === 'editStatsBtn' ||
-                el.id === 'editWorkoutsBtn') {
-                return;
-            }
-            el.style.pointerEvents = 'none';
-        });
-
+        // Убираем блокировку навигации, чтобы клики регистрировались и появлялся тост
         document.addEventListener('click', this.blockedClickHandler = (e) => {
             if (e.target.closest('#statsEditActions') ||
                 e.target.closest('#workoutsEditActions') ||
+                e.target.closest('#worldStatsEditActions') ||
                 e.target.closest('#editStatsBtn') ||
-                e.target.closest('#editWorkoutsBtn')) {
+                e.target.closest('#editWorkoutsBtn') ||
+                e.target.closest('#editWorldStatsBtn')) {
                 return;
             }
             if (e.target.closest('.drag-handle') ||
                 e.target.closest('.sortable-ghost') ||
                 e.target.closest('#statsEditActions') ||
-                e.target.closest('#workoutsEditActions')) {
+                e.target.closest('#workoutsEditActions') ||
+                e.target.closest('#worldStatsEditActions')) {
                 return;
             }
-            if (e.target.closest('.nav-item') ||
-                e.target.closest('.tab-btn') ||
+            if (e.target.closest('.nav-item')) {
+                e.preventDefault();
+                e.stopPropagation();
+                showToast('⚠️ Сначала завершите редактирование страницы');
+                return false;
+            }
+            if (e.target.closest('.tab-btn') ||
                 e.target.closest('.level-card') ||
                 e.target.closest('.custom-workout .btn-primary') ||
                 e.target.closest('.btn-primary') ||
@@ -4487,17 +5048,6 @@ class PageEditor {
     }
 
     unblockNavigation() {
-        const selectors = [
-            '.nav-item', '.category-card', '.tab-btn', '.level-card',
-            '.custom-workout .btn-primary', '.btn-primary', '.btn-secondary',
-            '.btn-primary-center', '.friend-delete-btn', '.friend-result-item .btn-sm',
-            '.workout-delete', '#editProfileBtn', '.settings-item'
-        ];
-
-        document.querySelectorAll(selectors.join(',')).forEach(el => {
-            el.style.pointerEvents = '';
-        });
-
         if (this.blockedClickHandler) {
             document.removeEventListener('click', this.blockedClickHandler, true);
             this.blockedClickHandler = null;
@@ -4553,7 +5103,7 @@ window.statsEditor = new PageEditor({
     ],
     defaultLayout: {
         statsSummary: ['workouts', 'minutes', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело']
     }
@@ -4580,6 +5130,23 @@ window.workoutsEditor = new PageEditor({
         catalogGridFitness: ['Зарядка', 'Кардио', 'Пилатес', 'Растяжка'],
         catalogGridPremium: ['Кроссфит', 'Мужская сила', 'Женское счастье'],
         myWorkoutsList: []
+    }
+});
+
+// =================== РЕДАКТОР МИРОВОЙ СТАТИСТИКИ ===================
+window.worldStatsEditor = new PageEditor({
+    pageId: 'page-stats',
+    storageKey: 'worldStatsLayout',
+    editBtnId: 'editWorldStatsBtn',
+    saveBtnId: 'saveWorldStatsBtn',
+    cancelBtnId: 'cancelWorldStatsBtn',
+    resetBtnId: 'resetWorldStatsBtn',
+    actionsId: 'worldStatsEditActions',
+    containers: [
+        { id: 'worldStatsBlocksContainer', dataAttr: 'blockId', handle: '.drag-handle' }
+    ],
+    defaultLayout: {
+        'worldStatsBlocksContainer': ['world-leaderboard', 'friends-leaderboard']
     }
 });
 
@@ -4756,8 +5323,8 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
     // Блокируем кнопку визуально
     const btn = this;
     btn.disabled = true;
-    btn.textContent = '⏳ Сохранение...';
-    btn.style.opacity = '0.6';
+    btn.textContent = 'Закончить';
+    btn.style.opacity = '1';
 
     try {
         const xpText = document.getElementById('finishXp').textContent;
@@ -4851,3 +5418,263 @@ document.querySelector('#registerForm .btn-primary')?.addEventListener('click', 
         return;
     }
 });
+
+// =================== ВКЛАДКИ ПРОФИЛЯ ===================
+let activeProfileTab = 'my';
+
+function switchProfileTab(tab) {
+    activeProfileTab = tab;
+    
+    // Переключаем кнопки
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    
+    // Переключаем контент
+    document.querySelectorAll('.profile-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    const target = document.getElementById('profileTab-' + tab);
+    if (target) target.classList.add('active');
+    
+    // Загружаем данные ТОЛЬКО при переключении на вкладку друзей
+    if (tab === 'friends') {
+        // Небольшая задержка, чтобы DOM успел обновиться
+        setTimeout(() => {
+            renderFriendsInProfile();
+        }, 100);
+    }
+}
+
+// Инициализация вкладок профиля
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            if (tab) switchProfileTab(tab);
+        });
+    });
+});
+
+// =================== ПРОФИЛЬ ДРУГА ===================
+let currentFriendId = null;
+let currentFriendData = null;
+
+async function openFriendProfile(friendId) {
+    currentFriendId = friendId;
+    
+    try {
+        // Загружаем данные друга
+        const result = await getUserProfile(friendId);
+        if (!result.success) {
+            showToast('❌ Не удалось загрузить данные друга');
+            return;
+        }
+        
+        currentFriendData = result.data;
+        
+        // Загружаем тренировки друга для статистики
+        const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
+        let workouts = [];
+        let totalSeconds = 0;
+        let totalExercises = 0;
+        
+        if (workoutsResult.success) {
+            workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
+            totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+            totalExercises = workouts.reduce((sum, w) => {
+                const completed = w.exercises?.filter(e => e.completed === true).length || 0;
+                return sum + completed;
+            }, 0);
+        }
+        
+        // Заполняем данные
+        const name = currentFriendData.displayName || 'Пользователь';
+        document.getElementById('friendProfileName').textContent = name;
+        document.getElementById('friendProfileEmail').textContent = currentFriendData.email || 'email не указан';
+        
+        // Уровень и XP
+        const xp = currentFriendData.totalXp || 0;
+        const currentLevel = getCurrentLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLevel = getNextLevel(xp);
+        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+        
+        document.getElementById('friendLevelLvl').textContent = currentLevel.id + ' LVL';
+        document.getElementById('friendLevelTitle').textContent = currentLevel.name;
+        document.getElementById('friendLevelProgressText').textContent = progressText;
+        document.getElementById('friendLevelFill').style.width = progress + '%';
+        
+        // Статистика
+        document.getElementById('friendTotalWorkouts').textContent = workouts.length;
+        document.getElementById('friendTotalMinutes').textContent = Math.floor(totalSeconds / 60);
+        document.getElementById('friendTotalExercises').textContent = totalExercises;
+        
+        // Открываем модалку
+        openModal('friendProfileModal');
+        
+    } catch (error) {
+        console.error('Ошибка загрузки профиля друга:', error);
+        showToast('❌ Ошибка загрузки профиля друга');
+    }
+}
+
+// =================== КНОПКИ В МОДАЛКЕ ПРОФИЛЯ ДРУГА ===================
+
+// Закрыть
+document.getElementById('friendProfileCloseBtn')?.addEventListener('click', function() {
+    closeModal('friendProfileModal');
+    currentFriendId = null;
+    currentFriendData = null;
+});
+
+// Пригласить на совместную тренировку
+document.getElementById('friendInviteBtn')?.addEventListener('click', async function() {
+    if (!currentFriendId || !currentFriendData) {
+        showToast('❌ Данные друга не загружены');
+        return;
+    }
+    
+    const friendName = currentFriendData.displayName || 'Пользователь';
+    
+    showConfirmModal(
+        'Совместная тренировка',
+        `Отправить приглашение ${friendName} на совместную тренировку?`,
+        async function() {
+            try {
+                const user = await getFirebaseUser();
+                if (!user) {
+                    showToast('❌ Вы не авторизованы');
+                    return;
+                }
+                
+                // Создаём уведомление в Firestore
+                await firebase.firestore().collection('notifications').add({
+                    to: currentFriendId,
+                    from: user.uid,
+                    fromName: user.displayName || 'Пользователь',
+                    type: 'invite',
+                    message: `${user.displayName || 'Пользователь'} приглашает вас на совместную тренировку!`,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+                
+                showToast(`✅ Приглашение отправлено ${friendName}`);
+                closeModal('friendProfileModal');
+                currentFriendId = null;
+                currentFriendData = null;
+            } catch (error) {
+                console.error('Ошибка отправки приглашения:', error);
+                showToast('❌ Не удалось отправить приглашение');
+            }
+        },
+        'Отправить'
+    );
+});
+
+// Удалить друга
+document.getElementById('friendRemoveBtn')?.addEventListener('click', function() {
+    if (!currentFriendId || !currentFriendData) {
+        showToast('❌ Данные друга не загружены');
+        return;
+    }
+    
+    const friendName = currentFriendData.displayName || 'Пользователь';
+    
+    showConfirmModal(
+        'Удалить друга?',
+        `Вы уверены, что хотите удалить ${friendName} из друзей?`,
+        async function() {
+            const result = await removeFriendFromList(currentFriendId);
+            if (result.success) {
+                closeModal('friendProfileModal');
+                currentFriendId = null;
+                currentFriendData = null;
+                await renderFriendsInProfile();
+                showToast(`✅ ${result.friendName || friendName} удалён из друзей`);
+            }
+        },
+        'Удалить'
+    );
+});
+
+// Вспомогательная функция для удаления друга (используется в модалке)
+async function removeFriendFromList(friendId) {
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Пользователь не авторизован');
+        return false;
+    }
+    
+    try {
+        // ПОЛУЧАЕМ ИМЯ ДРУГА ДО УДАЛЕНИЯ
+        const friendProfile = await getUserProfile(friendId);
+        const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
+        
+        // Удаляем у текущего пользователя
+        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+        const currentFriends = userDoc.data()?.friends || [];
+        const updatedFriends = currentFriends.filter(id => id !== friendId);
+        await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
+        
+        // Удаляем у друга
+        const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
+        const friendFriends = friendDoc.data()?.friends || [];
+        const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
+        await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
+        
+        // Очищаем локальные списки
+        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
+        localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
+        
+        const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
+        const updatedPrev = prevFriends.filter(f => f.id !== friendId);
+        localStorage.setItem('prevFriendsList', JSON.stringify(updatedPrev));
+        
+        // Возвращаем имя для использования в тосте
+        return { success: true, friendName: friendName };
+    } catch (error) {
+        console.error('Ошибка удаления друга:', error);
+        showToast('❌ Ошибка при удалении друга');
+        return { success: false };
+    }
+}
+
+// =================== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ ДРУГА ===================
+async function removeFriendFromList(friendId) {
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Пользователь не авторизован');
+        return false;
+    }
+    
+    try {
+        // Удаляем у текущего пользователя
+        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+        const currentFriends = userDoc.data()?.friends || [];
+        const updatedFriends = currentFriends.filter(id => id !== friendId);
+        await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
+        
+        // Удаляем у друга
+        const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
+        const friendFriends = friendDoc.data()?.friends || [];
+        const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
+        await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
+        
+        // Очищаем локальные списки
+        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
+        localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
+        
+        const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
+        const updatedPrev = prevFriends.filter(f => f.id !== friendId);
+        localStorage.setItem('prevFriendsList', JSON.stringify(updatedPrev));
+        
+        return true;
+    } catch (error) {
+        console.error('Ошибка удаления друга:', error);
+        showToast('❌ Ошибка при удалении друга');
+        return false;
+    }
+}
