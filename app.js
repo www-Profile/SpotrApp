@@ -4434,13 +4434,13 @@ const tutorialSteps = [
     id: 12,
     page: 'workout-detail',
     highlight: null,
-    text: 'Очень просим вас редактировать количество подходов и повторений/секунд,\nи честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
+    text: 'Очень просим вас редактировать количество подходов и повторений/секунд, и честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
 },
     {
         id: 13,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="my"]', '.custom-workout .btn-primary'],
-        text: 'Здесь вы можете создавать свои собственные тренировки\nи редактировать их.',
+        text: 'Здесь вы можете создавать свои собственные тренировки и редактировать их.',
         action: () => {
             activeWorkoutsTab = 'my';
             applyWorkoutsTab('my');
@@ -4473,7 +4473,7 @@ const tutorialSteps = [
     {
         id: 18,
         page: 'profile',
-        highlight: '.profile-tab-btn[data-tab="friends"]',
+        highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block'],
         text: 'Здесь вы можете найти своих друзей.\nДобавляйте их в друзья, чтобы соревноваться и видеть их прогресс в рейтинге.',
         action: () => {
             switchProfileTab('friends');
