@@ -89,7 +89,7 @@ body {
     color: var(--white);
     border: none;
     border-radius: 10px;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 1rem;
     cursor: pointer;
     text-decoration: none;
@@ -107,7 +107,7 @@ body {
     color: var(--white);
     border: none;
     border-radius: 10px;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 1rem;
     cursor: pointer;
     text-align: center;
@@ -121,7 +121,7 @@ body {
     border: 2px solid var(--accent);
     border-radius: 10px;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 1rem;
     cursor: pointer;
     background: transparent;
@@ -138,7 +138,7 @@ body {
     border: 2px solid var(--accent);
     border-radius: 10px;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 1rem;
     cursor: pointer;
     background: transparent;
@@ -953,9 +953,8 @@ body {
 }
 
 /* =================== СТРАНИЦА ДРУЗЬЯ =================== */
-/* Общий стиль для всех блоков */
-#profileTab-friends .friends-search-block,
-#profileTab-friends .friends-requests-block,
+
+/* ===== ОБЩИЙ БЛОК (всё в одном) ===== */
 #profileTab-friends .friends-list-block {
     background: var(--white);
     border-radius: 16px;
@@ -963,31 +962,15 @@ body {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
-/* ===== ЗАГОЛОВКИ РАЗДЕЛОВ (НЕ В БЛОКАХ) ===== */
-#profileTab-friends .friends-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.3rem 0.2rem;
-    margin-top: 1rem;
-    margin-bottom: 0.2rem;
-}
-
-#profileTab-friends .friends-section-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--dark);
-    letter-spacing: 0.3px;
-}
-
-/* ===== БЛОК 1: ПОИСК ===== */
-#profileTab-friends .friends-search-block .search-container {
+/* ===== ПОИСК ===== */
+#profileTab-friends .friends-list-block .search-container {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    margin-bottom: 0.8rem;
 }
 
-#profileTab-friends .friends-search-block .search-container input {
+#profileTab-friends .friends-list-block .search-container input {
     flex: 1;
     padding: 0.6rem 1rem;
     border: 1.5px solid #E2E8F0;
@@ -998,25 +981,48 @@ body {
     min-width: 0;
 }
 
-#profileTab-friends .friends-search-block .search-container input:focus {
+#profileTab-friends .friends-list-block .search-container input:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 4px rgba(220, 20, 60, 0.08);
 }
 
-#profileTab-friends .friends-search-block .search-container .btn-primary {
+#profileTab-friends .friends-list-block .search-container .btn-primary {
     padding: 0.6rem 1.2rem;
     font-size: 0.85rem;
     white-space: nowrap;
     flex-shrink: 0;
     width: auto;
+    margin: 0;
 }
 
-#profileTab-friends .friends-search-block #searchResults {
+#profileTab-friends .friends-list-block #searchResults {
+    margin-bottom: 0.8rem;
+}
+
+/* ===== ЗАГОЛОВКИ РАЗДЕЛОВ ===== */
+#profileTab-friends .friends-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.2rem;
     margin-top: 0.8rem;
+    margin-bottom: 0.2rem;
 }
 
-/* ===== ОБЩИЕ СТИЛИ ДЛЯ ЭЛЕМЕНТОВ ===== */
+#profileTab-friends .friends-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: 0.3px;
+}
+
+/* ===== ЗАЯВКИ ===== */
+#profileTab-friends .friends-requests-block {
+    padding: 0;
+}
+
+/* ===== ЭЛЕМЕНТЫ СПИСКОВ ===== */
 #profileTab-friends .friend-result-item,
 #profileTab-friends .friend-request-item,
 #profileTab-friends .friend-item {
@@ -1067,7 +1073,7 @@ body {
     word-break: break-all;
 }
 
-/* Кнопки */
+/* ===== КНОПКИ ===== */
 #profileTab-friends .friend-result-item .btn-sm,
 #profileTab-friends .friend-request-item .btn-sm {
     padding: 0.2rem 0.8rem;
@@ -1095,7 +1101,7 @@ body {
     pointer-events: none;
 }
 
-/* Кнопка удаления друга */
+/* ===== КНОПКА УДАЛЕНИЯ ===== */
 #profileTab-friends .friend-delete-btn {
     width: 32px;
     height: 32px;
@@ -1109,7 +1115,6 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: none;
 }
 
 #profileTab-friends .friend-delete-btn:active {
@@ -1120,7 +1125,7 @@ body {
     color: #EF4444;
 }
 
-/* Пустые состояния */
+/* ===== ПУСТЫЕ СОСТОЯНИЯ ===== */
 #profileTab-friends .empty-state {
     text-align: center;
     padding: 1rem 0;
@@ -1130,22 +1135,20 @@ body {
 
 /* ===== АДАПТАЦИЯ ===== */
 @media (max-width: 480px) {
-    #profileTab-friends .friends-search-block,
-    #profileTab-friends .friends-requests-block,
     #profileTab-friends .friends-list-block {
         padding: 0.8rem;
     }
-    
-    #profileTab-friends .friends-search-block .search-container input {
+
+    #profileTab-friends .friends-list-block .search-container input {
         font-size: 0.85rem;
         padding: 0.5rem 0.8rem;
     }
-    
-    #profileTab-friends .friends-search-block .search-container .btn-primary {
+
+    #profileTab-friends .friends-list-block .search-container .btn-primary {
         font-size: 0.75rem;
         padding: 0.5rem 0.8rem;
     }
-    
+
     #profileTab-friends .friends-section-title {
         font-size: 0.85rem;
     }
@@ -2495,7 +2498,7 @@ textarea.error {
 .session-btn {
     border: none;
     border-radius: 12px;
-    font-weight: 700;
+    font-weight: 500;
     width: 48px;
     height: 48px;
     display: flex;
@@ -2578,7 +2581,7 @@ textarea.error {
 
 #sessionExitModal .modal-stat-label {
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--slate);
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -2586,7 +2589,7 @@ textarea.error {
 
 #sessionExitModal .modal-stat-value {
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--dark);
 }
 

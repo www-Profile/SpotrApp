@@ -3574,7 +3574,7 @@ async function renderFriendsInProfile() {
             </div>`;
         }).join('');
     } else {
-        friendsHtml = '<p class="empty-state">У вас пока нет друзей</p>';
+        friendsHtml = '<p class="empty-state">Нет друзей</p>';
     }
     friendsDiv.innerHTML = friendsHtml;
     if (friendsCount) friendsCount.textContent = friendsCountValue;
@@ -4044,7 +4044,7 @@ async function loadFriendsLeaderboard() {
         }).join('');
 
         if (friends.length === 0) {
-            html += `<div style="text-align:center;color:var(--slate);padding:1.5rem 0 0.5rem 0;font-size:0.9rem;">У вас пока нет друзей</div>`;
+            html += `<div style="text-align:center;color:var(--slate);padding:1.5rem 0 0.5rem 0;font-size:0.9rem;">Нет друзей</div>`;
         }
 
         container.innerHTML = html;
