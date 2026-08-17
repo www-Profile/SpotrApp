@@ -2884,7 +2884,7 @@ async function loadProfile() {
         if (!isNotificationSeen(id)) {
             showNotification(
                 '🎉',
-                `Поздравляем! Вы достигли уровня ${currentLevel.id} — ${currentLevel.name}!`,
+                `Поздравляем! Вы достигли ${currentLevel.id} уровня!`,
                 null
             );
         }
@@ -3901,6 +3901,30 @@ window.addEventListener('online', function() {
     isOfflineModalShown = false;
     if (typeof syncPendingWorkouts === 'function') syncPendingWorkouts();
 });
+
+// =================== УВЕДОМЛЕНИЕ О РЕЙТИНГЕ ===================
+function checkRankNotification(currentRank, type) {
+    const key = type === 'world' ? LAST_WORLD_RANK_KEY : LAST_FRIENDS_RANK_KEY;
+    const lastRank = parseInt(localStorage.getItem(key) || '0');
+    
+    // Если рейтинг улучшился или это первый раз
+    if (currentRank < lastRank || lastRank === 0) {
+        const rankText = currentRank <= 3 ? '🥇' : currentRank <= 10 ? '⭐' : '📈';
+        const rankName = type === 'world' ? 'мировом' : 'дружеском';
+        
+        const id = `${type}_rank_${currentRank}_${Date.now()}`;
+        if (!isNotificationSeen(id)) {
+            showNotification(
+                rankText,
+                `В ${rankName} рейтинге вы на ${currentRank} месте!`,
+                null
+            );
+            markNotificationSeen(id);
+        }
+    }
+    
+    localStorage.setItem(key, String(currentRank));
+}
 
 // ===================МИРОВОЙ РЕЙТИНГ ===================
 async function loadWorldLeaderboard() {
