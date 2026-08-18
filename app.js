@@ -1646,9 +1646,6 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
                             <h3 class="item-title">${ex.name}</h3>
                             <p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
                         </div>
-                        <button class="quick-edit-btn" id="quickEditBtn-${index}" onclick="openQuickEditModal(${index})" style="display:none;" title="Редактировать упражнение">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </button>
                     </div>
                 </div>
             `).join('');
@@ -1671,8 +1668,6 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             };
         }
     }
-
-    document.querySelectorAll('.quick-edit-btn').forEach(btn => btn.style.display = 'none');
 
     const actionButton = document.getElementById('actionButton');
     if (actionButton) {
