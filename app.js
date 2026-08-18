@@ -4,360 +4,360 @@ const exercisesData = {
     'Силовые': {
         'Руки': {
             '1 LVL': [
-                { name: 'Отжимания от стены', category: 'Руки', reps: '12', sets: '3' },
-                { name: 'Сгибание рук с резинкой', category: 'Руки', reps: '15', sets: '3' },
-                { name: 'Разгибание рук с резинкой', category: 'Руки', reps: '15', sets: '3' },
-                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3' },
-                { name: 'Отжимания от коленей', category: 'Грудь', reps: '10', sets: '3' }
+                { name: 'Отжимания от стены', category: 'Руки', reps: '12', sets: '3', icon: 'bodybuilding' },
+                { name: 'Сгибание рук с резинкой', category: 'Руки', reps: '15', sets: '3', icon: 'bodybuilding' },
+                { name: 'Разгибание рук с резинкой', category: 'Руки', reps: '15', sets: '3', icon: 'bodybuilding' },
+                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3', icon: 'bodybuilding' },
+                { name: 'Отжимания от коленей', category: 'Грудь', reps: '10', sets: '3', icon: 'breast' }
             ],
             '2 LVL': [
-                { name: 'Отжимания от пола узким хватом', category: 'Руки', reps: '10', sets: '4' },
-                { name: 'Отжимания от пола широким хватом', category: 'Грудь', reps: '10', sets: '4' },
-                { name: 'Алмазные отжимания', category: 'Руки', reps: '8', sets: '4' },
-                { name: 'Сгибание рук с гантелями (бицепс)', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Французский жим с гантелью стоя', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Обратные отжимания от стула', category: 'Руки', reps: '10', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4' }
+                { name: 'Отжимания от пола узким хватом', category: 'Руки', reps: '10', sets: '4', icon: 'bodybuilding' },
+                { name: 'Отжимания от пола широким хватом', category: 'Грудь', reps: '10', sets: '4', icon: 'breast' },
+                { name: 'Алмазные отжимания', category: 'Руки', reps: '8', sets: '4', icon: 'bodybuilding' },
+                { name: 'Сгибание рук с гантелями (бицепс)', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Французский жим с гантелью стоя', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Обратные отжимания от стула', category: 'Руки', reps: '10', sets: '4', icon: 'bodybuilding' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' }
             ],
             '3 LVL': [
-                { name: 'Отжимания на одной руке на правую руку', category: 'Руки', reps: '5', sets: '4' },
-                { name: 'Отжимания на одной руке на левую руку', category: 'Руки', reps: '5', sets: '4' },
-                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '8', sets: '4' },
-                { name: 'Отжимания с узкой постановкой рук', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Сгибание рук с гантелями (бицепс)', category: 'Руки', reps: '15', sets: '4' },
-                { name: 'Молотковые сгибания', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Французский жим с гантелью стоя', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Обратные отжимания от стула с весом', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Планка на одной руке на правую руку', category: 'Руки', reps: '30 сек', sets: '4' },
-                { name: 'Планка на одной руке на левую руку', category: 'Руки', reps: '30 сек', sets: '4' }
+                { name: 'Отжимания на одной руке на правую руку', category: 'Руки', reps: '5', sets: '4', icon: 'bodybuilding' },
+                { name: 'Отжимания на одной руке на левую руку', category: 'Руки', reps: '5', sets: '4', icon: 'bodybuilding' },
+                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '8', sets: '4', icon: 'breast' },
+                { name: 'Отжимания с узкой постановкой рук', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Сгибание рук с гантелями (бицепс)', category: 'Руки', reps: '15', sets: '4', icon: 'bodybuilding' },
+                { name: 'Молотковые сгибания', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Французский жим с гантелью стоя', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Обратные отжимания от стула с весом', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Планка на одной руке на правую руку', category: 'Руки', reps: '30 сек', sets: '4', icon: 'bodybuilding' },
+                { name: 'Планка на одной руке на левую руку', category: 'Руки', reps: '30 сек', sets: '4', icon: 'bodybuilding' }
             ]
         },
         'Плечи': {
             '1 LVL': [
-                { name: 'Разведение рук с резинкой в стороны', category: 'Плечи', reps: '15', sets: '3' },
-                { name: 'Подъем рук вперед с резинкой', category: 'Плечи', reps: '15', sets: '3' },
-                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '3' },
-                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '12', sets: '3' },
-                { name: 'Тяга к подбородку с резинкой', category: 'Плечи', reps: '15', sets: '3' }
+                { name: 'Разведение рук с резинкой в стороны', category: 'Плечи', reps: '15', sets: '3', icon: 'shoulder' },
+                { name: 'Подъем рук вперед с резинкой', category: 'Плечи', reps: '15', sets: '3', icon: 'shoulder' },
+                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '3', icon: 'shoulder' },
+                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '12', sets: '3', icon: 'shoulder' },
+                { name: 'Тяга к подбородку с резинкой', category: 'Плечи', reps: '15', sets: '3', icon: 'shoulder' }
             ],
             '2 LVL': [
-                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Тяга к подбородку с гантелью', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Подъем рук вперед с гантелями', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Разведение гантелей в наклоне', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Жим Арнольда', category: 'Плечи', reps: '10', sets: '4' }
+                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Тяга к подбородку с гантелью', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Подъем рук вперед с гантелями', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Разведение гантелей в наклоне', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Жим Арнольда', category: 'Плечи', reps: '10', sets: '4', icon: 'shoulder' }
             ],
             '3 LVL': [
-                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '15', sets: '4' },
-                { name: 'Тяга к подбородку с гантелью', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Подъем рук вперед с гантелями', category: 'Плечи', reps: '15', sets: '4' },
-                { name: 'Разведение гантелей в наклоне', category: 'Плечи', reps: '15', sets: '4' },
-                { name: 'Жим Арнольда', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Отжимания в стойке у стены', category: 'Плечи', reps: '8', sets: '4' },
-                { name: 'Махи гантелями перед собой', category: 'Плечи', reps: '12', sets: '4' }
+                { name: 'Жим гантелей сидя', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Разведение гантелей в стороны стоя', category: 'Плечи', reps: '15', sets: '4', icon: 'shoulder' },
+                { name: 'Тяга к подбородку с гантелью', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Подъем рук вперед с гантелями', category: 'Плечи', reps: '15', sets: '4', icon: 'shoulder' },
+                { name: 'Разведение гантелей в наклоне', category: 'Плечи', reps: '15', sets: '4', icon: 'shoulder' },
+                { name: 'Жим Арнольда', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+                { name: 'Отжимания в стойке у стены', category: 'Плечи', reps: '8', sets: '4', icon: 'shoulder' },
+                { name: 'Махи гантелями перед собой', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' }
             ]
         },
         'Пресс': {
             '1 LVL': [
-                { name: 'Скручивания лёжа', category: 'Пресс', reps: '15', sets: '3' },
-                { name: 'Подъем ног лёжа', category: 'Пресс', reps: '12', sets: '3' },
-                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3' },
-                { name: 'Боковая планка на коленях на правую сторону', category: 'Пресс', reps: '15 сек', sets: '3' },
-                { name: 'Боковая планка на коленях на левую сторону', category: 'Пресс', reps: '15 сек', sets: '3' },
-                { name: 'Лодочка', category: 'Спина', reps: '12', sets: '3' },
-                { name: 'Вакуум живота стоя', category: 'Пресс', reps: '10 сек', sets: '3' }
+                { name: 'Скручивания лёжа', category: 'Пресс', reps: '15', sets: '3', icon: 'press' },
+                { name: 'Подъем ног лёжа', category: 'Пресс', reps: '12', sets: '3', icon: 'press' },
+                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3', icon: 'press' },
+                { name: 'Боковая планка на коленях на правую сторону', category: 'Пресс', reps: '15 сек', sets: '3', icon: 'press' },
+                { name: 'Боковая планка на коленях на левую сторону', category: 'Пресс', reps: '15 сек', sets: '3', icon: 'press' },
+                { name: 'Лодочка', category: 'Спина', reps: '12', sets: '3', icon: 'back' },
+                { name: 'Вакуум живота стоя', category: 'Пресс', reps: '10 сек', sets: '3', icon: 'press' }
             ],
             '2 LVL': [
-                { name: 'Скручивания с вытянутыми руками', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Подъем ног в висе (на турнике)', category: 'Пресс', reps: '12', sets: '4' },
-                { name: 'Ножницы ногами лёжа', category: 'Пресс', reps: '25', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Твист сидя', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Велосипед лёжа', category: 'Пресс', reps: '20', sets: '4' }
+                { name: 'Скручивания с вытянутыми руками', category: 'Пресс', reps: '20', sets: '4', icon: 'press' },
+                { name: 'Подъем ног в висе (на турнике)', category: 'Пресс', reps: '12', sets: '4', icon: 'press' },
+                { name: 'Ножницы ногами лёжа', category: 'Пресс', reps: '25', sets: '4', icon: 'press' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'press' },
+                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'press' },
+                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'press' },
+                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+                { name: 'Твист сидя', category: 'Пресс', reps: '20', sets: '4', icon: 'press' },
+                { name: 'Велосипед лёжа', category: 'Пресс', reps: '20', sets: '4', icon: 'press' }
             ],
             '3 LVL': [
-                { name: 'Скручивания с весом', category: 'Пресс', reps: '25', sets: '4' },
-                { name: 'Подъем ног в висе (на турнике)', category: 'Пресс', reps: '15', sets: '4' },
-                { name: 'Ножницы ногами лёжа', category: 'Пресс', reps: '30', sets: '4' },
-                { name: 'Планка на локтях с подъемом ног', category: 'Пресс', reps: '45 сек', sets: '4' },
-                { name: 'Боковая планка с подъемом ног на правую сторону', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Боковая планка с подъемом ног на левую сторону', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Лодочка с задержкой', category: 'Спина', reps: '20', sets: '4' },
-                { name: 'Твист сидя с весом', category: 'Пресс', reps: '25', sets: '4' },
-                { name: 'Подъем ног лёжа под углом 45°', category: 'Пресс', reps: '15', sets: '4' },
-                { name: 'Планка на руках с касанием плеч', category: 'Пресс', reps: '16', sets: '4' }
+                { name: 'Скручивания с весом', category: 'Пресс', reps: '25', sets: '4', icon: 'press' },
+                { name: 'Подъем ног в висе (на турнике)', category: 'Пресс', reps: '15', sets: '4', icon: 'press' },
+                { name: 'Ножницы ногами лёжа', category: 'Пресс', reps: '30', sets: '4', icon: 'press' },
+                { name: 'Планка на локтях с подъемом ног', category: 'Пресс', reps: '45 сек', sets: '4', icon: 'press' },
+                { name: 'Боковая планка с подъемом ног на правую сторону', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+                { name: 'Боковая планка с подъемом ног на левую сторону', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+                { name: 'Лодочка с задержкой', category: 'Спина', reps: '20', sets: '4', icon: 'back' },
+                { name: 'Твист сидя с весом', category: 'Пресс', reps: '25', sets: '4', icon: 'press' },
+                { name: 'Подъем ног лёжа под углом 45°', category: 'Пресс', reps: '15', sets: '4', icon: 'press' },
+                { name: 'Планка на руках с касанием плеч', category: 'Пресс', reps: '16', sets: '4', icon: 'press' }
             ]
         },
         'Грудь': {
             '1 LVL': [
-                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '3' },
-                { name: 'Отжимания от стены', category: 'Грудь', reps: '15', sets: '3' },
-                { name: 'Разводка рук с резинкой', category: 'Грудь', reps: '15', sets: '3' },
-                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3' },
-                { name: 'Отжимания с упором спереди', category: 'Грудь', reps: '10', sets: '3' }
+                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '3', icon: 'breast' },
+                { name: 'Отжимания от стены', category: 'Грудь', reps: '15', sets: '3', icon: 'breast' },
+                { name: 'Разводка рук с резинкой', category: 'Грудь', reps: '15', sets: '3', icon: 'breast' },
+                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3', icon: 'bodybuilding' },
+                { name: 'Отжимания с упором спереди', category: 'Грудь', reps: '10', sets: '3', icon: 'breast' }
             ],
             '2 LVL': [
-                { name: 'Отжимания от пола', category: 'Грудь', reps: '15', sets: '4' },
-                { name: 'Широкие отжимания', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Отжимания с узкой постановкой рук', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Отжимания с ногами на возвышении', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Разводка рук с гантелями лёжа', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Планка с переходом', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Жим гантелей лёжа', category: 'Грудь', reps: '12', sets: '4' }
+                { name: 'Отжимания от пола', category: 'Грудь', reps: '15', sets: '4', icon: 'breast' },
+                { name: 'Широкие отжимания', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Отжимания с узкой постановкой рук', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Отжимания с ногами на возвышении', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Разводка рук с гантелями лёжа', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Планка с переходом', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+                { name: 'Жим гантелей лёжа', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' }
             ],
             '3 LVL': [
-                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Отжимания на одной руке на правую руку', category: 'Грудь', reps: '6', sets: '4' },
-                { name: 'Отжимания на одной руке на левую руку', category: 'Грудь', reps: '6', sets: '4' },
-                { name: 'Отжимания с ногами на возвышении', category: 'Грудь', reps: '15', sets: '4' },
-                { name: 'Отжимания в алмаз', category: 'Руки', reps: '12', sets: '4' },
-                { name: 'Жим гантелей лёжа', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Разводка гантелей лёжа', category: 'Грудь', reps: '15', sets: '4' },
-                { name: 'Отжимания с паузой внизу', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Планка на одной руке на правую руку', category: 'Руки', reps: '30 сек', sets: '4' },
-                { name: 'Планка на одной руке на левую руку', category: 'Руки', reps: '30 сек', sets: '4' },
-                { name: 'Жим гантелей на наклонной скамье', category: 'Грудь', reps: '10', sets: '4' }
+                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Отжимания на одной руке на правую руку', category: 'Грудь', reps: '6', sets: '4', icon: 'breast' },
+                { name: 'Отжимания на одной руке на левую руку', category: 'Грудь', reps: '6', sets: '4', icon: 'breast' },
+                { name: 'Отжимания с ногами на возвышении', category: 'Грудь', reps: '15', sets: '4', icon: 'breast' },
+                { name: 'Отжимания в алмаз', category: 'Руки', reps: '12', sets: '4', icon: 'bodybuilding' },
+                { name: 'Жим гантелей лёжа', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Разводка гантелей лёжа', category: 'Грудь', reps: '15', sets: '4', icon: 'breast' },
+                { name: 'Отжимания с паузой внизу', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Планка на одной руке на правую руку', category: 'Руки', reps: '30 сек', sets: '4', icon: 'bodybuilding' },
+                { name: 'Планка на одной руке на левую руку', category: 'Руки', reps: '30 сек', sets: '4', icon: 'bodybuilding' },
+                { name: 'Жим гантелей на наклонной скамье', category: 'Грудь', reps: '10', sets: '4', icon: 'breast' }
             ]
         },
         'Спина': {
             '1 LVL': [
-                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '3' },
-                { name: 'Гиперэкстензия лёжа', category: 'Спина', reps: '15', sets: '3' },
-                { name: 'Лодочка', category: 'Спина', reps: '12', sets: '3' },
-                { name: 'Тяга резинки к поясу', category: 'Спина', reps: '15', sets: '3' },
-                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3' },
-                { name: 'Тяга резинки над головой', category: 'Спина', reps: '12', sets: '3' }
+                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '3', icon: 'back' },
+                { name: 'Гиперэкстензия лёжа', category: 'Спина', reps: '15', sets: '3', icon: 'back' },
+                { name: 'Лодочка', category: 'Спина', reps: '12', sets: '3', icon: 'back' },
+                { name: 'Тяга резинки к поясу', category: 'Спина', reps: '15', sets: '3', icon: 'back' },
+                { name: 'Планка на вытянутых руках', category: 'Руки', reps: '20 сек', sets: '3', icon: 'bodybuilding' },
+                { name: 'Тяга резинки над головой', category: 'Спина', reps: '12', sets: '3', icon: 'back' }
             ],
             '2 LVL': [
-                { name: 'Подтягивания (с резинкой)', category: 'Спина', reps: '10', sets: '4' },
-                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Гиперэкстензия', category: 'Спина', reps: '20', sets: '4' },
-                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Тяга гантели в наклоне двумя руками', category: 'Спина', reps: '12', sets: '4' }
+                { name: 'Подтягивания (с резинкой)', category: 'Спина', reps: '10', sets: '4', icon: 'back' },
+                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+                { name: 'Гиперэкстензия', category: 'Спина', reps: '20', sets: '4', icon: 'back' },
+                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+                { name: 'Тяга гантели в наклоне двумя руками', category: 'Спина', reps: '12', sets: '4', icon: 'back' }
             ],
             '3 LVL': [
-                { name: 'Подтягивания', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Гиперэкстензия с весом', category: 'Спина', reps: '20', sets: '4' },
-                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Тяга резинки к груди', category: 'Спина', reps: '20', sets: '4' },
-                { name: 'Планка на локтях с подъемом рук', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Подтягивания широким хватом', category: 'Спина', reps: '10', sets: '4' },
-                { name: 'Тяга гантели к груди', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Тяга штанги в наклоне (с гантелями)', category: 'Спина', reps: '12', sets: '4' }
+                { name: 'Подтягивания', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+                { name: 'Гиперэкстензия с весом', category: 'Спина', reps: '20', sets: '4', icon: 'back' },
+                { name: 'Лодочка с задержкой', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+                { name: 'Тяга резинки к груди', category: 'Спина', reps: '20', sets: '4', icon: 'back' },
+                { name: 'Планка на локтях с подъемом рук', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'press' },
+                { name: 'Подтягивания широким хватом', category: 'Спина', reps: '10', sets: '4', icon: 'back' },
+                { name: 'Тяга гантели к груди', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+                { name: 'Тяга штанги в наклоне (с гантелями)', category: 'Спина', reps: '12', sets: '4', icon: 'back' }
             ]
         },
         'Ноги': {
             '1 LVL': [
-                { name: 'Приседания без веса', category: 'Ноги', reps: '20', sets: '3' },
-                { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '12', sets: '3' },
-                { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '12', sets: '3' },
-                { name: 'Подъем на носки стоя', category: 'Ноги', reps: '20', sets: '3' },
-                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '3' },
-                { name: 'Приседания у стены', category: 'Ноги', reps: '30 сек', sets: '3' },
-                { name: 'Махи ногой назад стоя на правую ногу', category: 'Ягодицы', reps: '15', sets: '3' },
-                { name: 'Махи ногой назад стоя на левую ногу', category: 'Ягодицы', reps: '15', sets: '3' }
+                { name: 'Приседания без веса', category: 'Ноги', reps: '20', sets: '3', icon: 'legs' },
+                { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '12', sets: '3', icon: 'legs' },
+                { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '12', sets: '3', icon: 'legs' },
+                { name: 'Подъем на носки стоя', category: 'Ноги', reps: '20', sets: '3', icon: 'legs' },
+                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '3', icon: 'legs' },
+                { name: 'Приседания у стены', category: 'Ноги', reps: '30 сек', sets: '3', icon: 'legs' },
+                { name: 'Махи ногой назад стоя на правую ногу', category: 'Ягодицы', reps: '15', sets: '3', icon: 'legs' },
+                { name: 'Махи ногой назад стоя на левую ногу', category: 'Ягодицы', reps: '15', sets: '3', icon: 'legs' }
             ],
             '2 LVL': [
-                { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Приседания с паузой внизу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады назад с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады назад с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4' }
+                { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '20', sets: '4', icon: 'legs' },
+                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4', icon: 'legs' },
+                { name: 'Приседания с паузой внизу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Выпады назад с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Выпады назад с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' }
             ],
             '3 LVL': [
-                { name: 'Приседания с гантелями (глубокие)', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '25', sets: '4' },
-                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Приседания с паузой внизу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады в стороны на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады в стороны на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Приседания плие с гантелью', category: 'Ноги', reps: '15', sets: '4' }
+                { name: 'Приседания с гантелями (глубокие)', category: 'Ноги', reps: '20', sets: '4', icon: 'legs' },
+                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '25', sets: '4', icon: 'legs' },
+                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4', icon: 'legs' },
+                { name: 'Приседания с паузой внизу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Выпады в стороны на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Выпады в стороны на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Приседания плие с гантелью', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' }
             ]
         },
         'Всё тело': {
             '1 LVL': [
-                { name: 'Приседания без веса', category: 'Ноги', reps: '15', sets: '3' },
-                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '3' },
-                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3' },
-                { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '10', sets: '3' },
-                { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '10', sets: '3' },
-                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '3' },
-                { name: 'Скручивания лёжа', category: 'Пресс', reps: '15', sets: '3' }
+                { name: 'Приседания без веса', category: 'Ноги', reps: '15', sets: '3', icon: 'legs' },
+                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '3', icon: 'breast' },
+                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3', icon: 'press' },
+                { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '10', sets: '3', icon: 'legs' },
+                { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '10', sets: '3', icon: 'legs' },
+                { name: 'Тяга резинки к груди', category: 'Спина', reps: '15', sets: '3', icon: 'back' },
+                { name: 'Скручивания лёжа', category: 'Пресс', reps: '15', sets: '3', icon: 'press' }
             ],
             '2 LVL': [
-                { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Отжимания от пола', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Скручивания лёжа', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '15', sets: '4' }
+                { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Отжимания от пола', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+                { name: 'Выпады вперед с гантелями на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Выпады вперед с гантелями на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Тяга гантели к поясу', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+                { name: 'Скручивания лёжа', category: 'Пресс', reps: '20', sets: '4', icon: 'press' },
+                { name: 'Подъем на носки с гантелями', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' }
             ],
             '3 LVL': [
-                { name: 'Приседания с гантелями (глубокие)', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Планка с подъемом ног', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Подтягивания', category: 'Спина', reps: '10', sets: '4' },
-                { name: 'Скручивания с весом', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Тяга гантели к груди', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '15', sets: '4' }
+                { name: 'Приседания с гантелями (глубокие)', category: 'Ноги', reps: '20', sets: '4', icon: 'legs' },
+                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '4', icon: 'breast' },
+                { name: 'Планка с подъемом ног', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'press' },
+                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+                { name: 'Подтягивания', category: 'Спина', reps: '10', sets: '4', icon: 'back' },
+                { name: 'Скручивания с весом', category: 'Пресс', reps: '20', sets: '4', icon: 'press' },
+                { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+                { name: 'Тяга гантели к груди', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '15', sets: '4', icon: 'legs' }
             ]
         }
     },
     // ===================ФИТНЕС ===================
     'Фитнес': {
-        'Зарядка': {
-            '1 LVL': [
-                { name: 'Наклоны головы', category: 'Пресс', reps: '10', sets: '3' },
-                { name: 'Вращение плечами', category: 'Плечи', reps: '10', sets: '3' },
-                { name: 'Наклоны туловища', category: 'Спина', reps: '12', sets: '3' },
-                { name: 'Приседания', category: 'Ноги', reps: '15', sets: '3' },
-                { name: 'Махи ногами', category: 'Ноги', reps: '12', sets: '3' },
-                { name: 'Круговые движения тазом', category: 'Ягодицы', reps: '10', sets: '3' },
-                { name: 'Потягивание вверх', category: 'Спина', reps: '10', sets: '3' }
-            ],
-            '2 LVL': [
-                { name: 'Наклоны головы с сопротивлением', category: 'Пресс', reps: '12', sets: '4' },
-                { name: 'Вращение плечами с гантелями', category: 'Плечи', reps: '12', sets: '4' },
-                { name: 'Наклоны туловища с весом', category: 'Спина', reps: '12', sets: '4' },
-                { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Махи ногами с утяжелением', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Планка', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '10', sets: '4' },
-                { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '10', sets: '4' },
-                { name: 'Вращение корпусом с гантелью', category: 'Пресс', reps: '12', sets: '4' }
-            ],
-            '3 LVL': [
-                { name: 'Наклоны головы с отягощением', category: 'Пресс', reps: '15', sets: '4' },
-                { name: 'Вращение плечами с гантелями', category: 'Плечи', reps: '15', sets: '4' },
-                { name: 'Наклоны туловища с весом', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Приседания с гантелями глубокие', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Махи ногами с утяжелением', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Планка с подъемом рук', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Твист корпуса с гантелью', category: 'Пресс', reps: '15', sets: '4' }
-            ]
-        },
+'Зарядка': {
+    '1 LVL': [
+        { name: 'Наклоны головы', category: 'Пресс', reps: '10', sets: '3', icon: 'press' },
+        { name: 'Вращение плечами', category: 'Плечи', reps: '10', sets: '3', icon: 'shoulder' },
+        { name: 'Наклоны туловища', category: 'Спина', reps: '12', sets: '3', icon: 'back' },
+        { name: 'Приседания', category: 'Ноги', reps: '15', sets: '3', icon: 'legs' },
+        { name: 'Махи ногами', category: 'Ноги', reps: '12', sets: '3', icon: 'legs' },
+        { name: 'Круговые движения тазом', category: 'Ягодицы', reps: '10', sets: '3', icon: 'legs' },
+        { name: 'Потягивание вверх', category: 'Спина', reps: '10', sets: '3', icon: 'back' }
+    ],
+    '2 LVL': [
+        { name: 'Наклоны головы с сопротивлением', category: 'Пресс', reps: '12', sets: '4', icon: 'press' },
+        { name: 'Вращение плечами с гантелями', category: 'Плечи', reps: '12', sets: '4', icon: 'shoulder' },
+        { name: 'Наклоны туловища с весом', category: 'Спина', reps: '12', sets: '4', icon: 'back' },
+        { name: 'Приседания с гантелями', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+        { name: 'Махи ногами с утяжелением', category: 'Ноги', reps: '15', sets: '4', icon: 'legs' },
+        { name: 'Планка', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'press' },
+        { name: 'Выпады на месте на правую ногу', category: 'Ноги', reps: '10', sets: '4', icon: 'legs' },
+        { name: 'Выпады на месте на левую ногу', category: 'Ноги', reps: '10', sets: '4', icon: 'legs' },
+        { name: 'Вращение корпусом с гантелью', category: 'Пресс', reps: '12', sets: '4', icon: 'press' }
+    ],
+    '3 LVL': [
+        { name: 'Наклоны головы с отягощением', category: 'Пресс', reps: '15', sets: '4', icon: 'press' },
+        { name: 'Вращение плечами с гантелями', category: 'Плечи', reps: '15', sets: '4', icon: 'shoulder' },
+        { name: 'Наклоны туловища с весом', category: 'Спина', reps: '15', sets: '4', icon: 'back' },
+        { name: 'Приседания с гантелями глубокие', category: 'Ноги', reps: '20', sets: '4', icon: 'legs' },
+        { name: 'Махи ногами с утяжелением', category: 'Ноги', reps: '20', sets: '4', icon: 'legs' },
+        { name: 'Планка с подъемом рук', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'press' },
+        { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+        { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+        { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'legs' },
+        { name: 'Твист корпуса с гантелью', category: 'Пресс', reps: '15', sets: '4', icon: 'press' }
+    ]
+},
         'Кардио': {
             '1 LVL': [
-                { name: 'Бег на месте', category: 'Ноги', reps: '30 сек', sets: '3' },
-                { name: 'Прыжки на месте', category: 'Ноги', reps: '20', sets: '3' },
-                { name: 'Джампинг Джек', category: 'Ноги', reps: '15', sets: '3' },
-                { name: 'Бёрпи (упрощённые)', category: 'Ноги', reps: '8', sets: '3' },
-                { name: 'Ходьба с высоким подниманием колен', category: 'Ноги', reps: '20 сек', sets: '3' },
-                { name: 'Прыжки со сменой ног', category: 'Ноги', reps: '15', sets: '3' }
+                { name: 'Бег на месте', category: 'Ноги', reps: '30 сек', sets: '3', icon: 'cardio' },
+                { name: 'Прыжки на месте', category: 'Ноги', reps: '20', sets: '3', icon: 'cardio' },
+                { name: 'Джампинг Джек', category: 'Ноги', reps: '15', sets: '3', icon: 'cardio' },
+                { name: 'Бёрпи (упрощённые)', category: 'Ноги', reps: '8', sets: '3', icon: 'cardio' },
+                { name: 'Ходьба с высоким подниманием колен', category: 'Ноги', reps: '20 сек', sets: '3', icon: 'cardio' },
+                { name: 'Прыжки со сменой ног', category: 'Ноги', reps: '15', sets: '3', icon: 'cardio' }
             ],
             '2 LVL': [
-                { name: 'Бег на месте', category: 'Ноги', reps: '45 сек', sets: '4' },
-                { name: 'Прыжки на месте', category: 'Ноги', reps: '30', sets: '4' },
-                { name: 'Джампинг Джек', category: 'Ноги', reps: '25', sets: '4' },
-                { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Скакалка (без скакалки)', category: 'Ноги', reps: '30 сек', sets: '4' },
-                { name: 'Горные лыжи', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Прыжки ноги вместе-врозь', category: 'Ноги', reps: '20', sets: '4' }
+                { name: 'Бег на месте', category: 'Ноги', reps: '45 сек', sets: '4', icon: 'cardio' },
+                { name: 'Прыжки на месте', category: 'Ноги', reps: '30', sets: '4', icon: 'cardio' },
+                { name: 'Джампинг Джек', category: 'Ноги', reps: '25', sets: '4', icon: 'cardio' },
+                { name: 'Бёрпи', category: 'Ноги', reps: '12', sets: '4', icon: 'cardio' },
+                { name: 'Скакалка (без скакалки)', category: 'Ноги', reps: '30 сек', sets: '4', icon: 'cardio' },
+                { name: 'Горные лыжи', category: 'Ноги', reps: '20', sets: '4', icon: 'cardio' },
+                { name: 'Прыжки ноги вместе-врозь', category: 'Ноги', reps: '20', sets: '4', icon: 'cardio' }
             ],
             '3 LVL': [
-                { name: 'Бег на месте', category: 'Ноги', reps: '60 сек', sets: '5' },
-                { name: 'Прыжки на месте', category: 'Ноги', reps: '35', sets: '5' },
-                { name: 'Джампинг Джек', category: 'Ноги', reps: '30', sets: '5' },
-                { name: 'Бёрпи с отжиманием', category: 'Ноги', reps: '15', sets: '5' },
-                { name: 'Скакалка (быстрая)', category: 'Ноги', reps: '45 сек', sets: '5' },
-                { name: 'Горные лыжи', category: 'Ноги', reps: '25', sets: '5' },
-                { name: 'Прыжки из приседа', category: 'Ноги', reps: '20', sets: '5' },
-                { name: 'Берпи с прыжком вверх', category: 'Ноги', reps: '12', sets: '5' }
+                { name: 'Бег на месте', category: 'Ноги', reps: '60 сек', sets: '5', icon: 'cardio' },
+                { name: 'Прыжки на месте', category: 'Ноги', reps: '35', sets: '5', icon: 'cardio' },
+                { name: 'Джампинг Джек', category: 'Ноги', reps: '30', sets: '5', icon: 'cardio' },
+                { name: 'Бёрпи с отжиманием', category: 'Ноги', reps: '15', sets: '5', icon: 'cardio' },
+                { name: 'Скакалка (быстрая)', category: 'Ноги', reps: '45 сек', sets: '5', icon: 'cardio' },
+                { name: 'Горные лыжи', category: 'Ноги', reps: '25', sets: '5', icon: 'cardio' },
+                { name: 'Прыжки из приседа', category: 'Ноги', reps: '20', sets: '5', icon: 'cardio' },
+                { name: 'Берпи с прыжком вверх', category: 'Ноги', reps: '12', sets: '5', icon: 'cardio' }
             ]
         },
         'Пилатес': {
             '1 LVL': [
-                { name: 'Сотня (дыхание + руки)', category: 'Пресс', reps: '10', sets: '3' },
-                { name: 'Скручивание с подъемом ног', category: 'Пресс', reps: '12', sets: '3' },
-                { name: 'Подъем таза лёжа', category: 'Ягодицы', reps: '15', sets: '3' },
-                { name: 'Ножницы ногами', category: 'Ноги', reps: '15', sets: '3' },
-                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3' },
-                { name: 'Боковые наклоны сидя', category: 'Пресс', reps: '10', sets: '3' },
-                { name: 'Растяжка позвоночника (кошка)', category: 'Спина', reps: '10', sets: '3' }
+                { name: 'Сотня (дыхание + руки)', category: 'Пресс', reps: '10', sets: '3', icon: 'Pilates' },
+                { name: 'Скручивание с подъемом ног', category: 'Пресс', reps: '12', sets: '3', icon: 'Pilates' },
+                { name: 'Подъем таза лёжа', category: 'Ягодицы', reps: '15', sets: '3', icon: 'Pilates' },
+                { name: 'Ножницы ногами', category: 'Ноги', reps: '15', sets: '3', icon: 'Pilates' },
+                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '3', icon: 'Pilates' },
+                { name: 'Боковые наклоны сидя', category: 'Пресс', reps: '10', sets: '3', icon: 'Pilates' },
+                { name: 'Растяжка позвоночника (кошка)', category: 'Спина', reps: '10', sets: '3', icon: 'Pilates' }
             ],
             '2 LVL': [
-                { name: 'Сотня с вытянутыми ногами', category: 'Пресс', reps: '15', sets: '4' },
-                { name: 'Скручивание с подъемом ног', category: 'Пресс', reps: '15', sets: '4' },
-                { name: 'Подъем таза на правую ногу', category: 'Ягодицы', reps: '12', sets: '4' },
-                { name: 'Подъем таза на левую ногу', category: 'Ягодицы', reps: '12', sets: '4' },
-                { name: 'Ножницы ногами', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '35 сек', sets: '4' },
-                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '20 сек', sets: '4' },
-                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '20 сек', sets: '4' },
-                { name: 'Растяжка спины (скручивание)', category: 'Спина', reps: '15', sets: '4' },
-                { name: 'Мостик с подъемом ноги на правую ногу', category: 'Ягодицы', reps: '12', sets: '4' },
-                { name: 'Мостик с подъемом ноги на левую ногу', category: 'Ягодицы', reps: '12', sets: '4' }
+                { name: 'Сотня с вытянутыми ногами', category: 'Пресс', reps: '15', sets: '4', icon: 'Pilates' },
+                { name: 'Скручивание с подъемом ног', category: 'Пресс', reps: '15', sets: '4', icon: 'Pilates' },
+                { name: 'Подъем таза на правую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'Pilates' },
+                { name: 'Подъем таза на левую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'Pilates' },
+                { name: 'Ножницы ногами', category: 'Ноги', reps: '20', sets: '4', icon: 'Pilates' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '35 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '20 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '20 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Растяжка спины (скручивание)', category: 'Спина', reps: '15', sets: '4', icon: 'Pilates' },
+                { name: 'Мостик с подъемом ноги на правую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'Pilates' },
+                { name: 'Мостик с подъемом ноги на левую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'Pilates' }
             ],
             '3 LVL': [
-                { name: 'Сотня с отягощением', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Скручивание с подъемом ног и рук', category: 'Пресс', reps: '20', sets: '4' },
-                { name: 'Подъем таза с гантелью', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Ножницы ногами с утяжелением', category: 'Ноги', reps: '25', sets: '4' },
-                { name: 'Планка с подъемом ноги на правую ногу', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Планка с подъемом ноги на левую ногу', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Боковая планка с подъемом ноги на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Боковая планка с подъемом ноги на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Лодочка с задержкой', category: 'Спина', reps: '20', sets: '4' },
-                { name: 'Растяжка в позе голубя', category: 'Ягодицы', reps: '20 сек', sets: '4' },
-                { name: 'Стойка на лопатках', category: 'Спина', reps: '20 сек', sets: '4' }
+                { name: 'Сотня с отягощением', category: 'Пресс', reps: '20', sets: '4', icon: 'Pilates' },
+                { name: 'Скручивание с подъемом ног и рук', category: 'Пресс', reps: '20', sets: '4', icon: 'Pilates' },
+                { name: 'Подъем таза с гантелью', category: 'Ягодицы', reps: '15', sets: '4', icon: 'Pilates' },
+                { name: 'Ножницы ногами с утяжелением', category: 'Ноги', reps: '25', sets: '4', icon: 'Pilates' },
+                { name: 'Планка с подъемом ноги на правую ногу', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Планка с подъемом ноги на левую ногу', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Боковая планка с подъемом ноги на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Боковая планка с подъемом ноги на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Лодочка с задержкой', category: 'Спина', reps: '20', sets: '4', icon: 'Pilates' },
+                { name: 'Растяжка в позе голубя', category: 'Ягодицы', reps: '20 сек', sets: '4', icon: 'Pilates' },
+                { name: 'Стойка на лопатках', category: 'Спина', reps: '20 сек', sets: '4', icon: 'Pilates' }
             ]
         },
         'Растяжка': {
             '1 LVL': [
-                { name: 'Наклоны к ногам сидя', category: 'Спина', reps: '25 сек', sets: '3' },
-                { name: 'Растяжка шеи', category: 'Плечи', reps: '15 сек', sets: '3' },
-                { name: 'Растяжка рук за спиной', category: 'Руки', reps: '20 сек', sets: '3' },
-                { name: 'Наклоны в стороны', category: 'Спина', reps: '15 сек', sets: '3' },
-                { name: 'Растяжка спины (кошка-корова)', category: 'Спина', reps: '20 сек', sets: '3' },
-                { name: 'Ягодичный мостик (статический)', category: 'Ягодицы', reps: '20 сек', sets: '3' },
-                { name: 'Растяжка трицепса', category: 'Руки', reps: '15 сек', sets: '3' }
+                { name: 'Наклоны к ногам сидя', category: 'Спина', reps: '25 сек', sets: '3', icon: 'stretching' },
+                { name: 'Растяжка шеи', category: 'Плечи', reps: '15 сек', sets: '3', icon: 'stretching' },
+                { name: 'Растяжка рук за спиной', category: 'Руки', reps: '20 сек', sets: '3', icon: 'stretching' },
+                { name: 'Наклоны в стороны', category: 'Спина', reps: '15 сек', sets: '3', icon: 'stretching' },
+                { name: 'Растяжка спины (кошка-корова)', category: 'Спина', reps: '20 сек', sets: '3', icon: 'stretching' },
+                { name: 'Ягодичный мостик (статический)', category: 'Ягодицы', reps: '20 сек', sets: '3', icon: 'stretching' },
+                { name: 'Растяжка трицепса', category: 'Руки', reps: '15 сек', sets: '3', icon: 'stretching' }
             ],
             '2 LVL': [
-                { name: 'Глубокий наклон к ногам', category: 'Спина', reps: '30 сек', sets: '4' },
-                { name: 'Растяжка шеи с руками', category: 'Плечи', reps: '20 сек', sets: '4' },
-                { name: 'Растяжка плеч (замок)', category: 'Плечи', reps: '25 сек', sets: '4' },
-                { name: 'Боковые наклоны с руками', category: 'Спина', reps: '20 сек', sets: '4' },
-                { name: 'Растяжка спины (скручивание)', category: 'Спина', reps: '25 сек', sets: '4' },
-                { name: 'Растяжка ног (шпагат)', category: 'Ноги', reps: '20 сек', sets: '4' },
-                { name: 'Поза голубя', category: 'Ягодицы', reps: '25 сек', sets: '4' },
-                { name: 'Растяжка задней поверхности бедра', category: 'Ноги', reps: '20 сек', sets: '4' }
+                { name: 'Глубокий наклон к ногам', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка шеи с руками', category: 'Плечи', reps: '20 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка плеч (замок)', category: 'Плечи', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Боковые наклоны с руками', category: 'Спина', reps: '20 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка спины (скручивание)', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка ног (шпагат)', category: 'Ноги', reps: '20 сек', sets: '4', icon: 'stretching' },
+                { name: 'Поза голубя', category: 'Ягодицы', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка задней поверхности бедра', category: 'Ноги', reps: '20 сек', sets: '4', icon: 'stretching' }
             ],
             '3 LVL': [
-                { name: 'Глубокий наклон с захватом ног', category: 'Спина', reps: '40 сек', sets: '4' },
-                { name: 'Растяжка шеи с сопротивлением', category: 'Плечи', reps: '25 сек', sets: '4' },
-                { name: 'Растяжка плеч за спиной', category: 'Плечи', reps: '30 сек', sets: '4' },
-                { name: 'Боковые наклоны с захватом', category: 'Спина', reps: '25 сек', sets: '4' },
-                { name: 'Растяжка позвоночника (мост)', category: 'Спина', reps: '30 сек', sets: '4' },
-                { name: 'Продольный шпагат', category: 'Ноги', reps: '25 сек', sets: '4' },
-                { name: 'Поперечный шпагат', category: 'Ноги', reps: '20 сек', sets: '4' },
-                { name: 'Поза верблюда', category: 'Спина', reps: '25 сек', sets: '4' },
-                { name: 'Складка с захватом стоп', category: 'Спина', reps: '30 сек', sets: '4' }
+                { name: 'Глубокий наклон с захватом ног', category: 'Спина', reps: '40 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка шеи с сопротивлением', category: 'Плечи', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка плеч за спиной', category: 'Плечи', reps: '30 сек', sets: '4', icon: 'stretching' },
+                { name: 'Боковые наклоны с захватом', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Растяжка позвоночника (мост)', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' },
+                { name: 'Продольный шпагат', category: 'Ноги', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Поперечный шпагат', category: 'Ноги', reps: '20 сек', sets: '4', icon: 'stretching' },
+                { name: 'Поза верблюда', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+                { name: 'Складка с захватом стоп', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' }
             ]
         }
     },
@@ -365,123 +365,201 @@ const exercisesData = {
     'Особые': {
         'Кроссфит': {
             '1 LVL': [
-                { name: 'Бёрпи (упрощённые)', category: 'Ноги', reps: '10', sets: '4' },
-                { name: 'Прыжки на месте', category: 'Ноги', reps: '25', sets: '4' },
-                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '4' },
-                { name: 'Приседания без веса', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '4' },
-                { name: 'Джампинг Джек', category: 'Ноги', reps: '20', sets: '4' }
+                { name: 'Бёрпи (упрощённые)', category: 'Ноги', reps: '10', sets: '4', icon: 'crossfit' },
+                { name: 'Прыжки на месте', category: 'Ноги', reps: '25', sets: '4', icon: 'crossfit' },
+                { name: 'Отжимания от коленей', category: 'Грудь', reps: '12', sets: '4', icon: 'crossfit' },
+                { name: 'Приседания без веса', category: 'Ноги', reps: '20', sets: '4', icon: 'crossfit' },
+                { name: 'Планка на коленях', category: 'Пресс', reps: '20 сек', sets: '4', icon: 'crossfit' },
+                { name: 'Джампинг Джек', category: 'Ноги', reps: '20', sets: '4', icon: 'crossfit' }
             ],
             '2 LVL': [
-                { name: 'Бёрпи', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Джампинг Джек', category: 'Ноги', reps: '25', sets: '4' },
-                { name: 'Отжимания от пола', category: 'Грудь', reps: '15', sets: '4' },
-                { name: 'Приседания с выпрыгиванием', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Планка на локтях', category: 'Пресс', reps: '35 сек', sets: '4' },
-                { name: 'Горные лыжи', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Скакалка (без скакалки)', category: 'Ноги', reps: '30 сек', sets: '4' },
-                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '10', sets: '4' },
-                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '10', sets: '4' }
+                { name: 'Бёрпи', category: 'Ноги', reps: '15', sets: '4', icon: 'crossfit' },
+                { name: 'Джампинг Джек', category: 'Ноги', reps: '25', sets: '4', icon: 'crossfit' },
+                { name: 'Отжимания от пола', category: 'Грудь', reps: '15', sets: '4', icon: 'crossfit' },
+                { name: 'Приседания с выпрыгиванием', category: 'Ноги', reps: '15', sets: '4', icon: 'crossfit' },
+                { name: 'Планка на локтях', category: 'Пресс', reps: '35 сек', sets: '4', icon: 'crossfit' },
+                { name: 'Горные лыжи', category: 'Ноги', reps: '20', sets: '4', icon: 'crossfit' },
+                { name: 'Скакалка (без скакалки)', category: 'Ноги', reps: '30 сек', sets: '4', icon: 'crossfit' },
+                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '10', sets: '4', icon: 'crossfit' },
+                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '10', sets: '4', icon: 'crossfit' }
             ],
             '3 LVL': [
-                { name: 'Бёрпи с отжиманием', category: 'Ноги', reps: '15', sets: '5' },
-                { name: 'Джампинг Джек с утяжелением', category: 'Ноги', reps: '30', sets: '5' },
-                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '5' },
-                { name: 'Приседания со штангой', category: 'Ноги', reps: '15', sets: '5' },
-                { name: 'Планка с отягощением', category: 'Пресс', reps: '40 сек', sets: '5' },
-                { name: 'Скакалка (быстрая)', category: 'Ноги', reps: '45 сек', sets: '5' },
-                { name: 'Прыжки из приседа', category: 'Ноги', reps: '20', sets: '5' },
-                { name: 'Бёрпи с прыжком на тумбу', category: 'Ноги', reps: '10', sets: '5' },
-                { name: 'Горные лыжи с отягощением', category: 'Ноги', reps: '20', sets: '5' }
+                { name: 'Бёрпи с отжиманием', category: 'Ноги', reps: '15', sets: '5', icon: 'crossfit' },
+                { name: 'Джампинг Джек с утяжелением', category: 'Ноги', reps: '30', sets: '5', icon: 'crossfit' },
+                { name: 'Отжимания с хлопком', category: 'Грудь', reps: '12', sets: '5', icon: 'crossfit' },
+                { name: 'Приседания со штангой', category: 'Ноги', reps: '15', sets: '5', icon: 'crossfit' },
+                { name: 'Планка с отягощением', category: 'Пресс', reps: '40 сек', sets: '5', icon: 'crossfit' },
+                { name: 'Скакалка (быстрая)', category: 'Ноги', reps: '45 сек', sets: '5', icon: 'crossfit' },
+                { name: 'Прыжки из приседа', category: 'Ноги', reps: '20', sets: '5', icon: 'crossfit' },
+                { name: 'Бёрпи с прыжком на тумбу', category: 'Ноги', reps: '10', sets: '5', icon: 'crossfit' },
+                { name: 'Горные лыжи с отягощением', category: 'Ноги', reps: '20', sets: '5', icon: 'crossfit' }
             ],
             '_premium': true
         },
         'Мужская сила': {
             '1 LVL': [
-                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '12', sets: '4' },
-                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Приседания с задержкой', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Планка с подъемом таза', category: 'Пресс', reps: '20 сек', sets: '4' },
-                { name: 'Махи ногами в сторону на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Махи ногами в сторону на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Подъем на носки', category: 'Ноги', reps: '20', sets: '4' }
+                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '12', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Приседания с задержкой', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Планка с подъемом таза', category: 'Пресс', reps: '20 сек', sets: '4', icon: 'men' },
+                { name: 'Махи ногами в сторону на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Махи ногами в сторону на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Подъем на носки', category: 'Ноги', reps: '20', sets: '4', icon: 'men' }
             ],
             '2 LVL': [
-                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Приседания с выпрыгиванием', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Боковая планка с подъемом ноги на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Боковая планка с подъемом ноги на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '12', sets: '4' },
-                { name: 'Отведение ноги в сторону с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Отведение ноги в сторону с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '12', sets: '4' },
-                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '12', sets: '4' }
+                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Приседания с выпрыгиванием', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Боковая планка с подъемом ноги на правую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'men' },
+                { name: 'Боковая планка с подъемом ноги на левую сторону', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'men' },
+                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'men' },
+                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '12', sets: '4', icon: 'men' },
+                { name: 'Отведение ноги в сторону с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Отведение ноги в сторону с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '12', sets: '4', icon: 'men' }
             ],
             '3 LVL': [
-                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '25', sets: '4' },
-                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Приседания со штангой', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Планка с отягощением на тазу', category: 'Пресс', reps: '35 сек', sets: '4' },
-                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Махи ногой назад с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Махи ногой назад с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Боковые выпады с гантелью на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Боковые выпады с гантелью на левую ногу', category: 'Ноги', reps: '15', sets: '4' }
+                { name: 'Кегель для мужчин', category: 'Ягодицы', reps: '25', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Приседания со штангой', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Планка с отягощением на тазу', category: 'Пресс', reps: '35 сек', sets: '4', icon: 'men' },
+                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Махи ногой назад с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Махи ногой назад с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'men' },
+                { name: 'Боковые выпады с гантелью на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'men' },
+                { name: 'Боковые выпады с гантелью на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'men' }
             ],
             '_premium': true
         },
         'Женское счастье': {
             '1 LVL': [
-                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Приседания плие', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Планка на коленях', category: 'Пресс', reps: '25 сек', sets: '4' },
-                { name: 'Махи ногой назад на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Махи ногой назад на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Отведение ноги в сторону стоя на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Отведение ноги в сторону стоя на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' }
+                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Приседания плие', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Планка на коленях', category: 'Пресс', reps: '25 сек', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Отведение ноги в сторону стоя на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Отведение ноги в сторону стоя на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' }
             ],
             '2 LVL': [
-                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Приседания плие с гантелью', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '30 сек', sets: '4' },
-                { name: 'Махи ногой назад с утяжелением на правую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Махи ногой назад с утяжелением на левую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Отведение ноги в сторону с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Отведение ноги в сторону с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4' },
-                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' }
+                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик с гантелью', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Приседания плие с гантелью', category: 'Ноги', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Боковая планка на правую сторону', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'woman' },
+                { name: 'Боковая планка на левую сторону', category: 'Пресс', reps: '30 сек', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад с утяжелением на правую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад с утяжелением на левую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Отведение ноги в сторону с резинкой на правую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Отведение ноги в сторону с резинкой на левую ногу', category: 'Ягодицы', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' }
             ],
             '3 LVL': [
-                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '25', sets: '4' },
-                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Приседания с гантелями глубокие', category: 'Ноги', reps: '20', sets: '4' },
-                { name: 'Планка с подъемом ноги на правую ногу', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Планка с подъемом ноги на левую ногу', category: 'Пресс', reps: '40 сек', sets: '4' },
-                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Махи ногой назад с резинкой на правую ногу', category: 'Ягодицы', reps: '25', sets: '4' },
-                { name: 'Махи ногой назад с резинкой на левую ногу', category: 'Ягодицы', reps: '25', sets: '4' },
-                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4' },
-                { name: 'Боковые выпады с гантелью на правую ногу', category: 'Ноги', reps: '15', sets: '4' },
-                { name: 'Боковые выпады с гантелью на левую ногу', category: 'Ноги', reps: '15', sets: '4' }
+                { name: 'Кегель для женщин', category: 'Ягодицы', reps: '25', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик на правую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Ягодичный мостик на левую ногу', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Приседания с гантелями глубокие', category: 'Ноги', reps: '20', sets: '4', icon: 'woman' },
+                { name: 'Планка с подъемом ноги на правую ногу', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'woman' },
+                { name: 'Планка с подъемом ноги на левую ногу', category: 'Пресс', reps: '40 сек', sets: '4', icon: 'woman' },
+                { name: 'Болгарские сплит-приседания на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Болгарские сплит-приседания на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Выпады с прыжком на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Выпады с прыжком на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад с резинкой на правую ногу', category: 'Ягодицы', reps: '25', sets: '4', icon: 'woman' },
+                { name: 'Махи ногой назад с резинкой на левую ногу', category: 'Ягодицы', reps: '25', sets: '4', icon: 'woman' },
+                { name: 'Румынская тяга с гантелями', category: 'Ягодицы', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Боковые выпады с гантелью на правую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' },
+                { name: 'Боковые выпады с гантелью на левую ногу', category: 'Ноги', reps: '15', sets: '4', icon: 'woman' }
             ],
             '_premium': true
         }
     }
 };
 
-// =================== ЗАЩИТА ОТ СПАМА КНОПОК ===================
+// =================== МАППИНГ ИКОНОК В КАТЕГОРИИ ДЛЯ СТАТИСТИКИ ===================
+const ICON_TO_CATEGORY = {
+    'bodybuilding': 'Руки',
+    'shoulder': 'Плечи',
+    'press': 'Пресс',
+    'breast': 'Грудь',
+    'back': 'Спина',
+    'legs': 'Ноги',
+    'WholeBody': 'Всё тело',
+    'cardio': 'Кардио',
+    'stretching': 'Гибкость',
+    'charging': 'Зарядка',
+    'Pilates': 'Всё тело',
+    'crossfit': 'Всё тело',
+    'men': 'Ягодицы',
+    'woman': 'Ягодицы'
+};
+
+const DISPLAY_CATEGORIES = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+
+// =================== ПОЛУЧЕНИЕ ИКОНКИ ТРЕНИРОВКИ ===================
+function getWorkoutIcon(workout) {
+    // 1. Если у тренировки есть icon - используем его
+    if (workout.icon) return workout.icon;
+    
+    // 2. Если есть категория - определяем по ней
+    if (workout.category) {
+        const categoryToIcon = {
+            'Руки': 'bodybuilding',
+            'Плечи': 'shoulder',
+            'Пресс': 'press',
+            'Грудь': 'breast',
+            'Спина': 'back',
+            'Ноги': 'legs',
+            'Всё тело': 'WholeBody',
+            'Кардио': 'cardio',
+            'Гибкость': 'stretching',
+            'Зарядка': 'charging',
+            'Пилатес': 'Pilates',
+            'Кроссфит': 'crossfit',
+            'Мужская сила': 'men',
+            'Женское счастье': 'woman'
+        };
+        if (categoryToIcon[workout.category]) {
+            return categoryToIcon[workout.category];
+        }
+    }
+    
+    // 3. По названию
+    const title = workout.title || '';
+    const titleToIcon = {
+        'Руки': 'bodybuilding',
+        'Плечи': 'shoulder',
+        'Пресс': 'press',
+        'Грудь': 'breast',
+        'Спина': 'back',
+        'Ноги': 'legs',
+        'Всё тело': 'WholeBody',
+        'Кардио': 'cardio',
+        'Растяжка': 'stretching',
+        'Зарядка': 'charging',
+        'Пилатес': 'Pilates',
+        'Кроссфит': 'crossfit',
+        'Мужская сила': 'men',
+        'Женское счастье': 'woman'
+    };
+    for (const [key, icon] of Object.entries(titleToIcon)) {
+        if (title.includes(key)) return icon;
+    }
+    
+    // 4. По первому упражнению (как fallback)
+    if (workout.exercises && workout.exercises.length > 0) {
+        return getExerciseIcon(workout.exercises[0].name);
+    }
+    
+    return 'bodybuilding';
+}
+
+// ===================ЗАЩИТА ОТ СПАМА КНОПОК ===================
 const buttonCooldowns = new Map();
 
 function preventDoubleClick(buttonId, cooldownMs = 2000) {
@@ -528,7 +606,7 @@ function formatSets(sets) {
 
 // ===================МАКСИМАЛЬНОЕ КОЛИЧЕСТВО УПРАЖНЕНИЙ ===================
 function getMaxExercisesForLevel(level, isCustom) {
-    if (isCustom) return 20; // для личных тренировок всегда 20
+    if (isCustom) return 20;
     const maxMap = { '1 LVL': 10, '2 LVL': 15, '3 LVL': 20 };
     return maxMap[level] || 20;
 }
@@ -569,15 +647,13 @@ let currentYear = new Date().getFullYear();
 let isOfflineModalShown = false;
 let isLoggingIn = false;
 
-// Редакторы страниц (будут инициализированы позже)
 window.statsEditor = null;
 window.workoutsEditor = null;
 
-// ФЛАГИ ДЛЯ БЛОКИРОВКИ НАВИГАЦИИ
 let isEditingWorkout = false;
 let isEditingProfile = false;
 
-// =================== СИСТЕМА УВЕДОМЛЕНИЙ ===================
+// ===================СИСТЕМА УВЕДОМЛЕНИЙ ===================
 const NOTIFICATIONS_KEY = 'notificationsSeen';
 const LAST_VISIT_KEY = 'lastVisitDate';
 const LAST_WORLD_RANK_KEY = 'lastWorldRank';
@@ -585,21 +661,16 @@ const LAST_FRIENDS_RANK_KEY = 'lastFriendsRank';
 
 let notificationQueue = [];
 let isNotificationShowing = false;
-
-// Временный Set для отслеживания уже показанных уведомлений в текущей сессии
 const shownThisSession = new Set();
 
-// Элементы уведомлений
 const notificationContainer = document.getElementById('notificationContainer');
 const notificationCard = document.getElementById('notificationCard');
 const notificationIcon = document.getElementById('notificationIcon');
 const notificationText = document.getElementById('notificationText');
 const notificationOkBtn = document.getElementById('notificationOkBtn');
 
-// Показывать на всех страницах — контейнер всегда активен
 notificationContainer.style.display = 'block';
 
-// Закрыть по клику на "ОК"
 notificationOkBtn.addEventListener('click', function() {
     hideNotification();
 });
@@ -619,16 +690,13 @@ function showNotification(icon, text, actionCallback) {
     }
 }
 
-// =================== УВЕДОМЛЕНИЕ О ЗАЯВКЕ ===================
 function showFriendRequestNotification(icon, text, requestId) {
-    // Проверяем, не было ли уже уведомление для этой заявки (localStorage + сессия)
     const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
     if (shownRequests.includes(requestId) || shownThisSession.has(requestId)) {
-        console.log('⚠️ Уведомление для заявки уже было показано (сессия или localStorage):', requestId);
+        console.log('⚠️ Уведомление для заявки уже было показано:', requestId);
         return;
     }
     
-    // Добавляем в сессионный Set, чтобы не показывать повторно ДО нажатия ОК
     shownThisSession.add(requestId);
     
     notificationQueue.push({ 
@@ -659,7 +727,6 @@ function processNotificationQueue() {
         if (notification.actionCallback) notification.actionCallback();
         hideNotification();
         
-        // Сохраняем ID заявки, чтобы не показывать повторно
         if (notification.isFriendRequest && notification.requestId) {
             const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
             if (!shownRequests.includes(notification.requestId)) {
@@ -667,7 +734,6 @@ function processNotificationQueue() {
                 localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
                 console.log('✅ Заявка сохранена в показанные после ОК:', notification.requestId);
             }
-            // Удаляем из сессионного Set
             shownThisSession.delete(notification.requestId);
         }
         
@@ -692,7 +758,6 @@ function hideNotification() {
     isNotificationShowing = false;
     notificationOkBtn.onclick = null;
     
-    // Не скрываем контейнер, только карточку
     setTimeout(() => {
         if (notificationQueue.length > 0) {
             processNotificationQueue();
@@ -719,7 +784,7 @@ function clearSeenNotifications() {
     console.log('✅ История уведомлений очищена');
 }
 
-// =================== ДЕФОЛТНЫЕ ЛЕЙАУТЫ ===================
+// ===================ДЕФОЛТНЫЕ ЛЕЙАУТЫ ===================
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['workouts', 'minutes', 'exercises'],
@@ -754,7 +819,7 @@ function applySavedWorkoutsOrder() {
     const blocksContainer = document.getElementById('workoutsBlocksContainer');
     if (blocksContainer && layout.workoutsBlocksContainer) {
         const blockMap = {};
-        blocksContainer.querySelectorAll('.editable-block').forEach(b => {
+        blocksContainer.querySelectorAll('.section-block').forEach(b => {
             const id = b.dataset.blockId;
             if (id) blockMap[id] = b;
         });
@@ -775,7 +840,7 @@ function applySavedWorkoutsOrder() {
         const items = layout[id] || [];
         if (items.length === 0) return;
         const childMap = {};
-        list.querySelectorAll('.category-card').forEach(el => {
+        list.querySelectorAll('.item-card').forEach(el => {
             const key = el.dataset[dataAttr];
             if (key) childMap[key] = el;
         });
@@ -792,7 +857,7 @@ function applySavedStatsOrder() {
     const summary = document.getElementById('statsSummary');
     if (summary && layout.statsSummary) {
         const childMap = {};
-        summary.querySelectorAll('.stat-big-card').forEach(el => {
+        summary.querySelectorAll('.stat-card').forEach(el => {
             const id = el.dataset.statId;
             if (id) childMap[id] = el;
         });
@@ -804,7 +869,7 @@ function applySavedStatsOrder() {
     const blocksContainer = document.getElementById('statsBlocksContainer');
     if (blocksContainer && layout.statsBlocksContainer) {
         const blockMap = {};
-        blocksContainer.querySelectorAll('.editable-block').forEach(b => {
+        blocksContainer.querySelectorAll('.section-block').forEach(b => {
             const id = b.dataset.blockId;
             if (id) blockMap[id] = b;
         });
@@ -823,8 +888,8 @@ function applySavedStatsOrder() {
         const items = layout[id] || [];
         if (items.length === 0) return;
         const childMap = {};
-        list.querySelectorAll('.stat-muscle-item').forEach(el => {
-            const name = el.querySelector('.muscle-name')?.textContent;
+        list.querySelectorAll('.stat-item').forEach(el => {
+            const name = el.querySelector('.stat-name')?.textContent;
             if (name) childMap[name] = el;
         });
         items.forEach(name => {
@@ -844,7 +909,7 @@ function applySavedWorldStatsOrder() {
     if (items.length === 0) return;
 
     const childMap = {};
-    container.querySelectorAll('.block-base').forEach(el => {
+    container.querySelectorAll('.section-block').forEach(el => {
         const id = el.dataset.blockId;
         if (id) childMap[id] = el;
     });
@@ -871,6 +936,7 @@ function addPendingWorkout(workoutData) {
     const pending = getPendingWorkouts();
     workoutData._localId = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
     if (!workoutData.category) workoutData.category = 'Без категории';
+    if (!workoutData.icon) workoutData.icon = 'bodybuilding'; // ← ДОБАВИТЬ
     pending.push(workoutData);
     savePendingWorkouts(pending);
 }
@@ -893,14 +959,15 @@ async function syncPendingWorkouts() {
     let failedIds = [];
     for (const workout of pending) {
         try {
-            const result = await saveWorkoutToFirestore(user.uid, {
-                title: workout.title,
-                date: workout.date,
-                durationSeconds: workout.durationSeconds,
-                exercises: workout.exercises,
-                xpEarned: workout.xpEarned,
-                category: workout.category || 'Без категории' // <-- ДОБАВИТЬ ЭТУ СТРОКУ
-            });
+const result = await saveWorkoutToFirestore(user.uid, {
+    title: workout.title,
+    date: workout.date,
+    durationSeconds: workout.durationSeconds,
+    exercises: workout.exercises,
+    xpEarned: workout.xpEarned,
+    category: workout.category || 'Без категории',
+    icon: workout.icon || 'bodybuilding' // ← ДОБАВИТЬ
+});
             if (result.success) {
                 const profileResult = await getUserProfile(user.uid);
                 if (profileResult.success) {
@@ -986,12 +1053,10 @@ function calculateWorkoutXp(exercises) {
 }
 
 function resolveWorkoutCategory(category, parentCategory, isPremium) {
-    // Если это личная тренировка (нет родительской категории)
     if (!parentCategory) {
         return 'Личные';
     }
 
-    // Особые тренировки
     if (parentCategory === 'Особые') {
         if (category === 'Мужская сила' || category === 'Женское счастье') {
             return 'Ягодицы';
@@ -999,25 +1064,22 @@ function resolveWorkoutCategory(category, parentCategory, isPremium) {
         if (category === 'Кроссфит') {
             return 'Всё тело';
         }
-        return category; // fallback
+        return category;
     }
 
-    // Фитнес
     if (parentCategory === 'Фитнес') {
         if (category === 'Кардио') return 'Кардио';
         if (category === 'Растяжка') return 'Гибкость';
         if (category === 'Пилатес') return 'Всё тело';
-        if (category === 'Зарядка') return 'Зарядка'; // потом исключим в статистике
+        if (category === 'Зарядка') return 'Зарядка';
         return category;
     }
 
-    // Силовые – все подкатегории совпадают с названием (кроме "Всё тело")
     if (parentCategory === 'Силовые') {
         if (category === 'Всё тело') return 'Всё тело';
-        return category; // Руки, Плечи, Пресс, Грудь, Спина, Ноги
+        return category;
     }
 
-    // Если не определилось – возвращаем как есть
     return category;
 }
 
@@ -1097,7 +1159,8 @@ async function saveWorkoutToFirestore(userId, workoutData) {
             durationSeconds: workoutData.durationSeconds || 0,
             exercises: workoutData.exercises || [],
             xpEarned: workoutData.xpEarned || 0,
-            category: workoutData.category || 'Без категории', // <-- ДОБАВИТЬ ЭТУ СТРОКУ
+            category: workoutData.category || 'Без категории',
+            icon: workoutData.icon || 'bodybuilding',  // ← ДОБАВИТЬ
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -1147,8 +1210,8 @@ function setTheme(color) {
 }
 
 function updateColorButtons(color) {
-    document.querySelectorAll('.color-btn-modal').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.color === color);
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('color-btn-active', btn.dataset.color === color);
     });
 }
 
@@ -1169,12 +1232,9 @@ setTheme(savedColor);
 
 // ===================НАВИГАЦИЯ ===================
 window.navigateTo = function(page, params) {
-    // === БЛОКИРОВКА НАВИГАЦИИ ===
     if (isEditingWorkout) {
-        // Разрешаем переходы, связанные с редактированием
         const allowedPages = ['exercise-list', 'workout-edit', 'workout-detail'];
         if (allowedPages.includes(page)) {
-            // Разрешаем, но не сбрасываем флаг
         } else {
             showToast('⚠️ Сначала завершите редактирование тренировки');
             return;
@@ -1184,7 +1244,6 @@ window.navigateTo = function(page, params) {
         showToast('⚠️ Сначала завершите редактирование профиля');
         return;
     }
-    // Проверка открытых модальных окон
     const modalIds = ['exerciseModal', 'createExerciseModal', 'quickEditModal'];
     for (const id of modalIds) {
         const modal = document.getElementById(id);
@@ -1194,7 +1253,6 @@ window.navigateTo = function(page, params) {
         }
     }
 
-    // Проверка редактирования страниц (с тостом)
     if (window.statsEditor && window.statsEditor.isEditing) {
         showToast('⚠️ Сначала завершите редактирование страницы статистики');
         return;
@@ -1204,12 +1262,11 @@ window.navigateTo = function(page, params) {
         return;
     }
 
-    // === ОСНОВНАЯ ЛОГИКА ПЕРЕХОДА ===
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
     const target = document.getElementById('page-' + page);
-    if (target) target.classList.add('active');
+    if (target) target.classList.add('page-active');
     document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.page === page);
+        btn.classList.toggle('nav-item-active', btn.dataset.page === page);
     });
 
     if (page === 'profile') loadProfile();
@@ -1238,21 +1295,21 @@ window.navigateTo = function(page, params) {
         renderMyWorkouts();
     }
     if (page === 'exercise-list') renderExerciseListPage();
-if (page === 'stats') {
-    applyStatsTab(activeStatsTab);
-    if (activeStatsTab === 'world') {
-        loadWorldLeaderboard();
-        loadFriendsLeaderboard();
-        setTimeout(applySavedWorldStatsOrder, 100);
-    } else {
-        loadStats();
+    if (page === 'stats') {
+        applyStatsTab(activeStatsTab);
+        if (activeStatsTab === 'world') {
+            loadWorldLeaderboard();
+            loadFriendsLeaderboard();
+            setTimeout(applySavedWorldStatsOrder, 100);
+        } else {
+            loadStats();
+        }
     }
-}
-if (page === 'training-session' || page === 'finish') {
-    document.getElementById('bottomNav').style.display = 'none';
-} else {
-    document.getElementById('bottomNav').style.display = 'block';
-}
+    if (page === 'training-session' || page === 'finish') {
+        document.getElementById('bottomNav').style.display = 'none';
+    } else {
+        document.getElementById('bottomNav').style.display = 'block';
+    }
 };
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -1281,13 +1338,19 @@ function initTabs(containerSelector, tabSelector, activeTab, loaders) {
     tabs.forEach(btn => {
         btn.addEventListener('click', function() {
             const tab = this.dataset.tab;
-            tabs.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+            tabs.forEach(b => b.classList.remove('tab-btn-active'));
+            this.classList.add('tab-btn-active');
             const parent = this.closest('.page') || document;
             const contents = parent.querySelectorAll('.tab-content, .stats-tab-content');
-            contents.forEach(c => c.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('tab-content-active', 'stats-tab-content-active'));
             const targetContent = document.getElementById('tab-' + tab) || document.getElementById('stats-' + tab);
-            if (targetContent) targetContent.classList.add('active');
+            if (targetContent) {
+                if (targetContent.classList.contains('stats-tab-content')) {
+                    targetContent.classList.add('stats-tab-content-active');
+                } else {
+                    targetContent.classList.add('tab-content-active');
+                }
+            }
             if (loaders && typeof loaders[tab] === 'function') {
                 loaders[tab]();
             }
@@ -1299,10 +1362,9 @@ function initTabs(containerSelector, tabSelector, activeTab, loaders) {
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
 window.switchStatsTab = function(tab) {
-    // Проверяем, активна ли уже эта вкладка
-    const activeTab = document.querySelector('#page-stats .tab-btn.active');
+    const activeTab = document.querySelector('#page-stats .tab-btn.tab-btn-active');
     if (activeTab && activeTab.dataset.tab === tab) {
-        return; // ← НЕ ПЕРЕКЛЮЧАЕМ, ЕСЛИ УЖЕ АКТИВНА
+        return;
     }
     
     applyStatsTab(tab);
@@ -1321,12 +1383,12 @@ let activeStatsTab = 'personal';
 
 function applyWorkoutsTab(tab) {
     document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
+        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
     });
     document.querySelectorAll('#page-workouts .tab-content').forEach(content => {
-        content.classList.remove('active');
+        content.classList.remove('tab-content-active');
     });
-    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('tab-content-active');
 
     const resetBtn = document.getElementById('resetWorkoutsBtn');
     if (resetBtn) {
@@ -1335,18 +1397,18 @@ function applyWorkoutsTab(tab) {
     }
 }
 
+// Функция applyStatsTab - уже правильная
 function applyStatsTab(tab) {
     document.querySelectorAll('#page-stats .tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
+        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
     });
     document.querySelectorAll('#page-stats .stats-tab-content').forEach(content => {
-        content.classList.remove('active');
+        content.classList.remove('stats-tab-content-active');
     });
-    document.getElementById('stats-' + tab).classList.add('active');
+    document.getElementById('stats-' + tab).classList.add('stats-tab-content-active');
 }
 
-// Инициализация вкладок статистики
-initTabs('#page-stats .tabs-container', '.tab-btn', 'personal', {
+initTabs('#page-stats .tabs', '.tab-btn', 'personal', {
     personal: loadStats,
     world: function() {
         loadWorldLeaderboard();
@@ -1354,7 +1416,6 @@ initTabs('#page-stats .tabs-container', '.tab-btn', 'personal', {
     }
 });
 
-// Вкладки тренировок – отдельный обработчик (без загрузки данных)
 document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const tab = this.dataset.tab;
@@ -1365,7 +1426,7 @@ document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
 });
 
 // ===================КАТЕГОРИИ ТРЕНИРОВОК ===================
-document.querySelectorAll('.category-card:not([data-premium="true"])').forEach(card => {
+document.querySelectorAll('.item-card:not([data-premium="true"])').forEach(card => {
     card.addEventListener('click', function() {
         const name = this.dataset.category;
         if (name) {
@@ -1398,14 +1459,7 @@ function loadLevelSelect(category) {
     }
     const levelsArr = ['1 LVL', '2 LVL', '3 LVL'];
     const levelDescs = ['Начинающий', 'Любитель', 'Профессионал'];
-    const iconMap = {
-        'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
-        'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
-        'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
-        'Зарядка': 'charging', 'Пилатес': 'Pilates',
-        'Мужская сила': 'men', 'Женское счастье': 'woman', 'Кроссфит': 'crossfit'
-    };
-    const icon = iconMap[category] || 'bodybuilding';
+const icon = getExerciseIcon(category);
     const container = document.getElementById('levelsContainer');
 
     container.innerHTML = levelsArr.map((level, index) => {
@@ -1437,17 +1491,18 @@ function loadLevelSelect(category) {
 
         const count = exercises.length;
         return `
-            <div class="level-card" onclick="window.navigateTo('workout-detail', {
+            <div class="item-card" onclick="window.navigateTo('workout-detail', {
                 category: '${category}',
                 level: '${level}',
                 parentCategory: '${parentCategory || ''}',
                 isPremium: ${isPremium}
             })">
-                <div class="level-icon"><img src="images/${icon}.png"></div>
-                <div class="level-info">
-                    <h3>${displayName}</h3>
-                    <p>${levelDescs[index]} · ${count} упражнений</p>
+                <div class="item-icon"><img src="images/${icon}.png"></div>
+                <div class="item-info">
+                    <h3 class="item-title">${displayName}</h3>
+                    <p class="item-desc">${levelDescs[index]} · ${count} упражнений</p>
                 </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         `;
     }).join('');
@@ -1582,14 +1637,14 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             container.innerHTML = `<div class="empty-state" style="padding:1.5rem; margin-top:0;"><p style="color:var(--slate);">Упражнения не найдены</p></div>`;
         } else {
             container.innerHTML = exercises.map((ex, index) => `
-                <div class="level-card" id="exercise-${index}">
+                <div class="item-card" id="exercise-${index}">
                     <div class="exercise-status" id="status-${index}">
                         <span class="exercise-number" id="number-${index}">${index + 1}</span>
                     </div>
-                    <div class="level-info" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                    <div class="item-info" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex:1; min-width:0;">
                         <div style="flex:1; min-width:0;">
-                            <h3>${ex.name}</h3>
-                            <p>${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
+                            <h3 class="item-title">${ex.name}</h3>
+                            <p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
                         </div>
                         <button class="quick-edit-btn" id="quickEditBtn-${index}" onclick="openQuickEditModal(${index})" style="display:none;" title="Редактировать упражнение">
                             <i class="fa-regular fa-pen-to-square"></i>
@@ -1619,76 +1674,94 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
 
     document.querySelectorAll('.quick-edit-btn').forEach(btn => btn.style.display = 'none');
 
-    // Кнопка "Начать тренировку" — ЗАЩИТА ОТ СПАМА
     const actionButton = document.getElementById('actionButton');
     if (actionButton) {
         actionButton.textContent = 'Начать тренировку';
-        actionButton.onclick = function() {
-            // ЗАЩИТА ОТ СПАМА
-            if (!preventDoubleClick('startWorkoutBtn', 3000)) {
-                showToast('⏳ Подождите, тренировка уже запускается...');
-                return;
-            }
-            
-            // Получаем упражнения для текущей тренировки
-            let sessionExercises = [];
-            if (currentIsCustom && currentWorkoutId) {
-                const workout = getWorkoutById(currentWorkoutId);
-                if (workout) sessionExercises = workout.exercises || [];
-            } else {
-                let found = false;
-                for (const parent in exercisesData) {
-                    if (exercisesData[parent] && exercisesData[parent][currentCategory]) {
-                        const levelData = exercisesData[parent][currentCategory][currentLevel];
-                        if (levelData) {
-                            if (Array.isArray(levelData)) {
-                                sessionExercises = levelData;
-                            } else if (levelData._exercises) {
-                                sessionExercises = levelData._exercises;
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                if (!found && exercisesData[currentCategory] && exercisesData[currentCategory][currentLevel]) {
-                    const levelData = exercisesData[currentCategory][currentLevel];
+actionButton.onclick = function() {
+    if (!preventDoubleClick('startWorkoutBtn', 3000)) {
+        showToast('⏳ Подождите, тренировка уже запускается...');
+        return;
+    }
+    
+    let sessionExercises = [];
+    let workoutIcon = 'bodybuilding';
+    
+    if (currentIsCustom && currentWorkoutId) {
+        const workout = getWorkoutById(currentWorkoutId);
+        if (workout) {
+            sessionExercises = workout.exercises || [];
+            workoutIcon = workout.icon || 'bodybuilding'; // ← ИКОНКА ЛИЧНОЙ ТРЕНИРОВКИ
+        }
+    } else {
+        let found = false;
+        for (const parent in exercisesData) {
+            if (exercisesData[parent] && exercisesData[parent][currentCategory]) {
+                const levelData = exercisesData[parent][currentCategory][currentLevel];
+                if (levelData) {
                     if (Array.isArray(levelData)) {
                         sessionExercises = levelData;
                     } else if (levelData._exercises) {
                         sessionExercises = levelData._exercises;
                     }
+                    // Определяем иконку для готовой тренировки
+                    const iconMap = {
+                        'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
+                        'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
+                        'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
+                        'Зарядка': 'charging', 'Пилатес': 'Pilates',
+                        'Кроссфит': 'crossfit', 'Мужская сила': 'men', 'Женское счастье': 'woman'
+                    };
+                    workoutIcon = iconMap[currentCategory] || 'bodybuilding';
+                    found = true;
+                    break;
                 }
             }
-
-            if (sessionExercises.length === 0) {
-                showToast('⚠️ Нет упражнений для тренировки');
-                return;
+        }
+        if (!found && exercisesData[currentCategory] && exercisesData[currentCategory][currentLevel]) {
+            const levelData = exercisesData[currentCategory][currentLevel];
+            if (Array.isArray(levelData)) {
+                sessionExercises = levelData;
+            } else if (levelData._exercises) {
+                sessionExercises = levelData._exercises;
             }
+            const iconMap = {
+                'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
+                'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
+                'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
+                'Зарядка': 'charging', 'Пилатес': 'Pilates',
+                'Кроссфит': 'crossfit', 'Мужская сила': 'men', 'Женское счастье': 'woman'
+            };
+            workoutIcon = iconMap[currentCategory] || 'bodybuilding';
+        }
+    }
 
-            const fullTitle = document.getElementById('workoutDetailTitle').textContent;
-            const cleanTitle = fullTitle.replace('ТРЕНИРОВКА - ', '');
+    if (sessionExercises.length === 0) {
+        showToast('⚠️ Нет упражнений для тренировки');
+        return;
+    }
 
-            // ОПРЕДЕЛЯЕМ КАТЕГОРИЮ
-            let parent = parentCategory || '';
-            if (!parent) {
-                for (const p in exercisesData) {
-                    if (exercisesData[p] && exercisesData[p][currentCategory]) {
-                        parent = p;
-                        break;
-                    }
-                }
+const cleanTitle = currentCategory + ' ' + currentLevel;
+
+    let parent = parentCategory || '';
+    if (!parent) {
+        for (const p in exercisesData) {
+            if (exercisesData[p] && exercisesData[p][currentCategory]) {
+                parent = p;
+                break;
             }
-            const resolvedCategory = resolveWorkoutCategory(currentCategory, parent, isPremiumWorkout);
-            console.log('Определена категория для тренировки:', currentCategory, parent, isPremiumWorkout, '->', resolvedCategory);
-            
-            // ЗАПУСКАЕМ СЕССИЮ С КАТЕГОРИЕЙ
-            startTrainingSession(sessionExercises, cleanTitle, resolvedCategory);
-        };
+        }
+    }
+    
+    // Определяем категорию для статистики
+    const resolvedCategory = resolveWorkoutCategory(currentCategory, parent, isPremiumWorkout);
+    
+    // ЗАПУСКАЕМ СЕССИЮ С ИКОНКОЙ
+    startTrainingSession(sessionExercises, cleanTitle, resolvedCategory, workoutIcon);
+};
     }
 }
 
-// =================== СТРАНИЦА ТРЕНИРОВКИ СЕССИЯ ===================
+// ===================СТРАНИЦА ТРЕНИРОВКИ СЕССИЯ ===================
 let sessionExercises = [];
 let sessionCurrentIndex = 0;
 let sessionCompleted = new Set();
@@ -1696,20 +1769,24 @@ let sessionTimerInterval = null;
 let sessionSeconds = 0;
 let sessionWorkoutTitle = '';
 let sessionCategory = '';
+let sessionWorkoutIcon = 'bodybuilding'; // ← ДОБАВИТЬ
 
-function startTrainingSession(exercises, title, category) {
+function startTrainingSession(exercises, title, category, workoutIcon) {
     if (!exercises || exercises.length === 0) {
         showToast('⚠️ Нет упражнений для тренировки');
         return;
     }
-    sessionExercises = exercises;
+    // Добавляем иконки к каждому упражнению
+    sessionExercises = exercises.map(ex => ({
+        ...ex,
+        icon: ex.icon || getExerciseIcon(ex.name)
+    }));
     sessionCurrentIndex = 0;
     sessionCompleted = new Set();
     sessionSeconds = 0;
     sessionWorkoutTitle = title;
-    sessionCategory = category || 'Без категории'; // <-- ЭТА СТРОКА ДОЛЖНА БЫТЬ
-
-    console.log('startTrainingSession получила категорию:', sessionCategory);
+    sessionCategory = category || 'Без категории';
+    sessionWorkoutIcon = workoutIcon || 'bodybuilding'; // ← СОХРАНЯЕМ ИКОНКУ ТРЕНИРОВКИ
 
     closeModal('sessionExitModal');
     window.navigateTo('training-session');
@@ -1752,7 +1829,7 @@ function renderSessionProgress() {
         const dash = document.createElement('div');
         dash.className = 'progress-dash';
         if (i < current) {
-            dash.classList.add('active');
+            dash.classList.add('progress-dash-active');
         }
         container.appendChild(dash);
     }
@@ -1767,7 +1844,6 @@ function updateSessionButtons() {
     const nextBtn = document.getElementById('sessionNextBtn');
     const mainBtn = document.getElementById('sessionMainBtn');
 
-    // Кнопки всегда видны, но неактивны на крайних упражнениях
     if (isFirst) {
         prevBtn.style.visibility = 'visible';
         prevBtn.style.pointerEvents = 'none';
@@ -1825,12 +1901,12 @@ function finishTrainingSession() {
     stopSessionTimer();
     const total = sessionExercises.length;
     const completed = sessionCompleted.size;
-    // Фильтруем только выполненные упражнения
     const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
     const xpEarned = calculateWorkoutXp(completedExercises);
     showFinishPage(total, completed, sessionSeconds, xpEarned);
 }
-// =================== ТАЙМЕР ===================
+
+// ===================ТАЙМЕР ===================
 function startSessionTimer() {
     if (sessionTimerInterval) return;
     sessionTimerInterval = setInterval(() => {
@@ -1852,28 +1928,25 @@ function updateSessionTimerDisplay() {
     document.getElementById('sessionTimer').textContent = `${mins}:${secs}`;
 }
 
-
-// =================== КНОПКИ ===================
+// ===================КНОПКИ СЕССИИ ===================
 document.getElementById('sessionPrevBtn')?.addEventListener('click', goToPrevExercise);
 document.getElementById('sessionNextBtn')?.addEventListener('click', goToNextExercise);
 document.getElementById('sessionMainBtn')?.addEventListener('click', markCurrentComplete);
 
-
-// =================== КРЕСТИК ===================
+// ===================КРЕСТИК СЕССИИ ===================
 document.getElementById('sessionCloseBtn')?.addEventListener('click', function() {
     const total = sessionExercises.length;
     const completed = sessionCompleted.size;
     const mins = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
     const secs = String(sessionSeconds % 60).padStart(2, '0');
     
-    // Вычисляем XP
     const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
     const xpEarned = calculateWorkoutXp(completedExercises);
 
     document.getElementById('sessionExitTitle').textContent = sessionWorkoutTitle;
     document.getElementById('exitExercises').textContent = `${completed}/${total}`;
     document.getElementById('exitMinutes').textContent = `${mins}:${secs}`;
-    document.getElementById('exitXp').textContent = `+${Math.round(xpEarned)} XP`;  // ← ДОБАВИТЬ ЭТУ СТРОКУ
+    document.getElementById('exitXp').textContent = `+${Math.round(xpEarned)} XP`;
     openModal('sessionExitModal');
 });
 
@@ -1884,7 +1957,6 @@ document.getElementById('exitContinueBtn')?.addEventListener('click', function()
 document.getElementById('exitFinishBtn')?.addEventListener('click', function() {
     closeModal('sessionExitModal');
     stopSessionTimer();
-    // TODO: сохранить результаты
     showToast('💾 Тренировка сохранена');
     window.navigateTo('workouts');
 });
@@ -1985,9 +2057,9 @@ document.getElementById('quickEditSaveBtn')?.addEventListener('click', function(
     const editedIndex = _quickEditIndex;
     _quickEditIndex = null;
 
-    const infoDiv = document.querySelector(`#exercise-${editedIndex} .level-info`);
+    const infoDiv = document.querySelector(`#exercise-${editedIndex} .item-info`);
     if (infoDiv) {
-        const p = infoDiv.querySelector('p');
+        const p = infoDiv.querySelector('.item-desc');
         if (p) {
             p.textContent = `${formatSets(sets)} × ${formatReps(repsDisplay)}`;
         }
@@ -2045,9 +2117,7 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
             showConfirmModal(
                 'Тренировка с таким названием уже существует',
                 'Сохранить с дубликатом?',
-                function() {
-                    // Код сохранения с дубликатом
-                },
+                function() {},
                 'Да, сохранить'
             );
         }
@@ -2123,6 +2193,21 @@ function loadEditPage(category, isCustom, id, level, exercises) {
     editIsCustom = isCustom;
     editWorkoutId = id;
     editLevel = level || '1 LVL';
+
+    // ===== ПОКАЗЫВАЕМ БЛОК ВЫБОРА ЗНАЧКА ТОЛЬКО ДЛЯ ЛИЧНЫХ ТРЕНИРОВОК =====
+    const iconPickerBlock = document.getElementById('iconPickerBlock');
+    if (iconPickerBlock) {
+        if (isCustom || id === 'new') {
+            iconPickerBlock.style.display = 'block';
+            // Устанавливаем значок по умолчанию
+            const defaultIcon = ['bodybuilding', 'press', 'breast', 'back', 'legs', 'shoulder', 'cardio', 'stretching', 'WholeBody', 'charging', 'Pilates'].includes(category) ? category : 'bodybuilding';
+            document.querySelectorAll('#createExerciseIconPicker .icon-option').forEach(el => {
+                el.classList.toggle('icon-option-active', el.dataset.icon === defaultIcon);
+            });
+        } else {
+            iconPickerBlock.style.display = 'none';
+        }
+    }
 
     let savedName = null;
     if (isCustom || id === 'new') {
@@ -2206,7 +2291,7 @@ function loadEditPage(category, isCustom, id, level, exercises) {
     if (isCustom || id === 'new') {
         const defaultIcon = ['bodybuilding', 'press', 'breast', 'back', 'legs', 'shoulder', 'cardio', 'stretching', 'WholeBody', 'charging', 'Pilates'].includes(category) ? category : 'bodybuilding';
         document.querySelectorAll('.icon-option').forEach(el => {
-            el.classList.toggle('active', el.dataset.icon === defaultIcon);
+            el.classList.toggle('icon-option-active', el.dataset.icon === defaultIcon);
         });
     }
     setTimeout(() => renderEditExercises(), 300);
@@ -2215,8 +2300,8 @@ function loadEditPage(category, isCustom, id, level, exercises) {
 // ===================ВЫБОР ЗНАЧКА ===================
 document.querySelectorAll('.icon-option').forEach(el => {
     el.addEventListener('click', function() {
-        document.querySelectorAll('.icon-option').forEach(e => e.classList.remove('active'));
-        this.classList.add('active');
+        document.querySelectorAll('.icon-option').forEach(e => e.classList.remove('icon-option-active'));
+        this.classList.add('icon-option-active');
     });
 });
 
@@ -2238,7 +2323,7 @@ function renderEditExercises() {
     }
     let trainingIcon = 'bodybuilding';
     if (editIsCustom || editWorkoutId === 'new') {
-        const selectedIcon = document.querySelector('.icon-option.active');
+        const selectedIcon = document.querySelector('.icon-option-active');
         if (selectedIcon) trainingIcon = selectedIcon.dataset.icon;
     } else {
         const iconMap = {
@@ -2249,45 +2334,19 @@ function renderEditExercises() {
         };
         trainingIcon = iconMap[editCategory] || 'bodybuilding';
     }
-    function getExerciseIconByName(exerciseName) {
-        for (const category in exercisesData) {
-            if (typeof exercisesData[category] === 'object') {
-                for (const subCategory in exercisesData[category]) {
-                    if (typeof exercisesData[category][subCategory] === 'object') {
-                        if (exercisesData[category][subCategory]._premium) continue;
-                        for (const level in exercisesData[category][subCategory]) {
-                            if (Array.isArray(exercisesData[category][subCategory][level])) {
-                                const found = exercisesData[category][subCategory][level].find(e => e.name === exerciseName);
-                                if (found) {
-                                    const iconMap = {
-                                        'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
-                                        'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
-                                        'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
-                                        'Зарядка': 'charging', 'Пилатес': 'Pilates'
-                                    };
-                                    return iconMap[subCategory] || 'bodybuilding';
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return trainingIcon;
-    }
     const exercisesHtml = editExercises.map((ex, index) => {
-        const icon = getExerciseIconByName(ex.name);
+        const icon = getExerciseIcon(ex.name);
         return `
             <div class="edit-exercise-item" data-index="${index}" draggable="true">
-                <div class="drag-handle"><span>☰</span></div>
-                <div class="level-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <div class="edit-drag-handle"><span>☰</span></div>
+                <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
                     <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;">
                 </div>
                 <div class="edit-exercise-info">
-                    <h4>${ex.name}</h4>
-                    <p>${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
+                    <h4 class="edit-exercise-name">${ex.name}</h4>
+                    <p class="edit-exercise-details">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
                 </div>
-                <div class="edit-actions">
+                <div class="edit-exercise-actions">
                     <button class="edit-btn" onclick="openExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
                     <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
                 </div>
@@ -2451,7 +2510,6 @@ document.getElementById('modalCancelBtn')?.addEventListener('click', function() 
 
 // ===================СОХРАНЕНИЕ И ОТМЕНА В РЕДАКТИРОВАНИИ ===================
 document.getElementById('saveEditBtn')?.addEventListener('click', function() {
-    // ЗАЩИТА ОТ СПАМА
     if (!preventDoubleClick('saveEditBtn', 2000)) {
         showToast('⏳ Подождите, сохранение уже выполняется...');
         return;
@@ -2464,11 +2522,10 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
     const nameInput = document.getElementById('editWorkoutName');
     const title = nameInput ? nameInput.value.trim() : (editCategory || 'Моя тренировка');
     if (!title) { showToast('⚠️ Введите название тренировки'); return; }
-    const selectedIcon = document.querySelector('.icon-option.active');
+    const selectedIcon = document.querySelector('.icon-option-active');
     const icon = selectedIcon ? selectedIcon.dataset.icon : 'bodybuilding';
     const success = saveWorkoutData(editCategory, editLevel, editIsCustom, editWorkoutId, title, icon, editExercises);
     if (success) {
-        // Сначала сбрасываем флаг, чтобы navigateTo работал
         isEditingWorkout = false;
         
         showToast('✅ Тренировка сохранена!');
@@ -2491,7 +2548,6 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
 });
 
 document.getElementById('cancelEditBtn')?.addEventListener('click', function() {
-    // Сначала сбрасываем флаг, чтобы navigateTo работал
     isEditingWorkout = false;
     
     localStorage.removeItem('temp_edit_name');
@@ -2523,7 +2579,6 @@ function resetWorkout() {
         return;
     }
 
-    // СОЗДАЁМ КАСТОМНУЮ МОДАЛКУ С КРАСНОЙ КНОПКОЙ
     const oldModal = document.getElementById('resetConfirmModal');
     if (oldModal) oldModal.remove();
 
@@ -2535,10 +2590,10 @@ function resetWorkout() {
             <div class="modal-title">Сбросить тренировку?</div>
             <p style="color:var(--slate); font-size:0.95rem; margin:0.5rem 0 1.5rem 0; text-align:center;">Тренировка вернется к исходному виду.</p>
             <div style="display:flex; gap:0.5rem;">
-                <button class="modal-btn modal-btn-danger" id="resetConfirmYes" style="flex:1;">
+                <button class="btn btn-danger" id="resetConfirmYes" style="flex:1;">
                     Сбросить
                 </button>
-                <button class="modal-btn modal-btn-primary" id="resetConfirmNo" style="flex:1;">
+                <button class="btn btn-primary" id="resetConfirmNo" style="flex:1;">
                     Отмена
                 </button>
             </div>
@@ -2548,7 +2603,6 @@ function resetWorkout() {
 
     document.getElementById('resetConfirmYes').addEventListener('click', function() {
         overlay.remove();
-        // ЛОГИКА СБРОСА
         const category = editCategory;
         const level = editLevel || '1 LVL';
         let parentCategory = null;
@@ -2623,23 +2677,23 @@ function renderMyWorkouts() {
     const container = document.getElementById('myWorkoutsList');
     const workouts = getMyWorkouts();
     if (workouts.length === 0) {
-        container.innerHTML = `<div class="empty-state"><span>📋</span><h3>Нет своих тренировок</h3><p>Создайте свою первую тренировку!</p></div>`;
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📋</span><h3 class="empty-title">Нет своих тренировок</h3><p class="empty-text">Создайте свою первую тренировку!</p></div>`;
         return;
     }
     container.innerHTML = workouts.map(w => `
-        <div class="category-card" data-workout-id="${w._id}" onclick="handleWorkoutClick('${w._id}', event)">
-            <div class="category-icon"><img src="images/${w.icon || 'bodybuilding'}.png"></div>
-            <div class="category-info">
-                <h3>${w.title}</h3>
-                <p>${w.exercises?.length || 0} упражнений</p>
+        <div class="item-card" data-workout-id="${w._id}" onclick="handleWorkoutClick('${w._id}', event)">
+            <div class="item-icon"><img src="images/${w.icon || 'bodybuilding'}.png"></div>
+            <div class="item-info">
+                <h3 class="item-title">${w.title}</h3>
+                <p class="item-desc">${w.exercises?.length || 0} упражнений</p>
             </div>
-            <button class="workout-delete" onclick="event.stopPropagation(); deleteCustomWorkout('${w._id}')"><i class="fa-regular fa-trash-can"></i></button>
+            <button class="item-action workout-delete" onclick="event.stopPropagation(); deleteCustomWorkout('${w._id}')"><i class="fa-regular fa-trash-can"></i></button>
         </div>
     `).join('');
 }
 
 function handleWorkoutClick(id, event) {
-    if (event.target.closest('.category-card')?.classList.contains('sortable-chosen')) {
+    if (event.target.closest('.item-card')?.classList.contains('sortable-chosen')) {
         return;
     }
     const workout = getWorkoutById(id);
@@ -2671,7 +2725,12 @@ async function loadStats() {
     if (!user) return;
     const result = await getUserWorkoutsFromFirestore(user.uid);
     if (!result.success) return;
-    const workouts = result.data.filter(w => !(w.title || '').includes('Зарядка'));
+    
+    // Исключаем зарядку
+    const workouts = result.data.filter(w => {
+        const icon = getWorkoutIcon(w);
+        return icon !== 'charging';
+    });
 
     // === ОБЩАЯ СТАТИСТИКА ===
     const total = workouts.length;
@@ -2685,89 +2744,50 @@ async function loadStats() {
     document.getElementById('totalMinutes').textContent = totalMinutes;
     document.getElementById('totalExercises').textContent = totalExercises;
 
-    // === УПРАЖНЕНИЯ ПО ГРУППАМ МЫШЦ ===
-    const exerciseCounts = { 'Руки': 0, 'Плечи': 0, 'Пресс': 0, 'Грудь': 0, 'Спина': 0, 'Ноги': 0, 'Ягодицы': 0 };
+    // === УПРАЖНЕНИЯ ПО ГРУППАМ МЫШЦ (ТОЛЬКО ПО ИКОНКАМ) ===
+    const exerciseCounts = {};
     workouts.forEach(w => {
         (w.exercises || []).forEach(ex => {
             if (ex.completed) {
-                const category = ex.category || 'Ноги';
-                if (exerciseCounts[category] !== undefined) exerciseCounts[category]++;
+                const icon = ex.icon || getExerciseIcon(ex.name);
+                const category = getCategoryByIcon(icon);
+                if (category && category !== 'Зарядка') {
+                    exerciseCounts[category] = (exerciseCounts[category] || 0) + 1;
+                }
             }
         });
     });
+
     const exercisesContainer = document.getElementById('exerciseMuscleStats');
     if (exercisesContainer) {
+        const displayCategories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
         const maxCount = Math.max(1, ...Object.values(exerciseCounts));
-        exercisesContainer.innerHTML = Object.keys(exerciseCounts).map(cat => {
-            const count = exerciseCounts[cat];
+        exercisesContainer.innerHTML = displayCategories.map(cat => {
+            const count = exerciseCounts[cat] || 0;
             const percent = Math.round((count / maxCount) * 100);
-            return `<div class="stat-muscle-item"><span class="muscle-name">${cat}</span><div class="muscle-bar"><div class="muscle-fill" style="width:${percent}%;"></div></div><span class="muscle-count">${count}</span></div>`;
+            return `<div class="stat-item"><span class="stat-name">${cat}</span><div class="stat-bar"><div class="stat-fill" style="width:${percent}%;"></div></div><span class="stat-count">${count}</span></div>`;
         }).join('');
     }
 
-    // === ТРЕНИРОВКИ ПО КАТЕГОРИЯМ (ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА) ===
-    const displayCategories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+    // === ТРЕНИРОВКИ ПО КАТЕГОРИЯМ (ТОЛЬКО ПО ИКОНКАМ) ===
     const categoryCounts = {};
-    displayCategories.forEach(cat => categoryCounts[cat] = 0);
-
-    // ПРИНУДИТЕЛЬНО: если тренировок нет, показываем пустые данные
-    if (workouts.length === 0) {
-        const categoriesContainer = document.getElementById('categoriesStats');
-        if (categoriesContainer) {
-            categoriesContainer.innerHTML = displayCategories.map(cat => {
-                return `<div class="stat-muscle-item"><span class="muscle-name">${cat}</span><div class="muscle-bar"><div class="muscle-fill" style="width:0%;"></div></div><span class="muscle-count">0</span></div>`;
-            }).join('');
+    workouts.forEach(w => {
+        const icon = getWorkoutIcon(w);
+        const category = getCategoryByIcon(icon);
+        if (category && category !== 'Зарядка') {
+            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         }
-    } else {
-        workouts.forEach(w => {
-            let cat = w.category;
-            
-            // Если поле category отсутствует – пытаемся определить по названию
-            if (!cat) {
-                const title = w.title || '';
-                const oldMap = {
-                    'Руки': ['Руки'],
-                    'Плечи': ['Плечи'],
-                    'Пресс': ['Пресс'],
-                    'Грудь': ['Грудь'],
-                    'Спина': ['Спина'],
-                    'Ноги': ['Ноги'],
-                    'Ягодицы': ['Мужская сила', 'Женское счастье'],
-                    'Кардио': ['Кардио'],
-                    'Гибкость': ['Растяжка'],
-                    'Всё тело': ['Всё тело', 'Пилатес', 'Кроссфит', 'WholeBody']
-                };
-                for (const displayCat in oldMap) {
-                    if (oldMap[displayCat].some(k => title.includes(k))) {
-                        cat = displayCat;
-                        break;
-                    }
-                }
-                if (!cat) cat = 'Без категории';
-            }
-            
-            // Исключаем зарядку и личные тренировки
-            if (cat === 'Зарядка' || cat === 'Личные') return;
-            
-            if (categoryCounts.hasOwnProperty(cat)) {
-                categoryCounts[cat]++;
-            } else {
-                // Если категория не из списка, пытаемся добавить в "Всё тело"
-                if (categoryCounts.hasOwnProperty('Всё тело')) {
-                    categoryCounts['Всё тело']++;
-                }
-            }
-        });
+    });
 
-        const categoriesContainer = document.getElementById('categoriesStats');
-        if (categoriesContainer) {
-            const maxCount = Math.max(1, ...Object.values(categoryCounts));
-            categoriesContainer.innerHTML = displayCategories.map(cat => {
-                const count = categoryCounts[cat] || 0;
-                const percent = Math.round((count / maxCount) * 100);
-                return `<div class="stat-muscle-item"><span class="muscle-name">${cat}</span><div class="muscle-bar"><div class="muscle-fill" style="width:${percent}%;"></div></div><span class="muscle-count">${count}</span></div>`;
-            }).join('');
-        }
+    const categoriesContainer = document.getElementById('categoriesStats');
+    if (categoriesContainer) {
+        const displayCategories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+        const maxCount = Math.max(1, ...Object.values(categoryCounts));
+        categoriesContainer.innerHTML = displayCategories.map(cat => {
+            const count = categoryCounts[cat] || 0;
+            const percent = Math.round((count / maxCount) * 100);
+            return `<div class="stat-item"><span class="stat-name">${cat}</span><div class="stat-bar"><div class="stat-fill" style="width:${percent}%;"></div></div><span class="stat-count">${count}</span></div>`;
+        }).join('');
     }
 
     // === КАЛЕНДАРЬ ===
@@ -2786,12 +2806,12 @@ async function loadStats() {
                 const xpEarned = w.xpEarned || 0;
                 const minutes = Math.floor((w.durationSeconds || 0) / 60);
                 const detailsText = `${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP`;
-                return `<div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-                        <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${w.title}</strong>
-                        <span style="color:var(--slate);font-size:0.8rem;flex-shrink:0;">${new Date(w.date).toLocaleDateString('ru-RU')}</span>
+                return `<div class="history-item">
+                    <div class="history-item-header">
+                        <strong class="history-item-title">${w.title}</strong>
+                        <span class="history-item-date">${new Date(w.date).toLocaleDateString('ru-RU')}</span>
                     </div>
-                    <div style="color:var(--slate);font-size:0.8rem;margin-top:0.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${detailsText}</div>
+                    <div class="history-item-details">${detailsText}</div>
                 </div>`;
             }).join('');
         }
@@ -2832,9 +2852,9 @@ async function renderCalendar(month, year) {
         dayEl.classList.add('calendar-day');
         dayEl.textContent = day;
         const hasWorkout = workoutDays.some(d => d.getDate() === day && d.getMonth() === month && d.getFullYear() === year);
-        if (hasWorkout) dayEl.classList.add('has-workout');
+        if (hasWorkout) dayEl.classList.add('calendar-day-has-workout');
         if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-            dayEl.classList.add('today');
+            dayEl.classList.add('calendar-day-today');
         }
         container.appendChild(dayEl);
     }
@@ -2877,7 +2897,6 @@ async function loadProfile() {
     document.getElementById('levelProgressText').textContent = progressText;
     document.getElementById('levelFill').style.width = progress + '%';
     
-    // === УВЕДОМЛЕНИЕ: НОВЫЙ УРОВЕНЬ ===
     const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
     if (currentLevel.id > prevLevel) {
         const id = 'new_level_' + currentLevel.id;
@@ -2891,7 +2910,6 @@ async function loadProfile() {
         localStorage.setItem('prevLevel', String(currentLevel.id));
     }
     
-    // === УВЕДОМЛЕНИЕ: ВОЗВРАЩЕНИЕ ПОСЛЕ 7+ ДНЕЙ ===
     const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
     if (lastVisit) {
         const daysDiff = Math.floor((Date.now() - parseInt(lastVisit)) / (1000 * 60 * 60 * 24));
@@ -2916,7 +2934,7 @@ document.getElementById('editProfileBtn')?.addEventListener('click', () => {
     document.getElementById('editNameError').textContent = '';
 });
 document.getElementById('cancelProfileEditBtn')?.addEventListener('click', () => {
-    isEditingProfile = false; // <-- СБРАСЫВАЕМ ПЕРЕД ПЕРЕХОДОМ
+    isEditingProfile = false;
     document.getElementById('profileView').style.display = 'block';
     document.getElementById('profileEdit').style.display = 'none';
     loadProfile();
@@ -2936,7 +2954,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
     nameInput.classList.remove('error');
 
     if (name === currentName) {
-        isEditingProfile = false; // <-- СБРАСЫВАЕМ ПЕРЕД ПЕРЕХОДОМ
+        isEditingProfile = false;
         document.getElementById('profileView').style.display = 'block';
         document.getElementById('profileEdit').style.display = 'none';
         return;
@@ -2945,7 +2963,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
     const user = await getFirebaseUser();
     if (user) {
         await updateUserProfile(user.uid, { displayName: name });
-        isEditingProfile = false; // <-- СБРАСЫВАЕМ ПОСЛЕ СОХРАНЕНИЯ
+        isEditingProfile = false;
         loadProfile();
         showToast('✅ Профиль обновлен');
     }
@@ -2961,16 +2979,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
             try { await user.reload(); } catch (e) { console.warn('Ошибка перезагрузки пользователя:', e); }
             if (!user.emailVerified) {
                 bottomNav.style.display = 'none';
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById('page-login').classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+                document.getElementById('page-login').classList.add('page-active');
                 clearAuthFields();
                 return;
             }
-            const isPageLoaded = document.querySelector('#page-workouts.active') || document.querySelector('#page-stats.active') || document.querySelector('#page-profile.active');
+            const isPageLoaded = document.querySelector('#page-workouts.page-active') || document.querySelector('#page-stats.page-active') || document.querySelector('#page-profile.page-active');
             if (isPageLoaded) return;
 
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-loading').classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.getElementById('page-loading').classList.add('page-active');
             bottomNav.style.display = 'none';
 
             const [profileResult, workoutsResult] = await Promise.all([
@@ -3003,8 +3021,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
             updatePremiumUI();
             initProfileBlocks();
 
-            // ✅ СЮДА ВСТАВЬ ЭТУ СТРОКУ — ПОСЛЕ ЗАГРУЗКИ ПРОФИЛЯ
-            // При загрузке профиля — вкладка "Мой" активна по умолчанию
             switchProfileTab('my');
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
@@ -3012,35 +3028,35 @@ firebase.auth().onAuthStateChanged(async (user) => {
             if (typeof syncPendingWorkouts === 'function') syncPendingWorkouts();
         } else {
             bottomNav.style.display = 'none';
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-hero').classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.getElementById('page-hero').classList.add('page-active');
             clearAuthFields();
         }
     } catch (error) {
         console.error('Ошибка в onAuthStateChanged:', error);
         bottomNav.style.display = 'none';
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-login').classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+        document.getElementById('page-login').classList.add('page-active');
         clearAuthFields();
     }
 });
 
 // ===================ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ===================
 function showLogin() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-login').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+    document.getElementById('page-login').classList.add('page-active');
     clearAuthFields();
 }
 
 function showRegister() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-register').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+    document.getElementById('page-register').classList.add('page-active');
     clearAuthFields();
 }
 
 function showHero() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-hero').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+    document.getElementById('page-hero').classList.add('page-active');
     clearAuthFields();
 }
 
@@ -3057,7 +3073,6 @@ if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ЗАЩИТА ОТ СПАМА
         if (!preventDoubleClick('registerBtn', 3000)) {
             showToast('⏳ Подождите, регистрация уже выполняется...');
             return;
@@ -3124,7 +3139,6 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ЗАЩИТА ОТ СПАМА
         if (!preventDoubleClick('loginBtn', 3000)) {
             showToast('⏳ Подождите, вход уже выполняется...');
             return;
@@ -3248,10 +3262,10 @@ function enterApp() {
         return;
     }
     document.getElementById('bottomNav').style.display = 'block';
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-workouts').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+    document.getElementById('page-workouts').classList.add('page-active');
     document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.page === 'workouts');
+        btn.classList.toggle('nav-item-active', btn.dataset.page === 'workouts');
     });
 
     if (window._tutorialNeeded) {
@@ -3375,21 +3389,18 @@ async function acceptFriendRequest(requestId, fromUserId) {
         await firebase.firestore().collection('users').doc(user.uid).update({ friends: firebase.firestore.FieldValue.arrayUnion(fromUserId) });
         await firebase.firestore().collection('users').doc(fromUserId).update({ friends: firebase.firestore.FieldValue.arrayUnion(user.uid) });
         
-        // Удаляем ID заявки из списка показанных
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const updated = shownRequests.filter(id => id !== requestId);
         localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
         
-        // Получаем данные нового друга
         const friendProfile = await getUserProfile(fromUserId);
         const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
         
-        // Обновляем список друзей для уведомлений
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
         if (!shownFriendNotifications.includes(fromUserId)) {
             showNotification(
                 '👤',
-                `У вас новый друг — ${friendName}!`,  // ✅ Исправлено: имя нового друга
+                `У вас новый друг — ${friendName}!`,
                 null
             );
             shownFriendNotifications.push(fromUserId);
@@ -3407,7 +3418,6 @@ async function acceptFriendRequest(requestId, fromUserId) {
 
 async function rejectFriendRequest(requestId) {
     try {
-        // Получаем данные заявки, чтобы узнать имя отправителя
         const requestDoc = await firebase.firestore().collection('friendRequests').doc(requestId).get();
         const requestData = requestDoc.data();
         let senderName = 'Пользователь';
@@ -3421,14 +3431,12 @@ async function rejectFriendRequest(requestId) {
         
         await firebase.firestore().collection('friendRequests').doc(requestId).delete();
         
-        // Удаляем ID заявки из списка показанных
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const updated = shownRequests.filter(id => id !== requestId);
         localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
         
         await renderFriendsInProfile();
         
-        // ПОКАЗЫВАЕМ ТОСТ
         showToast(`❌ Заявка от ${senderName} отклонена`);
         
         return { success: true };
@@ -3460,9 +3468,8 @@ async function getFriendsList() {
 
 // ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
 async function renderFriendsInProfile() {
-    // Проверяем, что мы на нужной вкладке
     const friendsTab = document.getElementById('profileTab-friends');
-    if (!friendsTab || !friendsTab.classList.contains('active')) {
+    if (!friendsTab || !friendsTab.classList.contains('profile-tab-content-active')) {
         console.log('Вкладка "Друзья" не активна, рендер отложен');
         return;
     }
@@ -3487,13 +3494,13 @@ async function renderFriendsInProfile() {
                 const initial = (u.displayName || 'П')[0].toUpperCase();
                 let buttonHtml = '';
                 if (u.friendshipStatus === 'none') {
-                    buttonHtml = `<button class="btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
                 } else if (u.friendshipStatus === 'pending_sent') {
-                    buttonHtml = `<button class="btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
                 } else if (u.friendshipStatus === 'pending_received') {
-                    buttonHtml = `<button class="btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
                 } else if (u.friendshipStatus === 'friends') {
-                    buttonHtml = `<button class="btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
                 }
                 return `<div class="friend-result-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${u.displayName || 'Пользователь'}</strong><span>${u.email || ''}</span></div>${buttonHtml}</div>`;
             }).join('');
@@ -3501,7 +3508,6 @@ async function renderFriendsInProfile() {
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
     }
     
-    // === ЗАЯВКИ ===
     const requests = await getFriendRequests();
     let requestsHtml = '';
     let requestsCountValue = 0;
@@ -3524,7 +3530,7 @@ async function renderFriendsInProfile() {
         requestsHtml += requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
-            return `<div class="friend-request-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${fromUser.displayName || 'Пользователь'}</strong><span>${fromUser.email || ''}</span></div><div><button class="btn-primary btn-sm" onclick="acceptFriend('${r.id}','${r.from}')">Принять</button><button class="btn-secondary btn-sm" onclick="rejectFriend('${r.id}')">Отклонить</button></div></div>`;
+            return `<div class="friend-request-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${fromUser.displayName || 'Пользователь'}</strong><span>${fromUser.email || ''}</span></div><div><button class="btn btn-primary btn-sm" onclick="acceptFriend('${r.id}','${r.from}')">Принять</button><button class="btn btn-secondary btn-sm" onclick="rejectFriend('${r.id}')">Отклонить</button></div></div>`;
         }).join('');
     } else {
         requestsHtml = '<p class="empty-state">Нет заявок</p>';
@@ -3532,7 +3538,6 @@ async function renderFriendsInProfile() {
     requestsDiv.innerHTML = requestsHtml;
     if (requestsCount) requestsCount.textContent = requestsCountValue;
     
-    // === ДРУЗЬЯ ===
     const friends = await getFriendsList();
     let friendsHtml = '';
     let friendsCountValue = 0;
@@ -3558,7 +3563,6 @@ async function renderFriendsInProfile() {
         
         localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
         
-        // !!! ВАЖНО: Добавлен onclick на весь блок друга !!!
         friendsHtml += friends.data.map(f => {
             const initial = (f.displayName || 'П')[0].toUpperCase();
             const level = getCurrentLevel(f.totalXp || 0).id;
@@ -3618,23 +3622,19 @@ window.removeFriend = async function(friendId) {
                 return; 
             }
             try {
-                // ПОЛУЧАЕМ ИМЯ ДРУГА ДО УДАЛЕНИЯ
                 const friendProfile = await getUserProfile(friendId);
                 const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
                 
-                // Удаляем у текущего пользователя
                 const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
                 const currentFriends = userDoc.data()?.friends || [];
                 const updatedFriends = currentFriends.filter(id => id !== friendId);
                 await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
                 
-                // Удаляем у друга
                 const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
                 const friendFriends = friendDoc.data()?.friends || [];
                 const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
                 await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
                 
-                // Очищаем локальные списки
                 const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
                 const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
                 localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
@@ -3689,19 +3689,18 @@ function openExerciseList() {
     currentCategoryFilter = 'all';
     currentSearchQuery = '';
     document.getElementById('exerciseSearchInput').value = '';
-    // Флаг isEditingWorkout уже true, мы просто переходим на страницу списка
     window.navigateTo('exercise-list');
 }
 
 // ===================РЕНДЕР СТРАНИЦЫ СПИСКА УПРАЖНЕНИЙ ===================
 function renderExerciseListPage() {
     document.querySelectorAll('#exerciseCategoryFilter .icon-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.category === currentCategoryFilter);
+        el.classList.toggle('icon-option-active', el.dataset.category === currentCategoryFilter);
     });
     document.querySelectorAll('#exerciseCategoryFilter .icon-option').forEach(el => {
         el.onclick = function() {
-            document.querySelectorAll('#exerciseCategoryFilter .icon-option').forEach(e => e.classList.remove('active'));
-            this.classList.add('active');
+            document.querySelectorAll('#exerciseCategoryFilter .icon-option').forEach(e => e.classList.remove('icon-option-active'));
+            this.classList.add('icon-option-active');
             currentCategoryFilter = this.dataset.category;
             renderExerciseListPageContent();
         };
@@ -3728,19 +3727,13 @@ function renderExerciseListPageContent() {
         container.innerHTML = '<p style="color:var(--slate);text-align:center;padding:2rem 0;">Упражнения не найдены</p>';
         return;
     }
-    const icons = {
-        'Руки': 'bodybuilding', 'Пресс': 'press', 'Грудь': 'breast',
-        'Спина': 'back', 'Ноги': 'legs', 'Плечи': 'shoulder',
-        'Кардио': 'cardio', 'Растяжка': 'stretching', 'Зарядка': 'charging',
-        'Пилатес': 'Pilates', 'Всё тело': 'WholeBody'
-    };
     container.innerHTML = filtered.map(ex => {
-        const icon = icons[ex.category] || 'bodybuilding';
-        return `<div class="level-card" onclick="addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')" style="cursor:pointer; margin-bottom:0.8rem;">
-            <div class="level-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        const icon = getExerciseIcon(ex.name); // ← здесь используем функцию
+        return `<div class="item-card" onclick="addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')" style="cursor:pointer; margin-bottom:0.8rem;">
+            <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
                 <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;">
             </div>
-            <div class="level-info"><h3>${ex.name}</h3><p>${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p></div>
+            <div class="item-info"><h3 class="item-title">${ex.name}</h3><p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p></div>
         </div>`;
     }).join('');
 }
@@ -3764,7 +3757,17 @@ function addExerciseFromList(name, sets, reps) {
     const isSeconds = repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд');
     const repsValue = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
     const repsDisplay = isSeconds ? `${repsValue} секунд` : `${repsValue}`;
-    editExercises.push({ name: name, sets: parseInt(sets) || 3, reps: repsDisplay });
+    
+    // Получаем иконку по имени упражнения
+    const icon = getExerciseIcon(name);
+    
+    editExercises.push({ 
+        name: name, 
+        sets: parseInt(sets) || 3, 
+        reps: repsDisplay,
+        icon: icon
+    });
+    
     showToast('✅ Упражнение добавлено');
 
     if (editIsCustom || editWorkoutId === 'new') {
@@ -3777,7 +3780,6 @@ function addExerciseFromList(name, sets, reps) {
         localStorage.setItem('temp_edit_id', editWorkoutId || '');
     }
 
-    // Возвращаемся на страницу редактирования
     window.navigateTo('workout-edit', {
         category: editCategory,
         isCustom: editIsCustom,
@@ -3794,22 +3796,36 @@ function openCreateExerciseModal() {
     document.getElementById('createExerciseName').value = 'Новое упражнение';
     document.getElementById('createExerciseSets').value = 3;
     document.getElementById('createExerciseReps').value = 12;
-    document.querySelectorAll('#createExerciseModal .create-toggle-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('#createExerciseModal .create-toggle-btn[data-type="reps"]')?.classList.add('active');
+    document.querySelectorAll('#createExerciseModal .toggle-btn').forEach(b => b.classList.remove('toggle-btn-active'));
+    document.querySelector('#createExerciseModal .toggle-btn[data-type="reps"]')?.classList.add('toggle-btn-active');
     document.getElementById('createSecondLabel').textContent = 'Повторения';
-    document.getElementById('createExerciseError').style.display = 'none';
     document.querySelectorAll('#createExerciseModal input').forEach(inp => inp.classList.remove('error'));
+    
+    // Сбрасываем выбор значка на дефолтный
+    document.querySelectorAll('#createExerciseIconPicker .icon-option').forEach(el => {
+        el.classList.remove('icon-option-active');
+    });
+    document.querySelector('#createExerciseIconPicker .icon-option[data-icon="bodybuilding"]')?.classList.add('icon-option-active');
+    
     window._isNewExercise = true;
     window._tempExerciseIndex = editExercises.length;
-    editExercises.push({ name: 'Новое упражнение', sets: 3, reps: 12 });
+    editExercises.push({ name: 'Новое упражнение', sets: 3, reps: 12, icon: 'bodybuilding' });
     renderEditExercises();
     openModal('createExerciseModal');
 }
 
-document.querySelectorAll('#createExerciseModal .create-toggle-btn').forEach(btn => {
+// ===================ВЫБОР ЗНАЧКА В МОДАЛКЕ СОЗДАНИЯ УПРАЖНЕНИЯ ===================
+document.querySelectorAll('#createExerciseIconPicker .icon-option').forEach(el => {
+    el.addEventListener('click', function() {
+        document.querySelectorAll('#createExerciseIconPicker .icon-option').forEach(e => e.classList.remove('icon-option-active'));
+        this.classList.add('icon-option-active');
+    });
+});
+
+document.querySelectorAll('#createExerciseModal .toggle-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('#createExerciseModal .create-toggle-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+        document.querySelectorAll('#createExerciseModal .toggle-btn').forEach(b => b.classList.remove('toggle-btn-active'));
+        this.classList.add('toggle-btn-active');
         const label = document.getElementById('createSecondLabel');
         if (this.dataset.type === 'reps') {
             label.textContent = 'Повторения';
@@ -3817,14 +3833,12 @@ document.querySelectorAll('#createExerciseModal .create-toggle-btn').forEach(btn
             label.textContent = 'Секунды';
         }
         document.querySelectorAll('#createExerciseModal input').forEach(inp => inp.classList.remove('error'));
-        document.getElementById('createExerciseError').style.display = 'none';
     });
 });
 
 document.querySelectorAll('#createExerciseModal input').forEach(inp => {
     inp.addEventListener('input', function() {
         this.classList.remove('error');
-        document.getElementById('createExerciseError').style.display = 'none';
     });
 });
 
@@ -3845,22 +3859,34 @@ document.getElementById('createExerciseSaveBtn')?.addEventListener('click', func
     const nameInput = document.getElementById('createExerciseName');
     const setsInput = document.getElementById('createExerciseSets');
     const repsInput = document.getElementById('createExerciseReps');
-    const errorEl = document.getElementById('createExerciseError');
+    
+    // Получаем выбранный значок
+    const selectedIcon = document.querySelector('#createExerciseIconPicker .icon-option-active');
+    const icon = selectedIcon ? selectedIcon.dataset.icon : 'bodybuilding';
+    
     [nameInput, setsInput, repsInput].forEach(inp => inp.classList.remove('error'));
-    errorEl.style.display = 'none';
-    errorEl.textContent = '';
     let hasError = false;
     let errorMessage = '';
     if (!name) { nameInput.classList.add('error'); hasError = true; errorMessage = 'Введите название упражнения'; }
     if (!sets || parseInt(sets) < 1 || parseInt(sets) > 5) { setsInput.classList.add('error'); hasError = true; if (!errorMessage) errorMessage = 'Подходы должны быть от 1 до 5'; }
     if (!reps || parseInt(reps) < 2 || parseInt(reps) > 60) { repsInput.classList.add('error'); hasError = true; if (!errorMessage) errorMessage = 'Повторения должны быть от 2 до 60'; }
     if (hasError) { showToast('⚠️ ' + errorMessage); return; }
-    const isSeconds = document.querySelector('#createExerciseModal .create-toggle-btn.active')?.dataset.type === 'seconds';
+    const isSeconds = document.querySelector('#createExerciseModal .toggle-btn-active')?.dataset.type === 'seconds';
     const repsDisplay = isSeconds ? `${reps} секунд` : `${reps}`;
     if (window._tempExerciseIndex !== null) {
-        editExercises[window._tempExerciseIndex] = { name: name, sets: parseInt(sets), reps: repsDisplay };
+        editExercises[window._tempExerciseIndex] = { 
+            name: name, 
+            sets: parseInt(sets), 
+            reps: repsDisplay,
+            icon: icon 
+        };
     } else {
-        editExercises.push({ name: name, sets: parseInt(sets), reps: repsDisplay });
+        editExercises.push({ 
+            name: name, 
+            sets: parseInt(sets), 
+            reps: repsDisplay,
+            icon: icon 
+        });
         window._isNewExercise = true;
     }
     closeModal('createExerciseModal');
@@ -3878,17 +3904,17 @@ function showOfflineModal() {
 function closeOfflineModal() {
     closeModal('offlineModal');
     const loadingPage = document.getElementById('page-loading');
-    if (loadingPage && loadingPage.classList.contains('active')) {
+    if (loadingPage && loadingPage.classList.contains('page-active')) {
         enterApp();
     }
 }
 
 window.addEventListener('offline', function() {
     const loadingPage = document.getElementById('page-loading');
-    if (loadingPage && loadingPage.classList.contains('active')) return;
-    const isInApp = document.getElementById('page-workouts').classList.contains('active') ||
-                    document.getElementById('page-stats').classList.contains('active') ||
-                    document.getElementById('page-profile').classList.contains('active');
+    if (loadingPage && loadingPage.classList.contains('page-active')) return;
+    const isInApp = document.getElementById('page-workouts').classList.contains('page-active') ||
+                    document.getElementById('page-stats').classList.contains('page-active') ||
+                    document.getElementById('page-profile').classList.contains('page-active');
     if (!isInApp) return;
     if (!isOfflineModalShown) {
         showOfflineModal();
@@ -3902,12 +3928,11 @@ window.addEventListener('online', function() {
     if (typeof syncPendingWorkouts === 'function') syncPendingWorkouts();
 });
 
-// =================== УВЕДОМЛЕНИЕ О РЕЙТИНГЕ ===================
+// ===================УВЕДОМЛЕНИЕ О РЕЙТИНГЕ ===================
 function checkRankNotification(currentRank, type) {
     const key = type === 'world' ? LAST_WORLD_RANK_KEY : LAST_FRIENDS_RANK_KEY;
     const lastRank = parseInt(localStorage.getItem(key) || '0');
     
-    // Если рейтинг улучшился или это первый раз
     if (currentRank < lastRank || lastRank === 0) {
         const rankText = currentRank <= 3 ? '🥇' : currentRank <= 10 ? '⭐' : '📈';
         const rankName = type === 'world' ? 'мировом' : 'дружеском';
@@ -3949,7 +3974,6 @@ async function loadWorldLeaderboard() {
             return;
         }
         
-        // === УВЕДОМЛЕНИЕ: РЕЙТИНГ (МИРОВОЙ) ===
         const currentRank = users.findIndex(u => u.id === user.uid) + 1;
         if (currentRank > 0) {
             checkRankNotification(currentRank, 'world');
@@ -3960,13 +3984,15 @@ async function loadWorldLeaderboard() {
             const level = getCurrentLevel(userData.totalXp || 0);
             const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
             const isCurrentUser = userData.id === user.uid;
-            return `<div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
-                <div class="leaderboard-position">${position}</div>
-                <div class="leaderboard-info">
-                    <div class="leaderboard-name">${userData.displayName || 'Пользователь'}</div>
-                    <div class="leaderboard-details"><span>Уровень ${level.id}</span><span>·</span><span><i class="fa-regular fa-calendar"></i> ${date}</span></div>
+            return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+                    <div class="exercise-status" id="status-${index}">
+                        <span class="exercise-number" id="number-${index}">${index + 1}</span>
+                    </div>
+                <div class="item-info">
+                    <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
+                    <p class="item-desc">Уровень ${level.id} · ${date}</p>
                 </div>
-                <div class="leaderboard-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+                <div class="item-actionXP">${(userData.totalXp || 0).toFixed(1)} XP</div>
             </div>`;
         }).join('');
     } catch (error) {
@@ -3979,7 +4005,7 @@ async function loadWorldLeaderboard() {
     }
 }
 
-// =================== РЕЙТИНГ ДРУЗЕЙ ===================
+// ===================РЕЙТИНГ ДРУЗЕЙ ===================
 async function loadFriendsLeaderboard() {
     const container = document.getElementById('friendsLeaderboard');
     if (!container) {
@@ -4020,7 +4046,6 @@ async function loadFriendsLeaderboard() {
 
         allUsers.sort((a, b) => (b.totalXp || 0) - (a.totalXp || 0));
 
-        // === УВЕДОМЛЕНИЕ: РЕЙТИНГ (ДРУЖЕСКИЙ) ===
         const currentRank = allUsers.findIndex(u => u.id === user.uid) + 1;
         if (currentRank > 0) {
             checkRankNotification(currentRank, 'friends');
@@ -4033,13 +4058,15 @@ async function loadFriendsLeaderboard() {
             const isCurrentUser = userData.isCurrentUser;
             const name = userData.displayName || 'Пользователь';
             
-            return `<div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
-                <div class="leaderboard-position">${position}</div>
-                <div class="leaderboard-info">
-                    <div class="leaderboard-name">${name}</div>
-                    <div class="leaderboard-details"><span>Уровень ${level.id}</span><span>·</span><span><i class="fa-regular fa-calendar"></i> ${date}</span></div>
+            return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+                                    <div class="exercise-status" id="status-${index}">
+                        <span class="exercise-number" id="number-${index}">${index + 1}</span>
+                    </div>
+                <div class="item-info">
+                    <h3 class="item-title">${name}</h3>
+                    <p class="item-desc">Уровень ${level.id} · ${date}</p>
                 </div>
-                <div class="leaderboard-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+                <div class="item-actionXP">${(userData.totalXp || 0).toFixed(1)} XP</div>
             </div>`;
         }).join('');
 
@@ -4101,7 +4128,7 @@ async function performRefresh() {
             await loadStats();
             renderMyWorkouts();
             await renderCalendar(currentMonth, currentYear);
-            if (document.getElementById('stats-world')?.classList.contains('active')) {
+            if (document.getElementById('stats-world')?.classList.contains('stats-tab-content-active')) {
                 await loadWorldLeaderboard();
                 await loadFriendsLeaderboard();
             }
@@ -4212,7 +4239,7 @@ function createTutorialOverlay(step) {
         highlightElements.forEach(el => el.classList.add('tutorial-highlight'));
         setTimeout(() => {
             highlightElements.forEach(el => {
-                el.classList.add('active');
+                el.classList.add('tutorial-highlight-active');
                 setTimeout(() => el.classList.add('pulsing'), 100);
             });
         }, 50);
@@ -4224,7 +4251,7 @@ function createTutorialOverlay(step) {
 
     let dotsHtml = '';
     for (let i = 0; i < tutorialSteps.length; i++) {
-        dotsHtml += `<div class="dot ${i === currentTutorialStep ? 'active' : ''}"></div>`;
+        dotsHtml += `<div class="tutorial-dot ${i === currentTutorialStep ? 'tutorial-dot-active' : ''}"></div>`;
     }
     const isLast = step.isLast || false;
     const buttonText = isLast ? 'Начать тренироваться' : 'Понятно';
@@ -4244,9 +4271,9 @@ function createTutorialOverlay(step) {
 
     tooltip.innerHTML = `
         <div class="tutorial-dots">${dotsHtml}</div>
-        <p>${step.text}</p>
+        <p class="tutorial-text">${step.text}</p>
         <div class="tutorial-buttons">
-            <button class="btn-primary" onclick="nextTutorialStep()" style="padding:0.6rem 2rem; width:auto;">${buttonText}</button>
+            <button class="btn btn-primary" onclick="nextTutorialStep()" style="padding:0.6rem 2rem; width:auto;">${buttonText}</button>
         </div>
     `;
     document.body.appendChild(tooltip);
@@ -4278,24 +4305,24 @@ function createTutorialOverlay(step) {
                     tooltip.style.top = 'auto';
                 }
             }
-            tooltip.classList.add('active');
+            tooltip.classList.add('tutorial-tooltip-active');
         }, 500);
     } else {
         setTimeout(() => {
-            tooltip.classList.add('active');
+            tooltip.classList.add('tutorial-tooltip-active');
         }, 200);
     }
 
-    setTimeout(() => overlay.classList.add('active'), 50);
+    setTimeout(() => overlay.classList.add('tutorial-overlay-active'), 50);
 }
 
 function removeTutorialOverlay() {
     const overlay = document.getElementById('tutorialOverlay');
     if (overlay) {
-        overlay.classList.remove('active');
+        overlay.classList.remove('tutorial-overlay-active');
         if (overlay._highlightElements) {
             overlay._highlightElements.forEach(el => {
-                el.classList.remove('active', 'pulsing');
+                el.classList.remove('tutorial-highlight-active', 'pulsing');
                 setTimeout(() => el.classList.remove('tutorial-highlight'), 400);
             });
         }
@@ -4303,7 +4330,7 @@ function removeTutorialOverlay() {
     }
     const tooltip = document.querySelector('.tutorial-tooltip');
     if (tooltip) {
-        tooltip.classList.remove('active');
+        tooltip.classList.remove('tutorial-tooltip-active');
         setTimeout(() => tooltip.remove(), 400);
     }
 }
@@ -4357,20 +4384,20 @@ const tutorialSteps = [
     {
         id: 3,
         page: 'stats',
-        highlight: ['#page-stats .tab-btn[data-tab="personal"]', '.stat-big-card'],
+        highlight: ['#page-stats .tab-btn[data-tab="personal"]', '.stat-card'],
         text: 'В личной статистике хранятся ваши данные.\nТакие как общее количество тренировок, минуты, упражнения, статистика упражнений по группам мышц, тренировки по категориям, календарь тренировок и история тренировок.'
     },
     {
         id: 4,
         page: 'stats',
-        highlight: ['#page-stats .tab-btn[data-tab="world"]', '.block-base[data-block-id="world-leaderboard"]'],
+        highlight: ['#page-stats .tab-btn[data-tab="world"]', '.section-block[data-block-id="world-leaderboard"]'],
         text: 'В мировой статистике находится рейтинг пользователей.',
         action: () => { switchStatsTab('world'); }
     },
     {
         id: 5,
         page: 'stats',
-        highlight: '.block-base[data-block-id="friends-leaderboard"]',
+        highlight: '.section-block[data-block-id="friends-leaderboard"]',
         text: 'Также есть рейтинг ваших друзей.\nЗдесь вы можете увидеть, кто из ваших друзей больше всех тренируется и соревноваться с ними.',
         action: () => { switchStatsTab('world'); }
     },
@@ -4389,7 +4416,7 @@ const tutorialSteps = [
     {
         id: 8,
         page: 'workouts',
-        highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '.category-card[data-category="Руки"]'],
+        highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '.item-card[data-category="Руки"]'],
         text: 'Здесь уже собраны готовые тренировки.',
         action: () => {
             activeWorkoutsTab = 'ready';
@@ -4399,43 +4426,43 @@ const tutorialSteps = [
     {
         id: 9,
         page: 'level-select',
-        highlight: '.level-card',
+        highlight: '.item-card',
         text: 'Каждая тренировка разделена на 3 уровня сложности.\nВы сможете найти подходящий для себя.',
         action: () => {
             window.navigateTo('level-select', { category: 'Руки' });
         }
     },
-{
-    id: 10,
-    page: 'workout-detail',
-    highlight: '#actionButton',
-    text: 'После выбора уровня вы переходите в саму тренировку,\nгде видите полный список упражнений для этой тренировки.\nСнизу нажимаете "Начать тренировку" и начинаете тренироваться.',
-    action: () => {
-        window.navigateTo('workout-detail', {
-            category: 'Руки',
-            level: '1 LVL',
-            parentCategory: 'Силовые'
-        });
-    }
-},
-{
-    id: 11,
-    page: 'workout-detail',
-    highlight: '#editWorkoutBtn',
-    text: 'Вы можете редактировать тренировку.\nМенять название, добавлять и удалять упражнения.',
-    action: () => {
-        const editWorkoutBtn = document.getElementById('editWorkoutBtn');
-        if (editWorkoutBtn) {
-            editWorkoutBtn.style.display = 'block';
+    {
+        id: 10,
+        page: 'workout-detail',
+        highlight: '#actionButton',
+        text: 'После выбора уровня вы переходите в саму тренировку,\nгде видите полный список упражнений для этой тренировки.\nСнизу нажимаете "Начать тренировку" и начинаете тренироваться.',
+        action: () => {
+            window.navigateTo('workout-detail', {
+                category: 'Руки',
+                level: '1 LVL',
+                parentCategory: 'Силовые'
+            });
         }
-    }
-},
-{
-    id: 12,
-    page: 'workout-detail',
-    highlight: null,
-    text: 'Очень просим вас редактировать количество подходов и повторений/секунд, и честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
-},
+    },
+    {
+        id: 11,
+        page: 'workout-detail',
+        highlight: '#editWorkoutBtn',
+        text: 'Вы можете редактировать тренировку.\nМенять название, добавлять и удалять упражнения.',
+        action: () => {
+            const editWorkoutBtn = document.getElementById('editWorkoutBtn');
+            if (editWorkoutBtn) {
+                editWorkoutBtn.style.display = 'block';
+            }
+        }
+    },
+    {
+        id: 12,
+        page: 'workout-detail',
+        highlight: null,
+        text: 'Очень просим вас редактировать количество подходов и повторений/секунд, и честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
+    },
     {
         id: 13,
         page: 'workouts',
@@ -4449,7 +4476,7 @@ const tutorialSteps = [
     {
         id: 14,
         page: 'profile',
-        highlight: ['.profile-block', '.profile-tab-btn[data-tab="my"]'],
+        highlight: ['.profile-card', '.profile-tab-btn[data-tab="my"]'],
         text: 'Это ваш профиль :)'
     },
     {
@@ -4461,7 +4488,7 @@ const tutorialSteps = [
     {
         id: 16,
         page: 'profile',
-        highlight: '#ettings-block-main .settings-block',
+        highlight: '#settings-block-main .settings-block',
         text: 'Это дополнительные настройки.\nЗдесь вы можете подключить PREMIUM, изменить акцентный цвет,пройти это обучение еще раз,включать и выключать кнопки редактирования.'
     },
     {
@@ -4477,7 +4504,7 @@ const tutorialSteps = [
         text: 'Здесь вы можете найти своих друзей.\nДобавляйте их в друзья, чтобы соревноваться и видеть их прогресс в рейтинге.',
         action: () => {
             switchProfileTab('friends');
-                renderFriendsInProfile();
+            renderFriendsInProfile();
         }
     },
     {
@@ -4535,7 +4562,7 @@ function updatePremiumUI() {
         icon.className = 'fa-solid fa-crown';
         icon.style.color = '#F7C948';
     }
-    document.querySelectorAll('.category-card[data-premium="true"]').forEach(card => {
+    document.querySelectorAll('.item-card[data-premium="true"]').forEach(card => {
         card.style.display = 'flex';
     });
 }
@@ -4559,8 +4586,8 @@ function handlePremiumClick() {
 // ===================ВЫБОР ЦВЕТА ЧЕРЕЗ МОДАЛЬНОЕ ОКНО ===================
 function openColorModal() {
     const currentColor = localStorage.getItem('themeColor') || 'red';
-    document.querySelectorAll('.color-btn-modal').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.color === currentColor);
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('color-btn-active', btn.dataset.color === currentColor);
     });
     openModal('colorModal');
 }
@@ -4569,17 +4596,17 @@ function closeColorModal() {
     closeModal('colorModal');
 }
 
-document.querySelectorAll('.color-btn-modal').forEach(btn => {
+document.querySelectorAll('.color-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const color = this.dataset.color;
-        document.querySelectorAll('.color-btn-modal').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('color-btn-active'));
+        this.classList.add('color-btn-active');
         setTheme(color);
         updateColorStatus(color);
     });
 });
 
-// =================== НАСТРОЙКИ РЕДАКТИРОВАНИЯ ===================
+// ===================НАСТРОЙКИ РЕДАКТИРОВАНИЯ ===================
 const EDIT_PAGES_KEY = 'editPagesEnabled';
 const EDIT_WORKOUT_KEY = 'editWorkoutEnabled';
 
@@ -4608,7 +4635,7 @@ function updateEditWorkoutUI(enabled) {
     const editWorkoutBtn = document.getElementById('editWorkoutBtn');
     if (editWorkoutBtn) {
         const pageWorkoutDetail = document.getElementById('page-workout-detail');
-        if (pageWorkoutDetail && pageWorkoutDetail.classList.contains('active')) {
+        if (pageWorkoutDetail && pageWorkoutDetail.classList.contains('page-active')) {
             const isPremium = window._currentIsPremium || false;
             if (!enabled || isPremium) {
                 editWorkoutBtn.style.display = 'none';
@@ -4654,10 +4681,8 @@ function toggleEditWorkout() {
 }
 
 // ===================ИНИЦИАЛИЗАЦИЯ ===================
-// Очищаем сессионный Set при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     console.log('SportApp загружен!');
-    // Очищаем сессионный Set при загрузке
     shownThisSession.clear();
     
     updatePremiumUI();
@@ -4686,12 +4711,12 @@ function showConfirmWithPasswordModal(title, message, onConfirm, confirmText = '
             <div class="modal-title">${title}</div>
             <p style="color:var(--slate); font-size:0.95rem; margin:0.5rem 0 1rem 0; text-align:center;">${message}</p>
             <div class="form-group" style="text-align:left; margin-bottom:1rem;">
-                <label for="confirmPassword">Введите пароль</label>
-                <input type="password" id="confirmPassword" placeholder="Пароль" style="width:100%; padding:0.6rem 1rem; border:1.5px solid #E2E8F0; border-radius:10px; font-size:0.95rem;" autocomplete="new-password" />
+                <label class="form-label">Введите пароль</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Пароль" autocomplete="new-password" />
             </div>
             <div style="display:flex; gap:0.8rem;">
-                <button class="modal-btn modal-btn-danger" id="confirmYes" style="flex:1;">${confirmText}</button>
-                <button class="modal-btn modal-btn-primary" id="confirmNo" style="flex:1;">Нет</button>
+                <button class="btn btn-danger" id="confirmYes" style="flex:1;">${confirmText}</button>
+                <button class="btn btn-primary" id="confirmNo" style="flex:1;">Нет</button>
             </div>
         </div>
     `;
@@ -4744,8 +4769,8 @@ function showConfirmModal(title, message, onConfirm, confirmText = 'Да') {
             <div class="modal-title">${title}</div>
             <p style="color:var(--slate); font-size:0.95rem; margin:0.5rem 0 1.5rem 0; text-align:center;">${message}</p>
             <div style="display:flex; gap:0.8rem;">
-                <button class="modal-btn modal-btn-primary" id="confirmYes" style="flex:1;">${confirmText}</button>
-                <button class="modal-btn modal-btn-secondary" id="confirmNo" style="flex:1;">Нет</button>
+                <button class="btn btn-primary" id="confirmYes" style="flex:1;">${confirmText}</button>
+                <button class="btn btn-secondary" id="confirmNo" style="flex:1;">Нет</button>
             </div>
         </div>
     `;
@@ -4779,7 +4804,6 @@ async function resetProgress() {
     }
 
     try {
-        // ===== УДАЛЯЕМ ТОЛЬКО ВЫПОЛНЕННЫЕ ТРЕНИРОВКИ (статистику) =====
         const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
         if (workoutsResult.success) {
             const workouts = workoutsResult.data;
@@ -4789,40 +4813,28 @@ async function resetProgress() {
             console.log(`✅ Удалено ${workouts.length} выполненных тренировок`);
         }
 
-        // ===== ОБНУЛЯЕМ XP В ПРОФИЛЕ =====
         await updateUserProfile(user.uid, { totalXp: 0 });
 
-        // ===== СОХРАНЯЕМ ВСЁ, ЧТО НУЖНО СОХРАНИТЬ =====
         const theme = localStorage.getItem('themeColor') || 'red';
         const premium = localStorage.getItem(PREMIUM_KEY) || 'false';
         
-        // СОХРАНЯЕМ ШАБЛОНЫ ТРЕНИРОВОК (изменённые готовые тренировки)
-        const exercisesDataRaw = localStorage.getItem(STORAGE_KEY); // 'sportapp_exercisesData'
-        
-        // СОХРАНЯЕМ ЛИЧНЫЕ ТРЕНИРОВКИ
+        const exercisesDataRaw = localStorage.getItem(STORAGE_KEY);
         const myWorkouts = localStorage.getItem('myCustomWorkouts');
-        
-        // СОХРАНЯЕМ ОФЛАЙН-ОЧЕРЕДЬ (если есть несинхронизированные тренировки)
         const pendingWorkouts = localStorage.getItem('pendingWorkouts');
 
-        // ===== ОЧИЩАЕМ LOCALSTORAGE =====
         localStorage.clear();
 
-        // ===== ВОССТАНАВЛИВАЕМ =====
         localStorage.setItem('themeColor', theme);
         localStorage.setItem(PREMIUM_KEY, premium);
         
-        // Восстанавливаем шаблоны тренировок (изменённые готовые тренировки)
         if (exercisesDataRaw) {
             localStorage.setItem(STORAGE_KEY, exercisesDataRaw);
         }
         
-        // Восстанавливаем личные тренировки
         if (myWorkouts) {
             localStorage.setItem('myCustomWorkouts', myWorkouts);
         }
         
-        // Восстанавливаем офлайн-очередь
         if (pendingWorkouts) {
             localStorage.setItem('pendingWorkouts', pendingWorkouts);
         }
@@ -4883,7 +4895,7 @@ async function deleteAccount() {
     }
 }
 
-// =================== УНИВЕРСАЛЬНАЯ СИСТЕМА РЕДАКТИРОВАНИЯ СТРАНИЦ ===================
+// ===================УНИВЕРСАЛЬНАЯ СИСТЕМА РЕДАКТИРОВАНИЯ СТРАНИЦ ===================
 class PageEditor {
     constructor(config) {
         this.pageId = config.pageId;
@@ -4983,7 +4995,6 @@ class PageEditor {
     }
 
     disableEdit(save = false) {
-        // ВСЕГДА сбрасываем флаг
         this.isEditing = false;
         
         const page = document.getElementById(this.pageId);
@@ -5030,7 +5041,6 @@ class PageEditor {
     }
 
     blockNavigation() {
-        // Убираем блокировку навигации, чтобы клики регистрировались и появлялся тост
         document.addEventListener('click', this.blockedClickHandler = (e) => {
             if (e.target.closest('#statsEditActions') ||
                 e.target.closest('#workoutsEditActions') ||
@@ -5040,7 +5050,7 @@ class PageEditor {
                 e.target.closest('#editWorldStatsBtn')) {
                 return;
             }
-            if (e.target.closest('.drag-handle') ||
+            if (e.target.closest('.section-drag') ||
                 e.target.closest('.sortable-ghost') ||
                 e.target.closest('#statsEditActions') ||
                 e.target.closest('#workoutsEditActions') ||
@@ -5054,11 +5064,10 @@ class PageEditor {
                 return false;
             }
             if (e.target.closest('.tab-btn') ||
-                e.target.closest('.level-card') ||
+                e.target.closest('.item-card') ||
                 e.target.closest('.custom-workout .btn-primary') ||
                 e.target.closest('.btn-primary') ||
                 e.target.closest('.btn-secondary') ||
-                e.target.closest('.btn-primary-center') ||
                 e.target.closest('.friend-delete-btn') ||
                 e.target.closest('.workout-delete') ||
                 e.target.closest('#editProfileBtn') ||
@@ -5110,7 +5119,7 @@ class PageEditor {
     }
 }
 
-// =================== НАСТРОЙКА РЕДАКТОРОВ СТРАНИЦ ===================
+// ===================НАСТРОЙКА РЕДАКТОРОВ СТРАНИЦ ===================
 window.statsEditor = new PageEditor({
     pageId: 'page-stats',
     storageKey: 'statsLayout',
@@ -5120,10 +5129,10 @@ window.statsEditor = new PageEditor({
     resetBtnId: 'resetStatsBtn',
     actionsId: 'statsEditActions',
     containers: [
-        { id: 'statsSummary', dataAttr: 'statId', handle: '.stat-big-card' },
-        { id: 'statsBlocksContainer', dataAttr: 'blockId', handle: '.drag-handle' },
-        { id: 'exerciseMuscleStats', dataAttr: 'muscleName', handle: '.stat-muscle-item' },
-        { id: 'categoriesStats', dataAttr: 'categoryName', handle: '.stat-muscle-item' }
+        { id: 'statsSummary', dataAttr: 'statId', handle: '.stat-card' },
+        { id: 'statsBlocksContainer', dataAttr: 'blockId', handle: '.section-drag' },
+        { id: 'exerciseMuscleStats', dataAttr: 'muscleName', handle: '.stat-item' },
+        { id: 'categoriesStats', dataAttr: 'categoryName', handle: '.stat-item' }
     ],
     defaultLayout: {
         statsSummary: ['workouts', 'minutes', 'exercises'],
@@ -5142,7 +5151,7 @@ window.workoutsEditor = new PageEditor({
     resetBtnId: 'resetWorkoutsBtn',
     actionsId: 'workoutsEditActions',
     containers: [
-        { id: 'workoutsBlocksContainer', dataAttr: 'blockId', handle: '.drag-handle' },
+        { id: 'workoutsBlocksContainer', dataAttr: 'blockId', handle: '.section-drag' },
         { id: 'catalogGridStrength', dataAttr: 'category' },
         { id: 'catalogGridFitness', dataAttr: 'category' },
         { id: 'catalogGridPremium', dataAttr: 'category' },
@@ -5157,7 +5166,6 @@ window.workoutsEditor = new PageEditor({
     }
 });
 
-// =================== РЕДАКТОР МИРОВОЙ СТАТИСТИКИ ===================
 window.worldStatsEditor = new PageEditor({
     pageId: 'page-stats',
     storageKey: 'worldStatsLayout',
@@ -5167,7 +5175,7 @@ window.worldStatsEditor = new PageEditor({
     resetBtnId: 'resetWorldStatsBtn',
     actionsId: 'worldStatsEditActions',
     containers: [
-        { id: 'worldStatsBlocksContainer', dataAttr: 'blockId', handle: '.drag-handle' }
+        { id: 'worldStatsBlocksContainer', dataAttr: 'blockId', handle: '.section-drag' }
     ],
     defaultLayout: {
         'worldStatsBlocksContainer': ['world-leaderboard', 'friends-leaderboard']
@@ -5210,10 +5218,10 @@ document.getElementById('resetStatsBtn')?.addEventListener('click', function() {
     );
 });
 
-// =================== АККОРДЕОН ===================
+// ===================АККОРДЕОН ===================
 function initAccordion() {
-    document.querySelectorAll('.accordion-wrapper').forEach(wrapper => {
-        const header = wrapper.querySelector('.block-header');
+    document.querySelectorAll('.section-block').forEach(block => {
+        const header = block.querySelector('.section-header');
         if (!header) return;
 
         if (header._accordionHandler) {
@@ -5221,25 +5229,8 @@ function initAccordion() {
         }
 
         const handler = function(e) {
-            if (e.target.closest('.drag-handle')) return;
-            wrapper.classList.toggle('accordion-open');
-        };
-
-        header._accordionHandler = handler;
-        header.addEventListener('click', handler);
-    });
-
-    document.querySelectorAll('.editable-block').forEach(block => {
-        const header = block.querySelector('.block-header');
-        if (!header) return;
-
-        if (header._accordionHandler) {
-            header.removeEventListener('click', header._accordionHandler);
-        }
-
-        const handler = function(e) {
-            if (e.target.closest('.drag-handle')) return;
-            block.classList.toggle('accordion-open');
+            if (e.target.closest('.section-drag')) return;
+            block.classList.toggle('open');
         };
 
         header._accordionHandler = handler;
@@ -5247,15 +5238,15 @@ function initAccordion() {
     });
 }
 
-// =================== ОТКРЫТИЕ ВСЕХ БЛОКОВ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ===================
+// ===================ОТКРЫТИЕ ВСЕХ БЛОКОВ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ===================
 function initProfileBlocks() {
     const isNewUser = localStorage.getItem('profileBlocksInitialized') !== 'true';
 
     if (isNewUser) {
         setTimeout(() => {
-            const blocks = document.querySelectorAll('.block-base-training.accordion-wrapper, .block-base.accordion-wrapper');
+            const blocks = document.querySelectorAll('.section-block');
             blocks.forEach(block => {
-                block.classList.add('accordion-open');
+                block.classList.add('open');
             });
             localStorage.setItem('profileBlocksInitialized', 'true');
             saveBlocksState();
@@ -5265,13 +5256,13 @@ function initProfileBlocks() {
     }
 }
 
-// =================== СОХРАНЕНИЕ СОСТОЯНИЯ БЛОКОВ ===================
+// ===================СОХРАНЕНИЕ СОСТОЯНИЯ БЛОКОВ ===================
 function saveBlocksState() {
-    const blocks = document.querySelectorAll('.block-base-training.accordion-wrapper, .block-base.accordion-wrapper');
+    const blocks = document.querySelectorAll('.section-block');
     const state = {};
     blocks.forEach((block, index) => {
         const id = block.dataset.blockId || index;
-        state[id] = block.classList.contains('accordion-open');
+        state[id] = block.classList.contains('open');
     });
     localStorage.setItem('blocksState', JSON.stringify(state));
 }
@@ -5282,20 +5273,20 @@ function loadBlocksState() {
 
     try {
         const state = JSON.parse(saved);
-        const blocks = document.querySelectorAll('.block-base-training.accordion-wrapper, .block-base.accordion-wrapper');
+        const blocks = document.querySelectorAll('.section-block');
         blocks.forEach((block, index) => {
             const id = block.dataset.blockId || index;
             if (state[id] === true) {
-                block.classList.add('accordion-open');
+                block.classList.add('open');
             }
         });
     } catch (e) {}
 }
 
 document.addEventListener('click', function(e) {
-    const header = e.target.closest('.block-header');
+    const header = e.target.closest('.section-header');
     if (header) {
-        const block = header.closest('.block-base-training, .block-base');
+        const block = header.closest('.section-block');
         if (block) {
             setTimeout(saveBlocksState, 100);
         }
@@ -5310,7 +5301,7 @@ window.addEventListener('load', function() {
     setTimeout(loadBlocksState, 500);
 });
 
-// =================== СТРАНИЦА ФИНИШ ===================
+// ===================СТРАНИЦА ФИНИШ ===================
 function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     document.getElementById('finishExercises').textContent = `${completedCount}/${exercisesCount}`;
     
@@ -5319,13 +5310,12 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     document.getElementById('finishMinutes').textContent = `${mins}:${secs}`;
     document.getElementById('finishXp').textContent = `+${Math.round(xpEarned)} XP`;
     
-    // Сброс звёзд – каждый раз при открытии финиша они неактивны
     document.querySelectorAll('#finishStars i').forEach(star => star.classList.remove('active'));
     
     window.navigateTo('finish');
 }
 
-// =================== ЗВЁЗДЫ ===================
+// ===================ЗВЁЗДЫ ===================
 document.querySelectorAll('#finishStars i').forEach(star => {
     star.addEventListener('click', function() {
         const value = parseInt(this.dataset.value);
@@ -5335,16 +5325,13 @@ document.querySelectorAll('#finishStars i').forEach(star => {
     });
 });
 
-// =================== КНОПКА "ЗАКОНЧИТЬ" ===================
-// =================== КНОПКА "ЗАКОНЧИТЬ" ===================
+// ===================КНОПКА "ЗАКОНЧИТЬ" ===================
 document.getElementById('finishDoneBtn')?.addEventListener('click', async function() {
-    // ЗАЩИТА ОТ СПАМА - блокируем кнопку на 3 секунды
     if (!preventDoubleClick('finishDoneBtn', 3000)) {
         showToast('⏳ Подождите, тренировка уже сохраняется...');
         return;
     }
 
-    // Блокируем кнопку визуально
     const btn = this;
     btn.disabled = true;
     btn.textContent = 'Закончить';
@@ -5354,7 +5341,6 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
         const xpText = document.getElementById('finishXp').textContent;
         const xpEarned = parseFloat(xpText) || 0;
 
-        // Принудительное определение категории
         let finalCategory = sessionCategory;
         if (!finalCategory || finalCategory === 'Без категории') {
             const title = sessionWorkoutTitle || '';
@@ -5369,13 +5355,16 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
             else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
             else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
             else finalCategory = 'Без категории';
-            console.log('Принудительно определена категория по названию:', finalCategory);
         }
 
         const workoutExercises = sessionExercises.map((ex, index) => ({
             ...ex,
+            icon: ex.icon || 'bodybuilding',
             completed: sessionCompleted.has(index)
         }));
+
+        // ИКОНКА ТРЕНИРОВКИ — ИСПОЛЬЗУЕМ СОХРАНЁННУЮ В СЕССИИ
+        const workoutIcon = sessionWorkoutIcon || 'bodybuilding';
 
         const workoutData = {
             title: sessionWorkoutTitle || 'Тренировка',
@@ -5383,10 +5372,11 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
             durationSeconds: sessionSeconds,
             exercises: workoutExercises,
             xpEarned: xpEarned,
-            category: finalCategory
+            category: finalCategory,
+            icon: workoutIcon
         };
 
-        console.log('Сохраняем тренировку с категорией:', workoutData);
+        console.log('Сохраняем тренировку с иконкой:', workoutData.icon);
 
         const user = await getFirebaseUser();
         if (user) {
@@ -5412,6 +5402,7 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
         sessionSeconds = 0;
         sessionWorkoutTitle = '';
         sessionCategory = '';
+        sessionWorkoutIcon = 'bodybuilding';
         
         window.navigateTo('workouts');
         
@@ -5425,7 +5416,6 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
     }
 });
 
-// Кнопка "Войти" на странице входа
 document.querySelector('#loginForm .btn-primary')?.addEventListener('click', function(e) {
     if (!preventDoubleClick('loginBtn', 3000)) {
         e.preventDefault();
@@ -5434,7 +5424,6 @@ document.querySelector('#loginForm .btn-primary')?.addEventListener('click', fun
     }
 });
 
-// Кнопка "Зарегистрироваться"
 document.querySelector('#registerForm .btn-primary')?.addEventListener('click', function(e) {
     if (!preventDoubleClick('registerBtn', 3000)) {
         e.preventDefault();
@@ -5443,7 +5432,36 @@ document.querySelector('#registerForm .btn-primary')?.addEventListener('click', 
     }
 });
 
-// =================== ВКЛАДКИ ПРОФИЛЯ ===================
+// =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
+function getExerciseIcon(exerciseName) {
+    // Сначала ищем в exercisesData
+    for (const parent in exercisesData) {
+        if (typeof exercisesData[parent] === 'object') {
+            for (const subCategory in exercisesData[parent]) {
+                if (typeof exercisesData[parent][subCategory] === 'object') {
+                    if (exercisesData[parent][subCategory]._premium) continue;
+                    for (const level in exercisesData[parent][subCategory]) {
+                        const levelData = exercisesData[parent][subCategory][level];
+                        if (Array.isArray(levelData)) {
+                            const found = levelData.find(e => e.name === exerciseName);
+                            if (found && found.icon) {
+                                return found.icon;  // ← сразу берём icon из данных
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 'bodybuilding';
+}
+
+// =================== ФУНКЦИЯ ПОЛУЧЕНИЯ КАТЕГОРИИ ПО ИКОНКЕ ===================
+function getCategoryByIcon(icon) {
+    return ICON_TO_CATEGORY[icon] || 'Без категории';
+}
+
+// ===================ВКЛАДКИ ПРОФИЛЯ ===================
 let activeProfileTab = 'my';
 
 function switchProfileTab(tab) {
@@ -5451,26 +5469,30 @@ function switchProfileTab(tab) {
     
     // Переключаем кнопки
     document.querySelectorAll('.profile-tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
+        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
     });
     
     // Переключаем контент
     document.querySelectorAll('.profile-tab-content').forEach(content => {
-        content.classList.remove('active');
+        content.classList.remove('profile-tab-content-active');
     });
-    const target = document.getElementById('profileTab-' + tab);
-    if (target) target.classList.add('active');
     
-    // Загружаем данные ТОЛЬКО при переключении на вкладку друзей
+    const target = document.getElementById('profileTab-' + tab);
+    if (target) {
+        target.classList.add('profile-tab-content-active');
+        console.log('✅ Переключено на вкладку:', tab, target);
+    } else {
+        console.error('❌ Вкладка не найдена:', 'profileTab-' + tab);
+    }
+    
+    // Загружаем данные для вкладки друзей
     if (tab === 'friends') {
-        // Небольшая задержка, чтобы DOM успел обновиться
         setTimeout(() => {
             renderFriendsInProfile();
         }, 100);
     }
 }
 
-// Инициализация вкладок профиля
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.profile-tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -5480,7 +5502,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// =================== ПРОФИЛЬ ДРУГА ===================
+// ===================ПРОФИЛЬ ДРУГА ===================
 let currentFriendId = null;
 let currentFriendData = null;
 
@@ -5488,7 +5510,6 @@ async function openFriendProfile(friendId) {
     currentFriendId = friendId;
     
     try {
-        // Загружаем данные друга
         const result = await getUserProfile(friendId);
         if (!result.success) {
             showToast('❌ Не удалось загрузить данные друга');
@@ -5497,7 +5518,6 @@ async function openFriendProfile(friendId) {
         
         currentFriendData = result.data;
         
-        // Загружаем тренировки друга для статистики
         const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
         let workouts = [];
         let totalSeconds = 0;
@@ -5512,12 +5532,10 @@ async function openFriendProfile(friendId) {
             }, 0);
         }
         
-        // Заполняем данные
         const name = currentFriendData.displayName || 'Пользователь';
         document.getElementById('friendProfileName').textContent = name;
         document.getElementById('friendProfileEmail').textContent = currentFriendData.email || 'email не указан';
         
-        // Уровень и XP
         const xp = currentFriendData.totalXp || 0;
         const currentLevel = getCurrentLevel(xp);
         const progress = getXpProgress(xp);
@@ -5529,12 +5547,10 @@ async function openFriendProfile(friendId) {
         document.getElementById('friendLevelProgressText').textContent = progressText;
         document.getElementById('friendLevelFill').style.width = progress + '%';
         
-        // Статистика
         document.getElementById('friendTotalWorkouts').textContent = workouts.length;
         document.getElementById('friendTotalMinutes').textContent = Math.floor(totalSeconds / 60);
         document.getElementById('friendTotalExercises').textContent = totalExercises;
         
-        // Открываем модалку
         openModal('friendProfileModal');
         
     } catch (error) {
@@ -5543,16 +5559,12 @@ async function openFriendProfile(friendId) {
     }
 }
 
-// =================== КНОПКИ В МОДАЛКЕ ПРОФИЛЯ ДРУГА ===================
-
-// Закрыть
 document.getElementById('friendProfileCloseBtn')?.addEventListener('click', function() {
     closeModal('friendProfileModal');
     currentFriendId = null;
     currentFriendData = null;
 });
 
-// Пригласить на совместную тренировку
 document.getElementById('friendInviteBtn')?.addEventListener('click', async function() {
     if (!currentFriendId || !currentFriendData) {
         showToast('❌ Данные друга не загружены');
@@ -5572,7 +5584,6 @@ document.getElementById('friendInviteBtn')?.addEventListener('click', async func
                     return;
                 }
                 
-                // Создаём уведомление в Firestore
                 await firebase.firestore().collection('notifications').add({
                     to: currentFriendId,
                     from: user.uid,
@@ -5596,7 +5607,6 @@ document.getElementById('friendInviteBtn')?.addEventListener('click', async func
     );
 });
 
-// Удалить друга
 document.getElementById('friendRemoveBtn')?.addEventListener('click', function() {
     if (!currentFriendId || !currentFriendData) {
         showToast('❌ Данные друга не загружены');
@@ -5622,7 +5632,6 @@ document.getElementById('friendRemoveBtn')?.addEventListener('click', function()
     );
 });
 
-// Вспомогательная функция для удаления друга (используется в модалке)
 async function removeFriendFromList(friendId) {
     const user = await getFirebaseUser();
     if (!user) {
@@ -5631,23 +5640,19 @@ async function removeFriendFromList(friendId) {
     }
     
     try {
-        // ПОЛУЧАЕМ ИМЯ ДРУГА ДО УДАЛЕНИЯ
         const friendProfile = await getUserProfile(friendId);
         const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
         
-        // Удаляем у текущего пользователя
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const currentFriends = userDoc.data()?.friends || [];
         const updatedFriends = currentFriends.filter(id => id !== friendId);
         await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
         
-        // Удаляем у друга
         const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
         const friendFriends = friendDoc.data()?.friends || [];
         const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
         await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
         
-        // Очищаем локальные списки
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
         const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
         localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
@@ -5656,49 +5661,10 @@ async function removeFriendFromList(friendId) {
         const updatedPrev = prevFriends.filter(f => f.id !== friendId);
         localStorage.setItem('prevFriendsList', JSON.stringify(updatedPrev));
         
-        // Возвращаем имя для использования в тосте
         return { success: true, friendName: friendName };
     } catch (error) {
         console.error('Ошибка удаления друга:', error);
         showToast('❌ Ошибка при удалении друга');
         return { success: false };
-    }
-}
-
-// =================== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ ДРУГА ===================
-async function removeFriendFromList(friendId) {
-    const user = await getFirebaseUser();
-    if (!user) {
-        showToast('❌ Пользователь не авторизован');
-        return false;
-    }
-    
-    try {
-        // Удаляем у текущего пользователя
-        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-        const currentFriends = userDoc.data()?.friends || [];
-        const updatedFriends = currentFriends.filter(id => id !== friendId);
-        await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
-        
-        // Удаляем у друга
-        const friendDoc = await firebase.firestore().collection('users').doc(friendId).get();
-        const friendFriends = friendDoc.data()?.friends || [];
-        const updatedFriendFriends = friendFriends.filter(id => id !== user.uid);
-        await firebase.firestore().collection('users').doc(friendId).update({ friends: updatedFriendFriends });
-        
-        // Очищаем локальные списки
-        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
-        const updatedShown = shownFriendNotifications.filter(id => id !== friendId);
-        localStorage.setItem('shownFriendNotifications', JSON.stringify(updatedShown));
-        
-        const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
-        const updatedPrev = prevFriends.filter(f => f.id !== friendId);
-        localStorage.setItem('prevFriendsList', JSON.stringify(updatedPrev));
-        
-        return true;
-    } catch (error) {
-        console.error('Ошибка удаления друга:', error);
-        showToast('❌ Ошибка при удалении друга');
-        return false;
     }
 }
