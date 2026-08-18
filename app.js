@@ -1262,47 +1262,9 @@ window.navigateTo = function(page, params) {
         return;
     }
 
-    // Получаем текущую активную страницу для определения направления свайпа
-    const currentPage = document.querySelector('.page-active');
-    const currentPageId = currentPage ? currentPage.id : '';
-    const targetPageId = 'page-' + page;
-    
-    // Определяем направление свайпа
-    const pageOrder = ['page-stats', 'page-workouts', 'page-profile'];
-    const currentIndex = pageOrder.indexOf(currentPageId);
-    const targetIndex = pageOrder.indexOf(targetPageId);
-    let swipeDirection = '';
-    
-    if (currentIndex !== -1 && targetIndex !== -1) {
-        if (targetIndex > currentIndex) {
-            swipeDirection = 'page-swipe-left';
-        } else if (targetIndex < currentIndex) {
-            swipeDirection = 'page-swipe-right';
-        }
-    }
-
-    // Скрываем все страницы
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
-        p.style.display = 'none';
-    });
-
-    // Показываем целевую страницу с анимацией
-    const target = document.getElementById(targetPageId);
-    if (target) {
-        target.style.display = 'block';
-        // Добавляем анимацию только для основных страниц
-        if (swipeDirection && ['stats', 'workouts', 'profile'].includes(page)) {
-            target.classList.add(swipeDirection);
-            // Убираем класс анимации после завершения
-            setTimeout(() => {
-                target.classList.remove(swipeDirection);
-            }, 350);
-        }
-        target.classList.add('page-active');
-    }
-
-    // Обновляем навигацию
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+    const target = document.getElementById('page-' + page);
+    if (target) target.classList.add('page-active');
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.toggle('nav-item-active', btn.dataset.page === page);
     });
@@ -3036,46 +2998,22 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
 firebase.auth().onAuthStateChanged(async (user) => {
     const bottomNav = document.getElementById('bottomNav');
     try {
-        // Скрываем все страницы перед проверкой
-        document.querySelectorAll('.page').forEach(p => {
-            p.style.display = 'none';
-            p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
-        });
-        
         if (user) {
-            try { 
-                await user.reload(); 
-            } catch (e) { 
-                console.warn('Ошибка перезагрузки пользователя:', e); 
-            }
-            
-            // Проверка подтверждения почты
+            try { await user.reload(); } catch (e) { console.warn('Ошибка перезагрузки пользователя:', e); }
             if (!user.emailVerified) {
-                if (bottomNav) bottomNav.style.display = 'none';
-                const loginPage = document.getElementById('page-login');
-                if (loginPage) {
-                    loginPage.style.display = 'block';
-                    loginPage.classList.add('page-active');
-                }
+                bottomNav.style.display = 'none';
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+                document.getElementById('page-login').classList.add('page-active');
                 clearAuthFields();
                 return;
             }
-            
-            // Проверяем, не загружена ли уже страница
-            const isPageLoaded = document.querySelector('#page-workouts.page-active') || 
-                                document.querySelector('#page-stats.page-active') || 
-                                document.querySelector('#page-profile.page-active');
+            const isPageLoaded = document.querySelector('#page-workouts.page-active') || document.querySelector('#page-stats.page-active') || document.querySelector('#page-profile.page-active');
             if (isPageLoaded) return;
 
-            // Показываем страницу загрузки
-            const loadingPage = document.getElementById('page-loading');
-            if (loadingPage) {
-                loadingPage.style.display = 'block';
-                loadingPage.classList.add('page-active');
-            }
-            if (bottomNav) bottomNav.style.display = 'none';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.getElementById('page-loading').classList.add('page-active');
+            bottomNav.style.display = 'none';
 
-            // Загружаем данные
             const [profileResult, workoutsResult] = await Promise.all([
                 getUserProfile(user.uid),
                 getUserWorkoutsFromFirestore(user.uid)
@@ -3099,87 +3037,29 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
             clearAuthFields();
 
-            // Ждем полной загрузки DOM
-            if (document.readyState !== 'complete') {
-                await new Promise(resolve => {
-                    window.addEventListener('load', resolve, { once: true });
-                });
-            }
-
-            // Небольшая задержка для рендеринга DOM
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Загружаем данные
             await loadProfile();
             await loadStats();
             renderMyWorkouts();
             await renderCalendar(currentMonth, currentYear);
             updatePremiumUI();
             initProfileBlocks();
-            
-            // Переключаем вкладку профиля
+
             switchProfileTab('my');
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
 
-            if (typeof syncPendingWorkouts === 'function') {
-                syncPendingWorkouts();
-            }
-            
-            // Скрываем все страницы и показываем тренировки
-            document.querySelectorAll('.page').forEach(p => {
-                p.style.display = 'none';
-                p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
-            });
-            
-            const workoutsPage = document.getElementById('page-workouts');
-            if (workoutsPage) {
-                workoutsPage.style.display = 'block';
-                workoutsPage.classList.add('page-active');
-            }
-            
-            // Показываем нижнюю навигацию
-            if (bottomNav) {
-                bottomNav.style.display = 'block';
-            }
-            
-            // Обновляем активную кнопку навигации
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.toggle('nav-item-active', btn.dataset.page === 'workouts');
-            });
-            
+            if (typeof syncPendingWorkouts === 'function') syncPendingWorkouts();
         } else {
-            // Пользователь не авторизован
-            if (bottomNav) bottomNav.style.display = 'none';
-            
-            // Скрываем все страницы и показываем приветствие
-            document.querySelectorAll('.page').forEach(p => {
-                p.style.display = 'none';
-                p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
-            });
-            
-            const heroPage = document.getElementById('page-hero');
-            if (heroPage) {
-                heroPage.style.display = 'block';
-                heroPage.classList.add('page-active');
-            }
+            bottomNav.style.display = 'none';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.getElementById('page-hero').classList.add('page-active');
             clearAuthFields();
         }
     } catch (error) {
         console.error('Ошибка в onAuthStateChanged:', error);
-        if (bottomNav) bottomNav.style.display = 'none';
-        
-        // В случае ошибки показываем страницу входа
-        document.querySelectorAll('.page').forEach(p => {
-            p.style.display = 'none';
-            p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
-        });
-        
-        const loginPage = document.getElementById('page-login');
-        if (loginPage) {
-            loginPage.style.display = 'block';
-            loginPage.classList.add('page-active');
-        }
+        bottomNav.style.display = 'none';
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+        document.getElementById('page-login').classList.add('page-active');
         clearAuthFields();
     }
 });
@@ -6003,86 +5883,3 @@ async function removeFriendFromList(friendId) {
     }
 }
 
-// ===================СВАЙПЫ ДЛЯ ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ===================
-let touchStartX = 0;
-let touchEndX = 0;
-let isSwiping = false;
-
-// Порядок страниц для свайпа
-const SWIPE_PAGES = ['stats', 'workouts', 'profile'];
-let currentSwipeIndex = 1; // 0 - stats, 1 - workouts, 2 - profile
-
-function getCurrentPageIndex() {
-    const activePage = document.querySelector('.page-active');
-    if (!activePage) return 1;
-    
-    const pageId = activePage.id.replace('page-', '');
-    const index = SWIPE_PAGES.indexOf(pageId);
-    return index !== -1 ? index : 1;
-}
-
-function navigateBySwipe(direction) {
-    const currentIndex = getCurrentPageIndex();
-    let newIndex = currentIndex + direction;
-    
-    // Ограничиваем диапазон
-    if (newIndex < 0) newIndex = 0;
-    if (newIndex >= SWIPE_PAGES.length) newIndex = SWIPE_PAGES.length - 1;
-    
-    // Если индекс не изменился - выходим
-    if (newIndex === currentIndex) return;
-    
-    const page = SWIPE_PAGES[newIndex];
-    window.navigateTo(page);
-}
-
-// Добавляем обработчики свайпов на весь документ
-document.addEventListener('touchstart', function(e) {
-    // Игнорируем свайпы в модальных окнах
-    if (e.target.closest('.modal-overlay')) return;
-    // Игнорируем свайпы на странице тренировки и финиша
-    const activePage = document.querySelector('.page-active');
-    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
-    
-    touchStartX = e.changedTouches[0].screenX;
-    isSwiping = true;
-}, { passive: true });
-
-document.addEventListener('touchmove', function(e) {
-    if (!isSwiping) return;
-    // Игнорируем свайпы в модальных окнах
-    if (e.target.closest('.modal-overlay')) return;
-    // Игнорируем свайпы на странице тренировки и финиша
-    const activePage = document.querySelector('.page-active');
-    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
-    
-    touchEndX = e.changedTouches[0].screenX;
-}, { passive: true });
-
-document.addEventListener('touchend', function(e) {
-    if (!isSwiping) return;
-    isSwiping = false;
-    
-    // Игнорируем свайпы в модальных окнах
-    if (e.target.closest('.modal-overlay')) return;
-    // Игнорируем свайпы на странице тренировки и финиша
-    const activePage = document.querySelector('.page-active');
-    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
-    
-    const diff = touchStartX - touchEndX;
-    
-    // Минимальное расстояние для свайпа (50px)
-    if (Math.abs(diff) < 50) return;
-    
-    // Свайп влево - следующая страница
-    if (diff > 0) {
-        navigateBySwipe(1);
-    } 
-    // Свайп вправо - предыдущая страница
-    else {
-        navigateBySwipe(-1);
-    }
-    
-    touchStartX = 0;
-    touchEndX = 0;
-}, { passive: true });
