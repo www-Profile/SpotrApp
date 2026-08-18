@@ -754,6 +754,46 @@ body {
     margin-top: 0.6rem;
     padding: 1rem;
     background-color: var(--light);
+    border-radius: 16px;
+    width: 100%;
+}
+
+.stats-summaryMOD .stat-card {
+    flex: 1;
+    padding: 0.8rem 0.3rem;
+    background: var(--white);
+    border-radius: 14px;
+    text-align: center;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-top: 3px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    width: 100%;
+}
+
+.stats-summaryMOD .stat-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.stats-summaryMOD .stat-number {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .stat-card {
@@ -1446,7 +1486,7 @@ body {
 /* ===== ПУСТЫЕ СОСТОЯНИЯ ===== */
 #profileTab-friends .empty-state {
     text-align: center;
-    padding: 2rem 1.5rem;
+    padding: 1rem 1rem;
     background: var(--white);
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
@@ -1515,6 +1555,7 @@ body {
     gap: 0.5rem;
     align-items: center;
     margin-bottom: 0.5rem;
+    width: 100%;
 }
 
 .search-input {
