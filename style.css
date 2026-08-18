@@ -80,6 +80,16 @@ body {
     color: var(--dark);
 }
 
+/* =================== ЕДИНЫЙ СТИЛЬ ДЛЯ ПОДЗАГОЛОВКОВ =================== */
+.section-title {
+    font-size: 2rem;
+    font-weight: 100;
+    color: var(--dark);
+    letter-spacing: 0.3px;
+    margin: 0;
+    padding: 0;
+}
+
 /* ===================КНОПКИ ==================== */
 .btn-primary {
     display: block;
@@ -163,10 +173,10 @@ body {
     z-index: 2000;
 }
 
-/* Для мобильных - выравнивание сверху, чтобы клавиатура не сдвигала */
+/* Для мобильных - выравнивание по центру */
 @media (max-width: 480px) {
     .modal-overlay {
-        align-items: flex-start;
+        align-items: center;  /* ← исправлено */
     }
 }
 
