@@ -226,7 +226,7 @@
             <header class="dashboard-header">
                 <h1 class="dashboard-title" id="workoutDetailTitle">ТРЕНИРОВКА</h1>
             </header>
-            <h3 class="page-subtitle">Упражнения</h3>
+            <h3 class="section-title">Упражнения</h3>
             <div id="exercisesContainer" class="item-grid"></div>
             <button class="btn btn-primary" style="margin-top: 1rem;" id="actionButton">Начать тренировку</button>
             <button class="btn btn-primary btn-center" id="editWorkoutBtn" style="margin-top:0.5rem;">
@@ -241,7 +241,7 @@
             <header class="dashboard-header">
                 <h1 class="dashboard-title" id="levelSelectTitle">ТРЕНИРОВКА</h1>
             </header>
-            <h3 class="page-subtitle">Уровни тренировки</h3>
+            <h3 class="section-title">Уровни тренировки</h3>
             <div id="levelsContainer" class="item-grid"></div>
         </main>
     </div>
@@ -989,7 +989,7 @@
         <div class="modal-content">
             <div class="modal-icon"><i class="fa-solid fa-wifi"></i></div>
             <div class="modal-title">Проверьте интернет-соединение</div>
-            <p class="modal-text">Приложение будет работать, но некоторые действия могут не сохраниться.<br><strong>Мы работаем над этим.</strong></p>
+            <p class="modal-text">Приложение будет работать, но некоторые действия могут не сохраниться.</p>
             <button class="btn btn-primary" onclick="closeModal('offlineModal')">Понятно</button>
         </div>
     </div>
@@ -1007,7 +1007,7 @@
                 <li>Поддержка разработчика</li>
             </ul>
             <p class="premium-sub">Разовый платёж · Доступ навсегда</p>
-            <button class="btn btn-premium" onclick="buyPremium()">
+            <button class="btn btn-primary" style="margin-bottom: 0.5rem;" onclick="buyPremium()">
                 <i class="fa-solid fa-crown"></i> Купить PREMIUM
             </button>
             <button class="btn btn-secondary" onclick="closeModal('premiumModal')">Закрыть</button>
@@ -1019,7 +1019,7 @@
         <div class="modal-content premium">
             <div class="premium-icon"><i class="fa-solid fa-crown"></i></div>
             <div class="modal-title" style="font-size:1.5rem; color: var(--accent);">PREMIUM АКТИВИРОВАН</div>
-            <p class="modal-text">У вас есть доступ ко всем особым тренировкам</p>
+            <p class="item-desc" style="margin-bottom: 1rem;">У вас есть доступ ко всем особым тренировкам</p>
             <button class="btn btn-primary" onclick="closeModal('premiumActiveModal')">Отлично!</button>
         </div>
     </div>

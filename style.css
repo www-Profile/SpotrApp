@@ -96,12 +96,6 @@ body {
     word-break: break-word;
 }
 
-.page-subtitle {
-    font-size: 1.2rem;
-    margin: 1.5rem 0 1rem 1rem;
-    color: var(--dark);
-}
-
 .list-title {
     font-size: 1rem;
     font-weight: 600;
@@ -136,7 +130,8 @@ body {
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--dark);
-    margin: 0;
+    margin-bottom: 0.2rem;
+    margin-top: 0.2rem;
 }
 
 .section-toggle {
@@ -184,7 +179,7 @@ body {
 .section-block.open .section-body {
     max-height: 3000px;
     opacity: 1;
-    margin-top: 0.8rem;
+    margin-top: 0.2rem;
 }
 
 /* ===================ЕДИНЫЙ СТИЛЬ ДЛЯ КАРТОЧЕК ЭЛЕМЕНТОВ ==================== */
@@ -517,11 +512,6 @@ body {
     width: 100%;
 }
 
-.btn-premium {
-    background: var(--accent);
-    color: var(--white);
-}
-
 .btn-block {
     display: block;
     width: 100%;
@@ -704,7 +694,7 @@ body {
     font-weight: 700;
     color: var(--dark);
     letter-spacing: 0.5px;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
     white-space: nowrap;
     overflow: visible;
     max-width: 100%;
@@ -718,8 +708,8 @@ body {
 
 .modal-text {
     color: var(--slate);
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 .modal-buttons {
@@ -1639,6 +1629,7 @@ body {
     gap: 0.6rem;
     justify-content: center;
     padding: 0.5rem 0;
+    margin-bottom: 1rem;
 }
 
 .color-btn {
