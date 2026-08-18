@@ -6049,4 +6049,13 @@ document.addEventListener('click', function(e) {
         setTimeout(refreshNotificationData, 300);
         return;
     }
+    
+    // ===== КНОПКА "ЗАВЕРШИТЬ ТРЕНИРОВКУ" =====
+    const finishBtn = e.target.closest('#finishDoneBtn');
+    if (finishBtn) {
+        console.log('🔄 Кнопка "Завершить тренировку" -> обновление');
+        // Даём время на сохранение тренировки, потом обновляем
+        setTimeout(refreshNotificationData, 1000);
+        return;
+    }
 });
