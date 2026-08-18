@@ -80,7 +80,11 @@ body {
 .dashboard-header {
     text-align: center;
     margin-bottom: 0rem;
-    padding-top: 0px;
+    padding-top: 10px;
+}
+
+#page-training-session .dashboard-header {
+    padding-top: 20px;
 }
 
 .dashboard-title {
@@ -129,7 +133,7 @@ body {
 
 .section-title {
     flex: 1;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--dark);
     margin: 0;
@@ -539,8 +543,9 @@ body {
     display: flex;
     gap: 0.5rem;
     background: var(--light);
-    padding: 0.4rem;
+    padding: 0rem;
     border-radius: 14px;
+    width: 100%;
 }
 
 .tab-btn {
@@ -813,6 +818,18 @@ body {
     color: var(--accent);
     min-width: 30px;
     text-align: right;
+}
+
+.item-xp {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding-right: 0.3rem;
+    white-space: nowrap;
+}
+
+.item-card.current-user {
+    border: 2px solid var(--accent);
 }
 
 /* ===================ИСТОРИЯ ТРЕНИРОВОК ==================== */
@@ -1193,42 +1210,49 @@ body {
 
 /* ===================ДРУЗЬЯ ==================== */
 .friends-list-block {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 1rem 1rem 0.6rem 1rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
-.friends-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.3rem 0.2rem;
-    margin-top: 0.8rem;
-    margin-bottom: 0.2rem;
-}
-
-.friends-section-title {
+.friends-list-block .section-title {
     font-size: 1rem;
     font-weight: 700;
     color: var(--dark);
-    letter-spacing: 0.3px;
 }
 
 .friend-item {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    background: var(--light);
-    padding: 0.6rem 0.6rem;
-    border-radius: 10px;
-    margin-bottom: 0.4rem;
+    background: var(--white);
+    padding: 0.8rem;
+    border-radius: 16px;
+    margin-bottom: 0.8rem;
     cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border: 2px solid transparent;
+}
+
+.friend-item:active {
+    opacity: 0.8;
+}
+
+.friend-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: var(--white);
+    padding: 0.8rem;
+    border-radius: 16px;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .friend-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--accent-light);
     color: var(--accent);
@@ -1239,6 +1263,24 @@ body {
     font-size: 1rem;
     flex-shrink: 0;
     text-transform: uppercase;
+}
+
+.friend-result-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.friend-result-info strong {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.friend-result-info span {
+    font-size: 0.75rem;
+    color: var(--slate);
 }
 
 .friend-info {
@@ -1262,26 +1304,22 @@ body {
 }
 
 .friend-delete-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     border: none;
     background: transparent;
     color: var(--slate);
-    font-size: 1rem;
+    font-size: 1.1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    border-radius: 50%;
 }
 
 .friend-delete-btn:active {
     opacity: 0.6;
-}
-
-.friend-delete-btn:hover {
-    color: var(--danger);
 }
 
 .friend-profile-avatar {
@@ -1306,12 +1344,40 @@ body {
     word-break: break-all;
 }
 
+/* Пустые состояния */
+#profileTab-friends .empty-state {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+#profileTab-friends .empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+#profileTab-friends .empty-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.3rem;
+}
+
+#profileTab-friends .empty-text {
+    color: var(--slate);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
 /* ===================ПОИСК ==================== */
 .search-container {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
 }
 
 .search-input {
@@ -1319,7 +1385,7 @@ body {
     padding: 0.6rem 1rem;
     border: 1.5px solid #E2E8F0;
     border-radius: 10px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     background: #FAFCFF;
     color: #0F172A;
     min-width: 0;
@@ -1332,8 +1398,8 @@ body {
 }
 
 .search-btn {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
     white-space: nowrap;
     flex-shrink: 0;
     width: auto;
@@ -2480,7 +2546,7 @@ body {
     }
 
     .friends-section-title {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
 
     .exercise-search-block {

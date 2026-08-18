@@ -794,26 +794,56 @@
 </div>
 </div>
 
-            <!-- Вкладка: Друзья -->
-            <div id="profileTab-friends" class="profile-tab-content">
-                <div class="friends-list-block">
-                    <div class="search-container">
-                        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
-                        <button class="btn btn-primary search-btn" id="searchBtn">Найти</button>
-                    </div>
-                    <div id="searchResults" class="item-grid"></div>
-
-                    <div class="friends-section-header">
-                        <span class="friends-section-title">Друзья</span>
-                    </div>
-                    <div id="friendsList" class="item-grid"></div>
-
-                    <div class="friends-section-header">
-                        <span class="friends-section-title">Заявки</span>
-                    </div>
-                    <div id="friendRequests" class="item-grid"></div>
-                </div>
+<!-- Вкладка: Друзья -->
+<div id="profileTab-friends" class="profile-tab-content">
+    <div class="section-block" data-block-id="friends-search">
+        <div class="friends-list-block">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
+                <button class="btn btn-primary search-btn" id="searchBtn">Найти</button>
             </div>
+            <div id="searchResults" class="item-grid"></div>
+        </div>
+    </div>
+
+    <div class="section-block" data-block-id="friends-list">
+        <div class="section-header">
+            <h2 class="section-title">Друзья</h2>
+            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+        </div>
+        <div class="section-body">
+            <div id="friendsList" class="item-grid"></div>
+        </div>
+    </div>
+
+    <div class="section-block" data-block-id="friend-requests">
+        <div class="section-header">
+            <h2 class="section-title">Заявки</h2>
+            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+        </div>
+        <div class="section-body">
+            <div id="friendRequests" class="item-grid"></div>
+        </div>
+    </div>
+
+    <!-- Кнопки редактирования -->
+    <div id="friendsEditButtons" style="margin-top: 0.5rem; width: 100%;">
+        <button id="editFriendsBtn" class="btn btn-primary btn-center">
+            <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
+        </button>
+        <div id="friendsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
+            <button id="resetFriendsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
+            </button>
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <button id="saveFriendsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
+                <button id="cancelFriendsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 

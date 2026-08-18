@@ -3479,8 +3479,6 @@ async function renderFriendsInProfile() {
     const resultsDiv = document.getElementById('searchResults');
     const requestsDiv = document.getElementById('friendRequests');
     const friendsDiv = document.getElementById('friendsList');
-    const requestsCount = document.getElementById('requestsCount');
-    const friendsCount = document.getElementById('friendsCount');
     
     if (searchBtn) {
         searchBtn.onclick = async () => {
@@ -3490,80 +3488,60 @@ async function renderFriendsInProfile() {
             const result = await searchUsers(query);
             if (!result.success) { resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;">Ошибка поиска</p>'; return; }
             if (result.data.length === 0) { resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;">Пользователи не найдены</p>'; return; }
-            resultsDiv.innerHTML = result.data.map(u => {
-                const initial = (u.displayName || 'П')[0].toUpperCase();
-                let buttonHtml = '';
-                if (u.friendshipStatus === 'none') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
-                } else if (u.friendshipStatus === 'pending_sent') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
-                } else if (u.friendshipStatus === 'pending_received') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
-                } else if (u.friendshipStatus === 'friends') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
-                }
-                return `<div class="friend-result-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${u.displayName || 'Пользователь'}</strong><span>${u.email || ''}</span></div>${buttonHtml}</div>`;
-            }).join('');
+resultsDiv.innerHTML = result.data.map(u => {
+    const initial = (u.displayName || 'П')[0].toUpperCase();
+    let buttonHtml = '';
+    if (u.friendshipStatus === 'none') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
+    } else if (u.friendshipStatus === 'pending_sent') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
+    } else if (u.friendshipStatus === 'pending_received') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
+    } else if (u.friendshipStatus === 'friends') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
+    }
+    return `<div class="friend-result-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${u.displayName || 'Пользователь'}</strong><span>${u.email || ''}</span></div>${buttonHtml}</div>`;
+}).join('');
         };
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
     }
     
     const requests = await getFriendRequests();
     let requestsHtml = '';
-    let requestsCountValue = 0;
-    
     if (requests.success && requests.data.length > 0) {
-        requestsCountValue = requests.data.length;
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const newRequests = requests.data.filter(r => !shownRequests.includes(r.id));
-        
         newRequests.forEach(r => {
             const fromUser = r.fromUser || {};
             const name = fromUser.displayName || 'Пользователь';
-            showFriendRequestNotification(
-                '📧',
-                `У вас новая заявка в друзья от ${name}`,
-                r.id
-            );
+            showFriendRequestNotification('📧', `У вас новая заявка в друзья от ${name}`, r.id);
         });
-        
-        requestsHtml += requests.data.map(r => {
+        requestsHtml = requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
             return `<div class="friend-request-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${fromUser.displayName || 'Пользователь'}</strong><span>${fromUser.email || ''}</span></div><div><button class="btn btn-primary btn-sm" onclick="acceptFriend('${r.id}','${r.from}')">Принять</button><button class="btn btn-secondary btn-sm" onclick="rejectFriend('${r.id}')">Отклонить</button></div></div>`;
         }).join('');
     } else {
-        requestsHtml = '<p class="empty-state">Нет заявок</p>';
+        requestsHtml = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки</p></div>';
     }
     requestsDiv.innerHTML = requestsHtml;
-    if (requestsCount) requestsCount.textContent = requestsCountValue;
     
     const friends = await getFriendsList();
     let friendsHtml = '';
-    let friendsCountValue = 0;
-    
     if (friends.success && friends.data.length > 0) {
-        friendsCountValue = friends.data.length;
         const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
         const prevFriendIds = prevFriends.map(f => f.id);
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
-        
         friends.data.forEach(f => {
             const friendId = f.id;
             if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
-                showNotification(
-                    '👤',
-                    `У вас новый друг — ${f.displayName || 'Пользователь'}!`,
-                    null
-                );
+                showNotification('👤', `У вас новый друг — ${f.displayName || 'Пользователь'}!`, null);
                 shownFriendNotifications.push(friendId);
                 localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
             }
         });
-        
         localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
-        
-        friendsHtml += friends.data.map(f => {
+        friendsHtml = friends.data.map(f => {
             const initial = (f.displayName || 'П')[0].toUpperCase();
             const level = getCurrentLevel(f.totalXp || 0).id;
             return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
@@ -3578,10 +3556,9 @@ async function renderFriendsInProfile() {
             </div>`;
         }).join('');
     } else {
-        friendsHtml = '<p class="empty-state">Нет друзей</p>';
+        friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
     friendsDiv.innerHTML = friendsHtml;
-    if (friendsCount) friendsCount.textContent = friendsCountValue;
 }
 
 // ===================ДРУЗЬЯ - ГЛОБАЛЬНЫЕ КНОПКИ ===================
@@ -3979,22 +3956,22 @@ async function loadWorldLeaderboard() {
             checkRankNotification(currentRank, 'world');
         }
         
-        container.innerHTML = users.map((userData, index) => {
-            const position = index + 1;
-            const level = getCurrentLevel(userData.totalXp || 0);
-            const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
-            const isCurrentUser = userData.id === user.uid;
-            return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-                    <div class="exercise-status" id="status-${index}">
-                        <span class="exercise-number" id="number-${index}">${index + 1}</span>
-                    </div>
-                <div class="item-info">
-                    <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
-                    <p class="item-desc">Уровень ${level.id} · ${date}</p>
-                </div>
-                <div class="item-actionXP">${(userData.totalXp || 0).toFixed(1)} XP</div>
-            </div>`;
-        }).join('');
+container.innerHTML = users.map((userData, index) => {
+    const position = index + 1;
+    const level = getCurrentLevel(userData.totalXp || 0);
+    const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
+    const isCurrentUser = userData.id === user.uid;
+    return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+        <div class="exercise-status" id="status-${index}">
+            <span class="exercise-number">${position}</span>
+        </div>
+        <div class="item-info">
+            <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
+            <p class="item-desc">Уровень ${level.id} · ${date}</p>
+        </div>
+        <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+    </div>`;
+}).join('');
     } catch (error) {
         console.error('Ошибка загрузки рейтинга:', error);
         let message = 'Ошибка загрузки. Проверьте интернет.';
@@ -4059,19 +4036,23 @@ async function loadFriendsLeaderboard() {
             const name = userData.displayName || 'Пользователь';
             
             return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-                                    <div class="exercise-status" id="status-${index}">
-                        <span class="exercise-number" id="number-${index}">${index + 1}</span>
-                    </div>
+                <div class="exercise-status" id="status-${index}">
+                    <span class="exercise-number">${position}</span>
+                </div>
                 <div class="item-info">
                     <h3 class="item-title">${name}</h3>
                     <p class="item-desc">Уровень ${level.id} · ${date}</p>
                 </div>
-                <div class="item-actionXP">${(userData.totalXp || 0).toFixed(1)} XP</div>
+                <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
             </div>`;
         }).join('');
 
         if (friends.length === 0) {
-            html += `<div style="text-align:center;color:var(--slate);padding:1.5rem 0 0.5rem 0;font-size:0.9rem;">Нет друзей</div>`;
+            html += `<div class="empty-state" style="padding:1.5rem 0;">
+                <span class="empty-icon">👥</span>
+                <h3 class="empty-title">Нет друзей</h3>
+                <p class="empty-text">Добавьте друзей, чтобы соревноваться!</p>
+            </div>`;
         }
 
         container.innerHTML = html;
