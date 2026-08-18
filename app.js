@@ -1262,9 +1262,47 @@ window.navigateTo = function(page, params) {
         return;
     }
 
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-    const target = document.getElementById('page-' + page);
-    if (target) target.classList.add('page-active');
+    // Получаем текущую активную страницу для определения направления свайпа
+    const currentPage = document.querySelector('.page-active');
+    const currentPageId = currentPage ? currentPage.id : '';
+    const targetPageId = 'page-' + page;
+    
+    // Определяем направление свайпа
+    const pageOrder = ['page-stats', 'page-workouts', 'page-profile'];
+    const currentIndex = pageOrder.indexOf(currentPageId);
+    const targetIndex = pageOrder.indexOf(targetPageId);
+    let swipeDirection = '';
+    
+    if (currentIndex !== -1 && targetIndex !== -1) {
+        if (targetIndex > currentIndex) {
+            swipeDirection = 'page-swipe-left';
+        } else if (targetIndex < currentIndex) {
+            swipeDirection = 'page-swipe-right';
+        }
+    }
+
+    // Скрываем все страницы
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
+        p.style.display = 'none';
+    });
+
+    // Показываем целевую страницу с анимацией
+    const target = document.getElementById(targetPageId);
+    if (target) {
+        target.style.display = 'block';
+        // Добавляем анимацию только для основных страниц
+        if (swipeDirection && ['stats', 'workouts', 'profile'].includes(page)) {
+            target.classList.add(swipeDirection);
+            // Убираем класс анимации после завершения
+            setTimeout(() => {
+                target.classList.remove(swipeDirection);
+            }, 350);
+        }
+        target.classList.add('page-active');
+    }
+
+    // Обновляем навигацию
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.toggle('nav-item-active', btn.dataset.page === page);
     });
@@ -2740,9 +2778,14 @@ async function loadStats() {
         const completed = w.exercises?.filter(e => e.completed === true).length || 0;
         return sum + completed;
     }, 0);
-    document.getElementById('totalWorkouts').textContent = total;
-    document.getElementById('totalMinutes').textContent = totalMinutes;
-    document.getElementById('totalExercises').textContent = totalExercises;
+    
+    const totalWorkoutsEl = document.getElementById('totalWorkouts');
+    const totalMinutesEl = document.getElementById('totalMinutes');
+    const totalExercisesEl = document.getElementById('totalExercises');
+    
+    if (totalWorkoutsEl) totalWorkoutsEl.textContent = total;
+    if (totalMinutesEl) totalMinutesEl.textContent = totalMinutes;
+    if (totalExercisesEl) totalExercisesEl.textContent = totalExercises;
 
     // === УПРАЖНЕНИЯ ПО ГРУППАМ МЫШЦ (ТОЛЬКО ПО ИКОНКАМ) ===
     const exerciseCounts = {};
@@ -2872,6 +2915,7 @@ document.getElementById('nextMonth')?.addEventListener('click', () => {
 });
 
 // ===================ПРОФИЛЬ ===================
+// ===================ПРОФИЛЬ ===================
 async function loadProfile() {
     const user = await getFirebaseUser();
     if (!user) return;
@@ -2883,19 +2927,34 @@ async function loadProfile() {
     const progress = getXpProgress(xp);
     const nextLevel = getNextLevel(xp);
     let progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
-    document.getElementById('profileName').textContent = profile.displayName || 'Пользователь';
-    document.getElementById('profileInitials').textContent = (profile.displayName || 'П')[0].toUpperCase();
-    document.getElementById('profileEmailDisplay').textContent = user.email || '';
-    if (profile.createdAt) {
+    
+    // Получаем элементы с проверкой на существование
+    const profileName = document.getElementById('profileName');
+    const profileInitials = document.getElementById('profileInitials');
+    const profileEmailDisplay = document.getElementById('profileEmailDisplay');
+    const profileDate = document.getElementById('profileDate');
+    const editName = document.getElementById('editName');
+    const levelLvl = document.getElementById('levelLvl');
+    const levelTitle = document.getElementById('levelTitle');
+    const levelProgressText = document.getElementById('levelProgressText');
+    const levelFill = document.getElementById('levelFill');
+    
+    // Безопасно устанавливаем значения
+    if (profileName) profileName.textContent = profile.displayName || 'Пользователь';
+    if (profileInitials) profileInitials.textContent = (profile.displayName || 'П')[0].toUpperCase();
+    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || '';
+    if (profileDate && profile.createdAt) {
         const date = new Date(profile.createdAt);
-        document.getElementById('profileDate').textContent = date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+        profileDate.textContent = date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
     }
-    document.getElementById('editName').value = profile.displayName || '';
-    document.getElementById('editNameError').textContent = '';
-    document.getElementById('levelLvl').textContent = currentLevel.id + ' LVL';
-    document.getElementById('levelTitle').textContent = currentLevel.name;
-    document.getElementById('levelProgressText').textContent = progressText;
-    document.getElementById('levelFill').style.width = progress + '%';
+    if (editName) editName.value = profile.displayName || '';
+    
+    // ★★★ СТРОКА С editNameError УДАЛЕНА ★★★
+    
+    if (levelLvl) levelLvl.textContent = currentLevel.id + ' LVL';
+    if (levelTitle) levelTitle.textContent = currentLevel.name;
+    if (levelProgressText) levelProgressText.textContent = progressText;
+    if (levelFill) levelFill.style.width = progress + '%';
     
     const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
     if (currentLevel.id > prevLevel) {
@@ -2931,26 +2990,28 @@ document.getElementById('editProfileBtn')?.addEventListener('click', () => {
     document.getElementById('profileEdit').style.display = 'block';
     const currentName = document.getElementById('profileName').textContent;
     document.getElementById('editName').value = currentName;
-    document.getElementById('editNameError').textContent = '';
+    // ★★★ УДАЛЯЕМ ЭТУ СТРОКУ ★★★
+    // document.getElementById('editNameError').textContent = '';
 });
+
 document.getElementById('cancelProfileEditBtn')?.addEventListener('click', () => {
     isEditingProfile = false;
     document.getElementById('profileView').style.display = 'block';
     document.getElementById('profileEdit').style.display = 'none';
     loadProfile();
 });
+
 document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
     const nameInput = document.getElementById('editName');
     const name = nameInput.value.trim();
-    const nameError = document.getElementById('editNameError');
     const currentName = document.getElementById('profileName').textContent;
 
     if (!name) {
-        nameError.textContent = 'Введите имя и фамилию';
+        // ★★★ ТАК КАК ЭЛЕМЕНТА НЕТ, ПРОСТО ПОКАЗЫВАЕМ TOAST ★★★
+        showToast('⚠️ Введите имя и фамилию');
         nameInput.classList.add('error');
         return;
     }
-    nameError.textContent = '';
     nameInput.classList.remove('error');
 
     if (name === currentName) {
@@ -2975,22 +3036,46 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
 firebase.auth().onAuthStateChanged(async (user) => {
     const bottomNav = document.getElementById('bottomNav');
     try {
+        // Скрываем все страницы перед проверкой
+        document.querySelectorAll('.page').forEach(p => {
+            p.style.display = 'none';
+            p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
+        });
+        
         if (user) {
-            try { await user.reload(); } catch (e) { console.warn('Ошибка перезагрузки пользователя:', e); }
+            try { 
+                await user.reload(); 
+            } catch (e) { 
+                console.warn('Ошибка перезагрузки пользователя:', e); 
+            }
+            
+            // Проверка подтверждения почты
             if (!user.emailVerified) {
-                bottomNav.style.display = 'none';
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-                document.getElementById('page-login').classList.add('page-active');
+                if (bottomNav) bottomNav.style.display = 'none';
+                const loginPage = document.getElementById('page-login');
+                if (loginPage) {
+                    loginPage.style.display = 'block';
+                    loginPage.classList.add('page-active');
+                }
                 clearAuthFields();
                 return;
             }
-            const isPageLoaded = document.querySelector('#page-workouts.page-active') || document.querySelector('#page-stats.page-active') || document.querySelector('#page-profile.page-active');
+            
+            // Проверяем, не загружена ли уже страница
+            const isPageLoaded = document.querySelector('#page-workouts.page-active') || 
+                                document.querySelector('#page-stats.page-active') || 
+                                document.querySelector('#page-profile.page-active');
             if (isPageLoaded) return;
 
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-            document.getElementById('page-loading').classList.add('page-active');
-            bottomNav.style.display = 'none';
+            // Показываем страницу загрузки
+            const loadingPage = document.getElementById('page-loading');
+            if (loadingPage) {
+                loadingPage.style.display = 'block';
+                loadingPage.classList.add('page-active');
+            }
+            if (bottomNav) bottomNav.style.display = 'none';
 
+            // Загружаем данные
             const [profileResult, workoutsResult] = await Promise.all([
                 getUserProfile(user.uid),
                 getUserWorkoutsFromFirestore(user.uid)
@@ -3014,29 +3099,87 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
             clearAuthFields();
 
+            // Ждем полной загрузки DOM
+            if (document.readyState !== 'complete') {
+                await new Promise(resolve => {
+                    window.addEventListener('load', resolve, { once: true });
+                });
+            }
+
+            // Небольшая задержка для рендеринга DOM
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Загружаем данные
             await loadProfile();
             await loadStats();
             renderMyWorkouts();
             await renderCalendar(currentMonth, currentYear);
             updatePremiumUI();
             initProfileBlocks();
-
+            
+            // Переключаем вкладку профиля
             switchProfileTab('my');
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
 
-            if (typeof syncPendingWorkouts === 'function') syncPendingWorkouts();
+            if (typeof syncPendingWorkouts === 'function') {
+                syncPendingWorkouts();
+            }
+            
+            // Скрываем все страницы и показываем тренировки
+            document.querySelectorAll('.page').forEach(p => {
+                p.style.display = 'none';
+                p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
+            });
+            
+            const workoutsPage = document.getElementById('page-workouts');
+            if (workoutsPage) {
+                workoutsPage.style.display = 'block';
+                workoutsPage.classList.add('page-active');
+            }
+            
+            // Показываем нижнюю навигацию
+            if (bottomNav) {
+                bottomNav.style.display = 'block';
+            }
+            
+            // Обновляем активную кнопку навигации
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.toggle('nav-item-active', btn.dataset.page === 'workouts');
+            });
+            
         } else {
-            bottomNav.style.display = 'none';
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-            document.getElementById('page-hero').classList.add('page-active');
+            // Пользователь не авторизован
+            if (bottomNav) bottomNav.style.display = 'none';
+            
+            // Скрываем все страницы и показываем приветствие
+            document.querySelectorAll('.page').forEach(p => {
+                p.style.display = 'none';
+                p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
+            });
+            
+            const heroPage = document.getElementById('page-hero');
+            if (heroPage) {
+                heroPage.style.display = 'block';
+                heroPage.classList.add('page-active');
+            }
             clearAuthFields();
         }
     } catch (error) {
         console.error('Ошибка в onAuthStateChanged:', error);
-        bottomNav.style.display = 'none';
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-        document.getElementById('page-login').classList.add('page-active');
+        if (bottomNav) bottomNav.style.display = 'none';
+        
+        // В случае ошибки показываем страницу входа
+        document.querySelectorAll('.page').forEach(p => {
+            p.style.display = 'none';
+            p.classList.remove('page-active', 'page-swipe-left', 'page-swipe-right');
+        });
+        
+        const loginPage = document.getElementById('page-login');
+        if (loginPage) {
+            loginPage.style.display = 'block';
+            loginPage.classList.add('page-active');
+        }
         clearAuthFields();
     }
 });
@@ -3066,14 +3209,24 @@ if (registerForm) {
     const nameInput = document.getElementById('regName');
     const emailInput = document.getElementById('regEmail');
     const passwordInput = document.getElementById('regPassword');
-    const nameError = document.getElementById('regNameError');
-    const emailError = document.getElementById('regEmailError');
-    const passwordError = document.getElementById('regPasswordError');
+    let isSubmitting = false;
+    
+    // Очистка ошибок при вводе
+    nameInput.addEventListener('input', () => { 
+        nameInput.classList.remove('error'); 
+    });
+    emailInput.addEventListener('input', () => { 
+        emailInput.classList.remove('error'); 
+    });
+    passwordInput.addEventListener('input', () => { 
+        passwordInput.classList.remove('error'); 
+    });
     
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        if (!preventDoubleClick('registerBtn', 3000)) {
+        // Проверяем, не выполняется ли уже регистрация
+        if (isSubmitting) {
             showToast('⏳ Подождите, регистрация уже выполняется...');
             return;
         }
@@ -3084,11 +3237,39 @@ if (registerForm) {
         const btn = registerForm.querySelector('.btn-primary');
         let hasError = false;
         
-        if (!name) { nameInput.classList.add('error'); nameError.textContent = 'Введите имя'; hasError = true; } else { nameInput.classList.remove('error'); nameError.textContent = ''; }
-        if (!email) { emailInput.classList.add('error'); emailError.textContent = 'Введите почту'; hasError = true; } else { emailInput.classList.remove('error'); emailError.textContent = ''; }
-        if (!password) { passwordInput.classList.add('error'); passwordError.textContent = 'Введите пароль'; hasError = true; } else if (password.length < 6) { passwordInput.classList.add('error'); passwordError.textContent = 'Пароль минимум 6 символов'; hasError = true; } else { passwordInput.classList.remove('error'); passwordError.textContent = ''; }
+        // Валидация
+        if (!name) { 
+            nameInput.classList.add('error'); 
+            showToast('⚠️ Введите имя');
+            hasError = true; 
+        } else { 
+            nameInput.classList.remove('error'); 
+        }
+        
+        if (!email) { 
+            emailInput.classList.add('error'); 
+            showToast('⚠️ Введите почту');
+            hasError = true; 
+        } else { 
+            emailInput.classList.remove('error'); 
+        }
+        
+        if (!password) { 
+            passwordInput.classList.add('error'); 
+            showToast('⚠️ Введите пароль');
+            hasError = true; 
+        } else if (password.length < 6) { 
+            passwordInput.classList.add('error'); 
+            showToast('⚠️ Пароль минимум 6 символов');
+            hasError = true; 
+        } else { 
+            passwordInput.classList.remove('error'); 
+        }
+        
         if (hasError) return;
         
+        // Блокируем кнопку
+        isSubmitting = true;
         btn.textContent = 'Регистрация...';
         btn.disabled = true;
         
@@ -3105,23 +3286,44 @@ if (registerForm) {
                 tutorialCompleted: false
             });
             await result.user.sendEmailVerification();
+            
+            // Разблокируем кнопку
+            isSubmitting = false;
+            btn.textContent = 'Зарегистрироваться';
+            btn.disabled = false;
+            
             showToast('📧 Подтвердите почту! Письмо отправлено на ' + email);
+            
+            // Переключаем на страницу входа
+            setTimeout(() => {
+                showLogin();
+            }, 1000);
+            
         } catch (error) {
             let message = 'Ошибка регистрации';
-            if (error.code === 'auth/email-already-in-use') { message = 'Почта уже используется'; emailInput.classList.add('error'); emailError.textContent = message; }
-            else if (error.code === 'auth/weak-password') { message = 'Пароль минимум 6 символов'; passwordInput.classList.add('error'); passwordError.textContent = message; }
-            else if (error.code === 'auth/invalid-email') { message = 'Неверный формат почты'; emailInput.classList.add('error'); emailError.textContent = message; }
-            else if (error.code === 'auth/network-request-failed') { message = 'Проверьте интернет-соединение'; passwordInput.classList.add('error'); passwordError.textContent = message; }
-            showToast('❌ Ошибка: ' + error.message);
-        } finally {
+            if (error.code === 'auth/email-already-in-use') { 
+                message = 'Почта уже используется'; 
+                emailInput.classList.add('error'); 
+            } else if (error.code === 'auth/weak-password') { 
+                message = 'Пароль минимум 6 символов'; 
+                passwordInput.classList.add('error'); 
+            } else if (error.code === 'auth/invalid-email') { 
+                message = 'Неверный формат почты'; 
+                emailInput.classList.add('error'); 
+            } else if (error.code === 'auth/network-request-failed') { 
+                message = 'Проверьте интернет-соединение'; 
+                passwordInput.classList.add('error'); 
+            } else {
+                message = error.message;
+            }
+            showToast('❌ ' + message);
+            
+            // Разблокируем кнопку
+            isSubmitting = false;
             btn.textContent = 'Зарегистрироваться';
             btn.disabled = false;
         }
     });
-    
-    nameInput.addEventListener('input', () => { nameInput.classList.remove('error'); nameError.textContent = ''; });
-    emailInput.addEventListener('input', () => { emailInput.classList.remove('error'); emailError.textContent = ''; });
-    passwordInput.addEventListener('input', () => { passwordInput.classList.remove('error'); passwordError.textContent = ''; });
 }
 
 // ===================ВХОД ===================
@@ -3129,51 +3331,77 @@ const loginForm = document.getElementById('loginForm');
 if (loginForm) {
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
-    const emailError = document.getElementById('loginEmailError');
-    const passwordError = document.getElementById('loginPasswordError');
     let isSubmitting = false;
     
-    emailInput.addEventListener('input', () => { emailInput.classList.remove('error'); emailError.textContent = ''; });
-    passwordInput.addEventListener('input', () => { passwordInput.classList.remove('error'); passwordError.textContent = ''; });
+    // Очистка ошибок при вводе
+    emailInput.addEventListener('input', () => { 
+        emailInput.classList.remove('error'); 
+    });
+    passwordInput.addEventListener('input', () => { 
+        passwordInput.classList.remove('error'); 
+    });
     
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        if (!preventDoubleClick('loginBtn', 3000)) {
+        // Проверяем, не выполняется ли уже вход
+        if (isSubmitting) {
             showToast('⏳ Подождите, вход уже выполняется...');
             return;
         }
-        if (isSubmitting) return;
         
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const btn = loginForm.querySelector('.btn-primary');
         let hasError = false;
         
-        if (!email) { emailInput.classList.add('error'); emailError.textContent = 'Введите почту'; hasError = true; } else { emailInput.classList.remove('error'); emailError.textContent = ''; }
-        if (!password) { passwordInput.classList.add('error'); passwordError.textContent = 'Введите пароль'; hasError = true; } else { passwordInput.classList.remove('error'); passwordError.textContent = ''; }
+        // Валидация
+        if (!email) { 
+            emailInput.classList.add('error'); 
+            showToast('⚠️ Введите почту');
+            hasError = true; 
+        } else { 
+            emailInput.classList.remove('error'); 
+        }
+        
+        if (!password) { 
+            passwordInput.classList.add('error'); 
+            showToast('⚠️ Введите пароль');
+            hasError = true; 
+        } else { 
+            passwordInput.classList.remove('error'); 
+        }
+        
         if (hasError) return;
         
+        // Блокируем кнопку
         isSubmitting = true;
         btn.textContent = 'Вход...';
         btn.disabled = true;
-        isLoggingIn = true;
         
         try {
             const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+            
             if (!result.user.emailVerified) {
                 showToast('⚠️ Подтвердите почту! Письмо отправлено на ' + email);
+                // Разблокируем кнопку
+                isSubmitting = false;
                 btn.textContent = 'Войти в аккаунт';
                 btn.disabled = false;
-                isLoggingIn = false;
-                isSubmitting = false;
                 return;
             }
+            
+            // Успешный вход - разблокируем перед перезагрузкой
+            isSubmitting = false;
             btn.textContent = 'Войти в аккаунт';
             btn.disabled = false;
-            isLoggingIn = false;
-            isSubmitting = false;
-            window.location.reload();
+            
+            // Показываем уведомление и перезагружаем
+            showToast('✅ Вход выполнен успешно!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+            
         } catch (error) {
             let message = '';
             if (error.code === 'auth/invalid-credential' ||
@@ -3202,12 +3430,14 @@ if (loginForm) {
             } else {
                 message = 'Ошибка входа. Проверьте данные и попробуйте снова';
             }
+            
             passwordInput.classList.add('error');
-            passwordError.textContent = message;
+            showToast('❌ ' + message);
+            
+            // Разблокируем кнопку
+            isSubmitting = false;
             btn.textContent = 'Войти в аккаунт';
             btn.disabled = false;
-            isLoggingIn = false;
-            isSubmitting = false;
         }
     });
 }
@@ -3216,32 +3446,32 @@ if (loginForm) {
 function clearAuthFields() {
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
-    const loginEmailError = document.getElementById('loginEmailError');
-    const loginPasswordError = document.getElementById('loginPasswordError');
 
-    if (loginEmail) loginEmail.value = '';
-    if (loginPassword) loginPassword.value = '';
-    if (loginEmailError) loginEmailError.textContent = '';
-    if (loginPasswordError) loginPasswordError.textContent = '';
-    if (loginEmail) loginEmail.classList.remove('error');
-    if (loginPassword) loginPassword.classList.remove('error');
+    if (loginEmail) {
+        loginEmail.value = '';
+        loginEmail.classList.remove('error');
+    }
+    if (loginPassword) {
+        loginPassword.value = '';
+        loginPassword.classList.remove('error');
+    }
 
     const regName = document.getElementById('regName');
     const regEmail = document.getElementById('regEmail');
     const regPassword = document.getElementById('regPassword');
-    const regNameError = document.getElementById('regNameError');
-    const regEmailError = document.getElementById('regEmailError');
-    const regPasswordError = document.getElementById('regPasswordError');
 
-    if (regName) regName.value = '';
-    if (regEmail) regEmail.value = '';
-    if (regPassword) regPassword.value = '';
-    if (regNameError) regNameError.textContent = '';
-    if (regEmailError) regEmailError.textContent = '';
-    if (regPasswordError) regPasswordError.textContent = '';
-    if (regName) regName.classList.remove('error');
-    if (regEmail) regEmail.classList.remove('error');
-    if (regPassword) regPassword.classList.remove('error');
+    if (regName) {
+        regName.value = '';
+        regName.classList.remove('error');
+    }
+    if (regEmail) {
+        regEmail.value = '';
+        regEmail.classList.remove('error');
+    }
+    if (regPassword) {
+        regPassword.value = '';
+        regPassword.classList.remove('error');
+    }
 }
 
 // ===================ВЫХОД ===================
@@ -3474,6 +3704,8 @@ async function renderFriendsInProfile() {
         return;
     }
     
+    console.log('Рендер друзей...');
+    
     const searchBtn = document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('searchResults');
@@ -3486,26 +3718,45 @@ async function renderFriendsInProfile() {
             resultsDiv.innerHTML = '';
             if (!query) return;
             const result = await searchUsers(query);
-            if (!result.success) { resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;">Ошибка поиска</p>'; return; }
-            if (result.data.length === 0) { resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;">Пользователи не найдены</p>'; return; }
-resultsDiv.innerHTML = result.data.map(u => {
-    const initial = (u.displayName || 'П')[0].toUpperCase();
-    let buttonHtml = '';
-    if (u.friendshipStatus === 'none') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
-    } else if (u.friendshipStatus === 'pending_sent') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
-    } else if (u.friendshipStatus === 'pending_received') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
-    } else if (u.friendshipStatus === 'friends') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
-    }
-    return `<div class="friend-result-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${u.displayName || 'Пользователь'}</strong><span>${u.email || ''}</span></div>${buttonHtml}</div>`;
-}).join('');
+            if (!result.success) { 
+                resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Ошибка поиска</p>'; 
+                return; 
+            }
+            if (result.data.length === 0) { 
+                resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Пользователи не найдены</p>'; 
+                return; 
+            }
+            resultsDiv.innerHTML = result.data.map(u => {
+                const initial = (u.displayName || 'П')[0].toUpperCase();
+                let buttonHtml = '';
+                if (u.friendshipStatus === 'none') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
+                } else if (u.friendshipStatus === 'pending_sent') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
+                } else if (u.friendshipStatus === 'pending_received') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
+                } else if (u.friendshipStatus === 'friends') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
+                }
+                return `<div class="friend-result-item">
+                    <div class="friend-avatar">${initial}</div>
+                    <div class="friend-result-info">
+                        <strong>${u.displayName || 'Пользователь'}</strong>
+                        <span>${u.email || ''}</span>
+                    </div>
+                    ${buttonHtml}
+                </div>`;
+            }).join('');
         };
-        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
+        
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') searchBtn.click(); 
+            });
+        }
     }
     
+    // Загружаем заявки
     const requests = await getFriendRequests();
     let requestsHtml = '';
     if (requests.success && requests.data.length > 0) {
@@ -3519,13 +3770,21 @@ resultsDiv.innerHTML = result.data.map(u => {
         requestsHtml = requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
-            return `<div class="friend-request-item"><div class="friend-avatar">${initial}</div><div class="friend-result-info"><strong>${fromUser.displayName || 'Пользователь'}</strong><span>${fromUser.email || ''}</span></div><div><button class="btn btn-primary btn-sm" onclick="acceptFriend('${r.id}','${r.from}')">Принять</button><button class="btn btn-secondary btn-sm" onclick="rejectFriend('${r.id}')">Отклонить</button></div></div>`;
+            return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
+                <div class="friend-avatar">${initial}</div>
+                <div class="friend-result-info">
+                    <strong>${fromUser.displayName || 'Пользователь'}</strong>
+                    <span>${fromUser.email || ''}</span>
+                </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>`;
         }).join('');
     } else {
         requestsHtml = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки</p></div>';
     }
-    requestsDiv.innerHTML = requestsHtml;
+    if (requestsDiv) requestsDiv.innerHTML = requestsHtml;
     
+    // Загружаем друзей
     const friends = await getFriendsList();
     let friendsHtml = '';
     if (friends.success && friends.data.length > 0) {
@@ -3550,16 +3809,115 @@ resultsDiv.innerHTML = result.data.map(u => {
                     <strong>${f.displayName || 'Пользователь'}</strong>
                     <span>Уровень ${level} · ${(f.totalXp || 0).toFixed(1)} XP</span>
                 </div>
-                <button class="friend-delete-btn" onclick="event.stopPropagation(); removeFriend('${f.id}')" title="Удалить друга">
-                    <i class="fa-regular fa-trash-can"></i>
-                </button>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>`;
         }).join('');
     } else {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
-    friendsDiv.innerHTML = friendsHtml;
+    if (friendsDiv) friendsDiv.innerHTML = friendsHtml;
 }
+
+// ===================ОТКРЫТИЕ ПРОФИЛЯ ЗАЯВКИ ===================
+async function openFriendRequestProfile(requestId, fromUserId) {
+    try {
+        const result = await getUserProfile(fromUserId);
+        if (!result.success) {
+            showToast('❌ Не удалось загрузить данные пользователя');
+            return;
+        }
+        
+        const userData = result.data;
+        
+        // Загружаем тренировки
+        const workoutsResult = await getUserWorkoutsFromFirestore(fromUserId);
+        let workouts = [];
+        let totalSeconds = 0;
+        let totalExercises = 0;
+        
+        if (workoutsResult.success) {
+            workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
+            totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+            totalExercises = workouts.reduce((sum, w) => {
+                const completed = w.exercises?.filter(e => e.completed === true).length || 0;
+                return sum + completed;
+            }, 0);
+        }
+        
+        const name = userData.displayName || 'Пользователь';
+        document.getElementById('friendRequestName').textContent = name;
+        document.getElementById('friendRequestEmail').textContent = userData.email || 'email не указан';
+        document.getElementById('friendRequestAvatar').textContent = name[0].toUpperCase();
+        
+        const xp = userData.totalXp || 0;
+        const currentLevel = getCurrentLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLevel = getNextLevel(xp);
+        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+        
+        document.getElementById('friendRequestLevelLvl').textContent = currentLevel.id + ' LVL';
+        document.getElementById('friendRequestLevelTitle').textContent = currentLevel.name;
+        document.getElementById('friendRequestLevelProgressText').textContent = progressText;
+        document.getElementById('friendRequestLevelFill').style.width = progress + '%';
+        
+        document.getElementById('friendRequestTotalWorkouts').textContent = workouts.length;
+        document.getElementById('friendRequestTotalMinutes').textContent = Math.floor(totalSeconds / 60);
+        document.getElementById('friendRequestTotalExercises').textContent = totalExercises;
+        
+        // Сохраняем ID заявки и пользователя для кнопок
+        document.getElementById('friendRequestAcceptBtn').dataset.requestId = requestId;
+        document.getElementById('friendRequestAcceptBtn').dataset.userId = fromUserId;
+        document.getElementById('friendRequestRejectBtn').dataset.requestId = requestId;
+        
+        openModal('friendRequestProfileModal');
+        
+    } catch (error) {
+        console.error('Ошибка загрузки профиля:', error);
+        showToast('❌ Ошибка загрузки профиля');
+    }
+}
+
+// ===================ОБРАБОТЧИКИ КНОПОК ЗАЯВКИ ===================
+document.getElementById('friendRequestAcceptBtn')?.addEventListener('click', async function() {
+    const requestId = this.dataset.requestId;
+    const userId = this.dataset.userId;
+    if (!requestId || !userId) {
+        showToast('❌ Ошибка: данные не найдены');
+        return;
+    }
+    
+    const result = await acceptFriendRequest(requestId, userId);
+    if (result.success) {
+        closeModal('friendRequestProfileModal');
+        await renderFriendsInProfile();
+        showToast('✅ Заявка принята!');
+    } else {
+        showToast('❌ Ошибка при принятии заявки');
+    }
+});
+
+document.getElementById('friendRequestRejectBtn')?.addEventListener('click', async function() {
+    const requestId = this.dataset.requestId;
+    if (!requestId) {
+        showToast('❌ Ошибка: данные не найдены');
+        return;
+    }
+    
+    const result = await rejectFriendRequest(requestId);
+    if (result.success) {
+        closeModal('friendRequestProfileModal');
+        await renderFriendsInProfile();
+        showToast('❌ Заявка отклонена');
+    } else {
+        showToast('❌ Ошибка при отклонении заявки');
+    }
+});
+
+document.getElementById('friendProfileCloseBtn')?.addEventListener('click', function() {
+    closeModal('friendProfileModal');
+    currentFriendId = null;
+    currentFriendData = null;
+});
 
 // ===================ДРУЗЬЯ - ГЛОБАЛЬНЫЕ КНОПКИ ===================
 window.addFriend = async function(userId, btnElement) {
@@ -4125,10 +4483,6 @@ async function performRefresh() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    initPullToRefresh();
-});
-
 // ===================ТОСТ ===================
 function showToast(message, duration = 3000) {
     const oldToast = document.getElementById('toast');
@@ -4664,18 +5018,43 @@ function toggleEditWorkout() {
 // ===================ИНИЦИАЛИЗАЦИЯ ===================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('SportApp загружен!');
+    
+    // 1. Очистка сессионных данных
     shownThisSession.clear();
     
+    // 2. PREMIUM UI
     updatePremiumUI();
+    
+    // 3. Синхронизация при наличии интернета
     if (navigator.onLine) {
         syncPendingWorkouts();
     }
+    
+    // 4. Цветовая тема
     const currentColor = localStorage.getItem('themeColor') || 'red';
     updateColorStatus(currentColor);
 
+    // 5. Настройки редактирования
     loadEditSettings();
+    
+    // 6. Аккордеон
     initAccordion();
 
+    // 7. Состояние блоков
+    setTimeout(loadBlocksState, 1000);
+    
+    // 8. Вкладки профиля
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            if (tab) switchProfileTab(tab);
+        });
+    });
+    
+    // 9. Pull-to-refresh
+    initPullToRefresh();
+
+    // 10. Применить сохраненный порядок
     applySavedWorldStatsOrder();
 });
 
@@ -5274,10 +5653,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(loadBlocksState, 1000);
-});
-
 window.addEventListener('load', function() {
     setTimeout(loadBlocksState, 500);
 });
@@ -5397,22 +5772,6 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
     }
 });
 
-document.querySelector('#loginForm .btn-primary')?.addEventListener('click', function(e) {
-    if (!preventDoubleClick('loginBtn', 3000)) {
-        e.preventDefault();
-        showToast('⏳ Подождите, вход уже выполняется...');
-        return;
-    }
-});
-
-document.querySelector('#registerForm .btn-primary')?.addEventListener('click', function(e) {
-    if (!preventDoubleClick('registerBtn', 3000)) {
-        e.preventDefault();
-        showToast('⏳ Подождите, регистрация уже выполняется...');
-        return;
-    }
-});
-
 // =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
 function getExerciseIcon(exerciseName) {
     // Сначала ищем в exercisesData
@@ -5449,19 +5808,22 @@ function switchProfileTab(tab) {
     activeProfileTab = tab;
     
     // Переключаем кнопки
-    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+    const profileTabs = document.querySelectorAll('.profile-tab-btn');
+    
+    profileTabs.forEach(btn => {
         btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
     });
     
     // Переключаем контент
-    document.querySelectorAll('.profile-tab-content').forEach(content => {
+    const contents = document.querySelectorAll('.profile-tab-content');
+    
+    contents.forEach(content => {
         content.classList.remove('profile-tab-content-active');
     });
     
     const target = document.getElementById('profileTab-' + tab);
     if (target) {
         target.classList.add('profile-tab-content-active');
-        console.log('✅ Переключено на вкладку:', tab, target);
     } else {
         console.error('❌ Вкладка не найдена:', 'profileTab-' + tab);
     }
@@ -5473,15 +5835,6 @@ function switchProfileTab(tab) {
         }, 100);
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            if (tab) switchProfileTab(tab);
-        });
-    });
-});
 
 // ===================ПРОФИЛЬ ДРУГА ===================
 let currentFriendId = null;
@@ -5649,3 +6002,87 @@ async function removeFriendFromList(friendId) {
         return { success: false };
     }
 }
+
+// ===================СВАЙПЫ ДЛЯ ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ===================
+let touchStartX = 0;
+let touchEndX = 0;
+let isSwiping = false;
+
+// Порядок страниц для свайпа
+const SWIPE_PAGES = ['stats', 'workouts', 'profile'];
+let currentSwipeIndex = 1; // 0 - stats, 1 - workouts, 2 - profile
+
+function getCurrentPageIndex() {
+    const activePage = document.querySelector('.page-active');
+    if (!activePage) return 1;
+    
+    const pageId = activePage.id.replace('page-', '');
+    const index = SWIPE_PAGES.indexOf(pageId);
+    return index !== -1 ? index : 1;
+}
+
+function navigateBySwipe(direction) {
+    const currentIndex = getCurrentPageIndex();
+    let newIndex = currentIndex + direction;
+    
+    // Ограничиваем диапазон
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= SWIPE_PAGES.length) newIndex = SWIPE_PAGES.length - 1;
+    
+    // Если индекс не изменился - выходим
+    if (newIndex === currentIndex) return;
+    
+    const page = SWIPE_PAGES[newIndex];
+    window.navigateTo(page);
+}
+
+// Добавляем обработчики свайпов на весь документ
+document.addEventListener('touchstart', function(e) {
+    // Игнорируем свайпы в модальных окнах
+    if (e.target.closest('.modal-overlay')) return;
+    // Игнорируем свайпы на странице тренировки и финиша
+    const activePage = document.querySelector('.page-active');
+    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
+    
+    touchStartX = e.changedTouches[0].screenX;
+    isSwiping = true;
+}, { passive: true });
+
+document.addEventListener('touchmove', function(e) {
+    if (!isSwiping) return;
+    // Игнорируем свайпы в модальных окнах
+    if (e.target.closest('.modal-overlay')) return;
+    // Игнорируем свайпы на странице тренировки и финиша
+    const activePage = document.querySelector('.page-active');
+    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
+    
+    touchEndX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+    if (!isSwiping) return;
+    isSwiping = false;
+    
+    // Игнорируем свайпы в модальных окнах
+    if (e.target.closest('.modal-overlay')) return;
+    // Игнорируем свайпы на странице тренировки и финиша
+    const activePage = document.querySelector('.page-active');
+    if (activePage && (activePage.id === 'page-training-session' || activePage.id === 'page-finish')) return;
+    
+    const diff = touchStartX - touchEndX;
+    
+    // Минимальное расстояние для свайпа (50px)
+    if (Math.abs(diff) < 50) return;
+    
+    // Свайп влево - следующая страница
+    if (diff > 0) {
+        navigateBySwipe(1);
+    } 
+    // Свайп вправо - предыдущая страница
+    else {
+        navigateBySwipe(-1);
+    }
+    
+    touchStartX = 0;
+    touchEndX = 0;
+}, { passive: true });
