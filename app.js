@@ -797,7 +797,7 @@ function showNotification(icon, text, actionCallback) {
         }
         notificationQueue.push({ icon, text, actionCallback, id: notificationId });
     } else {
-        // Для приглашений - показываем всегда, с уникальным ID чтобы не дублировать в очереди
+        // Для приглашений - показываем всегда
         const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
         notificationQueue.push({ icon, text, actionCallback, id: uniqueId, isInvite: true });
     }
@@ -1633,51 +1633,38 @@ function showFriendRequestNotification(icon, text, requestId) {
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ processNotificationQueue ===================
 function processNotificationQueue() {
-    console.log('🔵 processNotificationQueue вызвана');
-    console.log('📊 Очередь:', notificationQueue.length);
-    console.log('📊 isNotificationShowing:', isNotificationShowing);
-    
     if (notificationQueue.length === 0 || isNotificationShowing) {
-        console.log('⏭️ Очередь пуста или уведомление уже показывается');
         return;
     }
     
     isNotificationShowing = true;
     const notification = notificationQueue.shift();
-    console.log('📄 Уведомление:', notification);
     
     notificationIcon.textContent = notification.icon;
     notificationText.textContent = notification.text;
     
     const okBtn = document.getElementById('notificationOkBtn');
-    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
     
     if (notification.actionCallback) {
-        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
         okBtn.textContent = 'Принять';
         okBtn.onclick = function(e) {
-            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
             if (notification.actionCallback) {
-                console.log('🔵 Вызываем actionCallback');
                 try {
                     notification.actionCallback();
-                    console.log('✅ actionCallback выполнен');
                 } catch (error) {
                     console.error('❌ Ошибка в actionCallback:', error);
                 }
             }
             hideNotification();
             
-            // Для обычных уведомлений (не приглашений) помечаем как прочитанные
+            // ★★★ Для приглашений НЕ сохраняем в localStorage ★★★
             if (!notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
     } else {
-        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
         okBtn.textContent = 'ОК';
         okBtn.onclick = function() {
-            console.log('🔵 Кнопка "ОК" нажата');
             hideNotification();
             
             if (notification.isFriendRequest && notification.requestId) {
@@ -1689,6 +1676,7 @@ function processNotificationQueue() {
                 shownThisSession.delete(notification.requestId);
             }
             
+            // ★★★ Для приглашений НЕ сохраняем в localStorage ★★★
             if (!notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
@@ -1703,7 +1691,6 @@ function processNotificationQueue() {
         notificationCard.classList.add('show');
         notificationCard.style.transform = '';
         notificationCard.style.opacity = '';
-        console.log('✅ Уведомление показано');
     }, 100);
 }
 
