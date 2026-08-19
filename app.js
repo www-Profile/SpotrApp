@@ -975,38 +975,14 @@ if (isTrainingSessionActive) {
     
     const total = coopExercises.length || 0;
     
-    // ★★★ ПРОВЕРЯЕМ ФЛАГ ПЕРЕД ПОКАЗОМ ★★★
-if (partnerProgress >= total && myProgress < total && total > 0) {
-    console.log('👀 Партнер завершил, показываем уведомление');
-    if (!partnerFinishedNotified) {
-        showToast('👀 Партнер завершил тренировку!');
-        partnerFinishedNotified = true;
-    }
-}
-    
-    // Проверяем, завершили ли оба
-    if (myProgress >= total && partnerProgress >= total && total > 0) {
-        console.log('🎉 Оба завершили!');
-        if (data.status !== 'completed') {
-            firebase.firestore()
-                .collection('trainingSessions')
-                .doc(currentSessionId)
-                .update({
-                    status: 'completed',
-                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    console.log('✅ Статус обновлен на completed');
-                    showToast('🎉 Тренировка завершена!');
-                    setTimeout(() => {
-                        window.navigateTo('workouts');
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('❌ Ошибка обновления статуса:', err);
-                });
+    if (partnerProgress >= total && myProgress < total && total > 0) {
+        console.log('👀 Партнер завершил, показываем уведомление');
+        if (!partnerFinishedNotified) {
+            showToast('👀 Партнер завершил тренировку!');
+            partnerFinishedNotified = true;
         }
     }
+    // ★★★ ВЕСЬ БЛОК С ОБНОВЛЕНИЕМ СТАТУСА И ПЕРЕХОДОМ УДАЛЁН ★★★
     return;
 }
 
@@ -1177,8 +1153,10 @@ function showCoopFinishPage() {
     document.getElementById('coopPartnerTime').textContent = formatTime(partnerTime);
     document.getElementById('coopPartnerXp').textContent = `+${Math.round(partnerXp)}`;
     
-    // Переходим на страницу финиша
-    window.navigateTo('coop-finish');
+    // Переходим на страницу финиша с небольшой задержкой
+    setTimeout(() => {
+        window.navigateTo('coop-finish');
+    }, 500);
 }
 
 // Вспомогательная функция для форматирования времени
