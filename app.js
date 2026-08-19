@@ -783,15 +783,24 @@ function showInviteNotification(data, notificationId) {
     markNotificationSeen(id);
 }
 
-function showNotificationWithAction(icon, text, actionCallback) {
-    const notificationId = text + icon;
-    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-    if (seen.includes(notificationId)) {
-        console.log('Уведомление уже показано:', text);
-        return;
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ showNotification ===================
+function showNotification(icon, text, actionCallback) {
+    // Для приглашений НЕ проверяем localStorage
+    const isInvite = text.includes('приглашает');
+    
+    if (!isInvite) {
+        const notificationId = text + icon;
+        const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+        if (seen.includes(notificationId)) {
+            console.log('Уведомление уже показано:', text);
+            return;
+        }
+        notificationQueue.push({ icon, text, actionCallback, id: notificationId });
+    } else {
+        // Для приглашений - показываем всегда, с уникальным ID чтобы не дублировать в очереди
+        const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        notificationQueue.push({ icon, text, actionCallback, id: uniqueId, isInvite: true });
     }
-
-    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
     
     if (!isNotificationShowing) {
         processNotificationQueue();
@@ -1622,6 +1631,7 @@ function showFriendRequestNotification(icon, text, requestId) {
     }
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ processNotificationQueue ===================
 function processNotificationQueue() {
     console.log('🔵 processNotificationQueue вызвана');
     console.log('📊 Очередь:', notificationQueue.length);
@@ -1639,20 +1649,14 @@ function processNotificationQueue() {
     notificationIcon.textContent = notification.icon;
     notificationText.textContent = notification.text;
     
-    // Проверяем, что кнопка существует
     const okBtn = document.getElementById('notificationOkBtn');
     console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
     
-    // Если есть actionCallback — меняем текст кнопки на "Принять"
     if (notification.actionCallback) {
         console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
         okBtn.textContent = 'Принять';
         okBtn.onclick = function(e) {
             console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
-            console.log('🔵 event:', e);
-            console.log('🔵 actionCallback:', notification.actionCallback);
-            
-            // Вызываем actionCallback
             if (notification.actionCallback) {
                 console.log('🔵 Вызываем actionCallback');
                 try {
@@ -1661,21 +1665,11 @@ function processNotificationQueue() {
                 } catch (error) {
                     console.error('❌ Ошибка в actionCallback:', error);
                 }
-            } else {
-                console.log('⚠️ actionCallback не определён');
             }
             hideNotification();
             
-            if (notification.isFriendRequest && notification.requestId) {
-                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
-                if (!shownRequests.includes(notification.requestId)) {
-                    shownRequests.push(notification.requestId);
-                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
-                }
-                shownThisSession.delete(notification.requestId);
-            }
-            
-            if (!notification.isFriendRequest && notification.id) {
+            // Для обычных уведомлений (не приглашений) помечаем как прочитанные
+            if (!notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
@@ -1695,14 +1689,11 @@ function processNotificationQueue() {
                 shownThisSession.delete(notification.requestId);
             }
             
-            if (!notification.isFriendRequest && notification.id) {
+            if (!notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
     }
-    
-    console.log('🔍 Кнопка после установки onclick:', okBtn);
-    console.log('🔍 onclick:', okBtn.onclick);
     
     notificationCard.classList.remove('show');
     notificationCard.style.transform = 'translateY(-120px)';
