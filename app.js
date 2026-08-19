@@ -1316,31 +1316,24 @@ async function updateCoopProgress(completedCount) {
         // ★★★ СИНХРОНИЗИРУЕМ sessionCompleted ★★★
         syncSessionCompletedFromFirestore(completedCount);
         
-        if (isHost) {
-            update.hostProgress = completedCount;
-            if (completedCount >= total) {
-                update.hostFinishedSeconds = currentTime;
-                myFinishedSeconds = currentTime;
-                const completedExercises = coopExercises.filter((_, index) => index < completedCount);
-                update.hostXp = calculateWorkoutXp(completedExercises);
-            }
-            update['exercises'] = coopExercises.map((ex, index) => ({
-                ...ex,
-                hostCompleted: index < completedCount
-            }));
-        } else {
-            update.guestProgress = completedCount;
-            if (completedCount >= total) {
-                update.guestFinishedSeconds = currentTime;
-                myFinishedSeconds = currentTime;
-                const completedExercises = coopExercises.filter((_, index) => index < completedCount);
-                update.guestXp = calculateWorkoutXp(completedExercises);
-            }
-            update['exercises'] = coopExercises.map((ex, index) => ({
-                ...ex,
-                guestCompleted: index < completedCount
-            }));
+    if (isHost) {
+        update.hostProgress = completedCount;
+        // ★★★ ЕСЛИ ЗАВЕРШАЕМ — ВСЕГДА УСТАНАВЛИВАЕМ ФЛАГ ★★★
+        if (completedCount >= total || isFinishing) {
+            update.hostFinished = true;
+            update.hostFinishedSeconds = currentTime;
+            const completedExercises = coopExercises.filter((_, index) => index < completedCount);
+            update.hostXp = calculateWorkoutXp(completedExercises);
         }
+    } else {
+        update.guestProgress = completedCount;
+        if (completedCount >= total || isFinishing) {
+            update.guestFinished = true;
+            update.guestFinishedSeconds = currentTime;
+            const completedExercises = coopExercises.filter((_, index) => index < completedCount);
+            update.guestXp = calculateWorkoutXp(completedExercises);
+        }
+    }
         
         // Обновляем документ
         await firebase.firestore()
@@ -1602,29 +1595,18 @@ function syncSessionCompletedFromFirestore(progress) {
 const originalFinish = finishTrainingSession;
 finishTrainingSession = function() {
     console.log('🏁 finishTrainingSession вызвана');
-    console.log('currentSessionId:', currentSessionId);
-    console.log('sessionData:', sessionData);
-    
-    // ★★★ СОХРАНЯЕМ, ЧТО МЫ ЗАВЕРШИЛИ ★★★
     const completedCount = sessionCompleted.size;
     
     if (currentSessionId && sessionData) {
         const total = sessionData.totalExercises || coopExercises.length || 0;
-        console.log('📊 total:', total, 'partnerProgress:', partnerProgress, 'myProgress:', myProgress);
-        console.log('📊 Выполнено упражнений:', completedCount);
         
-        // Проверяем, завершил ли партнер
+        // ★★★ ВСЕГДА ПЕРЕДАЁМ isFinishing = true ★★★
+        // Это установит флаг hostFinished/guestFinished, даже если не все упражнения выполнены
+        updateCoopProgress(completedCount, true);
+        
         if (partnerProgress < total) {
             console.log('👀 Ожидаем завершения партнера...');
-            showToast('👀 Ожидаем завершения партнера.');
-            
-            // ★★★ ОСТАНАВЛИВАЕМ ТАЙМЕР ★★★
             stopSessionTimer();
-            
-            // ★★★ СОХРАНЯЕМ НАШ ПРОГРЕСС ★★★
-            updateCoopProgress(completedCount);
-            
-            // ★★★ МЕНЯЕМ КНОПКУ "ФИНИШ" НА "ОЖИДАНИЕ" ★★★
             const mainBtn = document.getElementById('sessionMainBtn');
             if (mainBtn) {
                 mainBtn.textContent = 'Ожидание';
@@ -1634,15 +1616,10 @@ finishTrainingSession = function() {
             return;
         }
         
-        // Если партнер уже завершил — показываем финиш
         if (partnerProgress >= total) {
             console.log('🎉 Партнер уже завершил! Показываем финиш.');
             stopSessionTimer();
-            
-            // Сохраняем наш прогресс
-            updateCoopProgress(completedCount).then(() => {
-                showCoopFinishPage();
-            });
+            showCoopFinishPage();
             return;
         }
     }
