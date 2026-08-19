@@ -1706,7 +1706,6 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
 
         // ★★★ ПЕРЕХОДИМ НА СТРАНИЦУ ТРЕНИРОВОК ТОЛЬКО У ЭТОГО УЧАСТНИКА ★★★
         window.navigateTo('workouts');
-        showToast('✅ Тренировка сохранена!');
 
     } catch (error) {
         console.error('Ошибка сохранения:', error);
