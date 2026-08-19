@@ -1287,6 +1287,29 @@ body {
     border: 2px solid transparent;
 }
 
+.friend-itemMOD {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: var(--light);
+    padding: 0.8rem 0.8rem;
+    border-radius: 16px;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border: 2px solid transparent;
+}
+
+.friend-itemMOD .friend-info {
+    text-align: left;
+    flex: 1;
+}
+.friend-itemMOD .friend-info strong,
+.friend-itemMOD .friend-info span {
+    display: block;
+    text-align: left;
+}
+
 /* ===== РЕЗУЛЬТАТЫ ПОИСКА ===== */
 .friend-result-item {
     display: flex;

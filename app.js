@@ -715,7 +715,6 @@ window.cancelInvite = async function() {
     }
 };
 
-// Слушаем входящие приглашения
 function listenForInvites() {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (!user) {
@@ -739,8 +738,17 @@ function listenForInvites() {
                     if (change.type === 'added') {
                         const data = change.doc.data();
                         const id = 'invite_' + data.sessionId;
+                        // Проверяем, не было ли уже показано
                         if (isNotificationSeen(id)) return;
-                        showInviteNotification(data, change.doc.id);
+                        // Показываем уведомление с кнопкой "Принять"
+                        showNotification(
+                            '🏋️',
+                            `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
+                            function() {
+                                acceptInvite(data.sessionId, change.doc.id);
+                            }
+                        );
+                        markNotificationSeen(id);
                     }
                 });
             });
@@ -750,7 +758,9 @@ function listenForInvites() {
 function showInviteNotification(data, notificationId) {
     const id = 'invite_' + data.sessionId;
     if (isNotificationSeen(id)) return;
-    showNotification(
+    
+    // Вместо передачи actionCallback, сохраняем данные и показываем уведомление
+    showNotificationWithAction(
         '🏋️',
         `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
         function() {
@@ -758,6 +768,21 @@ function showInviteNotification(data, notificationId) {
         }
     );
     markNotificationSeen(id);
+}
+
+function showNotificationWithAction(icon, text, actionCallback) {
+    const notificationId = text + icon;
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    if (seen.includes(notificationId)) {
+        console.log('Уведомление уже показано:', text);
+        return;
+    }
+
+    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
+    
+    if (!isNotificationShowing) {
+        processNotificationQueue();
+    }
 }
 
 async function acceptInvite(sessionId, notificationId) {
@@ -979,17 +1004,20 @@ function showFriendSelectModal(friends) {
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-title">Выберите друга</div>
             <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;">
-                ${friends.map(f => `
-                    <div class="friend-item" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer;">
+                ${friends.map(f => {
+                    const level = getCurrentLevel(f.totalXp || 0).id;
+                    const xp = (f.totalXp || 0).toFixed(1);
+                    return `
+                    <div class="friend-itemMOD" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer;">
                         <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
                         <div class="friend-info">
                             <strong>${f.displayName || 'Пользователь'}</strong>
-                            <span>Уровень ${getCurrentLevel(f.totalXp || 0).id}</span>
+                            <span>Уровень ${level} · ${xp} XP</span>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
-            <button class="btn btn-secondary" onclick="document.getElementById('friendSelectModal').remove()">Закрыть</button>
+            <button class="btn btn-primary" onclick="document.getElementById('friendSelectModal').remove()">Закрыть</button>
         </div>
     `;
     document.body.appendChild(overlay);
@@ -1281,25 +1309,46 @@ function processNotificationQueue() {
     notificationIcon.textContent = notification.icon;
     notificationText.textContent = notification.text;
     
-    notificationOkBtn.textContent = 'ОК';
-    notificationOkBtn.onclick = function() {
-        if (notification.actionCallback) notification.actionCallback();
-        hideNotification();
-        
-        if (notification.isFriendRequest && notification.requestId) {
-            const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
-            if (!shownRequests.includes(notification.requestId)) {
-                shownRequests.push(notification.requestId);
-                localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
-                console.log('✅ Заявка сохранена в показанные после ОК:', notification.requestId);
+    // Если есть actionCallback — меняем текст кнопки на "Принять"
+    if (notification.actionCallback) {
+        notificationOkBtn.textContent = 'Принять';
+        notificationOkBtn.onclick = function() {
+            // Вызываем actionCallback
+            if (notification.actionCallback) notification.actionCallback();
+            hideNotification();
+            
+            if (notification.isFriendRequest && notification.requestId) {
+                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+                if (!shownRequests.includes(notification.requestId)) {
+                    shownRequests.push(notification.requestId);
+                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                }
+                shownThisSession.delete(notification.requestId);
             }
-            shownThisSession.delete(notification.requestId);
-        }
-        
-        if (!notification.isFriendRequest && notification.id) {
-            markNotificationSeen(notification.id);
-        }
-    };
+            
+            if (!notification.isFriendRequest && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    } else {
+        notificationOkBtn.textContent = 'ОК';
+        notificationOkBtn.onclick = function() {
+            hideNotification();
+            
+            if (notification.isFriendRequest && notification.requestId) {
+                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+                if (!shownRequests.includes(notification.requestId)) {
+                    shownRequests.push(notification.requestId);
+                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                }
+                shownThisSession.delete(notification.requestId);
+            }
+            
+            if (!notification.isFriendRequest && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    }
     
     notificationCard.classList.remove('show');
     notificationCard.style.transform = 'translateY(-120px)';
