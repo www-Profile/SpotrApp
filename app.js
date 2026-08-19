@@ -982,7 +982,17 @@ if (isTrainingSessionActive) {
             partnerFinishedNotified = true;
         }
     }
-    // ★★★ ВЕСЬ БЛОК С ОБНОВЛЕНИЕМ СТАТУСА И ПЕРЕХОДОМ УДАЛЁН ★★★
+    
+    // ★★★ ДОБАВЛЯЕМ ПРОВЕРКУ, ЧТО ОБА ЗАВЕРШИЛИ ★★★
+    if (myProgress >= total && partnerProgress >= total && total > 0) {
+        console.log('🎉 Оба завершили! Показываем финиш.');
+        // Проверяем, не на странице ли уже финиша, чтобы не вызывать повторно
+        const coopFinishPage = document.getElementById('page-coop-finish');
+        if (coopFinishPage && !coopFinishPage.classList.contains('page-active')) {
+            showCoopFinishPage();
+        }
+    }
+    
     return;
 }
 
