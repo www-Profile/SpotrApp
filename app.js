@@ -857,10 +857,10 @@ async function acceptInvite(sessionId, notificationId) {
         console.log('✅ Сессия обновлена');
         
         // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ: отключаем и включаем сеть
-        console.log('🔄 Принудительное обновление Firestore...');
-        await firebase.firestore().disableNetwork();
-        await firebase.firestore().enableNetwork();
-        console.log('✅ Сеть перезапущена');
+       // console.log('🔄 Принудительное обновление Firestore...');
+       // await firebase.firestore().disableNetwork();
+       // await firebase.firestore().enableNetwork();
+       // console.log('✅ Сеть перезапущена');
         
         currentSessionId = sessionId;
         isHost = false;
@@ -905,16 +905,20 @@ function listenSession(sessionId) {
             }
             console.log('✅ Сессия существует, подписываемся на изменения');
             
-            // Теперь подписываемся
+            // ПРАВИЛЬНАЯ ПОДПИСКА
             sessionListener = firebase.firestore()
                 .collection('trainingSessions')
                 .doc(sessionId)
-                .onSnapshot((snapshot) => {
-                    console.log('📡 onSnapshot сработал');
-                    handleSessionSnapshot(doc);
-                }, (error) => {
-                    console.error('❌ Ошибка в onSnapshot:', error);
-                });
+                .onSnapshot(
+                    { includeMetadataChanges: true },
+                    (doc) => {
+                        console.log('📡 onSnapshot сработал (с метаданными)');
+                        handleSessionSnapshot(doc);
+                    },
+                    (error) => {
+                        console.error('❌ Ошибка в onSnapshot:', error);
+                    }
+                );
         })
         .catch((error) => {
             console.error('❌ Ошибка проверки сессии:', error);
@@ -925,6 +929,7 @@ function listenSession(sessionId) {
 
 function handleSessionSnapshot(doc) {
     console.log('📡 handleSessionSnapshot вызвана');
+    console.log('📡 Метаданные:', doc.metadata);
     
     if (!doc.exists) {
         console.log('❌ Документ не существует');

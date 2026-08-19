@@ -16,7 +16,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 // Включаем офлайн-персистентность (кеширование)
-firebase.firestore().enablePersistence({ synchronizeTabs: true })
+// synchronizeTabs: false — отключаем синхронизацию между вкладками,
+// чтобы избежать проблем с обновлением слушателей
+firebase.firestore().enablePersistence({ synchronizeTabs: false })
   .catch((err) => {
     console.warn('Офлайн-режим не включён:', err.code);
   });
