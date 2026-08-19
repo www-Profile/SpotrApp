@@ -2077,10 +2077,6 @@ font-style: italic;
     flex-shrink: 0;
 }
 
-.session-btn:active {
-    transform: scale(0.92);
-}
-
 .session-btn-prev,
 .session-btn-next {
     background: var(--accent-light);

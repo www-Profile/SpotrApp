@@ -697,6 +697,50 @@ let myFinishedSeconds = null;
 let partnerXp = 0;
 let myXp = 0;
 let finishPageShown = false;
+// ===================СОВМЕСТНЫЕ ТРЕНИРОВКИ ===================
+const SESSION_MAX_AGE_HOURS = 6; // Максимальное время жизни сессии в часах
+const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_HOURS * 60 * 60 * 1000; // в миллисекундах
+
+// =================== ПРОВЕРКА ВРЕМЕНИ СЕССИИ ===================
+function isSessionExpired(createdAt) {
+    if (!createdAt) return false;
+    const createdTime = createdAt.seconds ? createdAt.seconds * 1000 : new Date(createdAt).getTime();
+    const now = Date.now();
+    const age = now - createdTime;
+    const expired = age > SESSION_MAX_AGE_MS;
+    if (expired) {
+        console.log('⏰ Сессия старше ' + SESSION_MAX_AGE_HOURS + ' часов, удаляем');
+    }
+    return expired;
+}
+
+async function deleteSessionIfExpired(sessionId, docData) {
+    if (!sessionId) return false;
+    if (isSessionExpired(docData?.createdAt)) {
+        try {
+            await firebase.firestore()
+                .collection('trainingSessions')
+                .doc(sessionId)
+                .delete();
+            console.log('🗑️ Сессия ' + sessionId + ' удалена (истекло время)');
+            
+            // Удаляем уведомления
+            const snapshot = await firebase.firestore()
+                .collection('notifications')
+                .where('sessionId', '==', sessionId)
+                .get();
+            const batch = firebase.firestore().batch();
+            snapshot.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Ошибка удаления просроченной сессии:', error);
+            return false;
+        }
+    }
+    return false;
+}
 
 // =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 window.cancelInvite = async function() {
@@ -783,38 +827,50 @@ function listenForInvites() {
                             continue;
                         }
                         
-                        // ★★★ ПРОВЕРЯЕМ, НЕ ЗАВЕРШЕНА ЛИ СЕССИЯ ★★★
-                        try {
-                            const doc = await firebase.firestore()
-                                .collection('trainingSessions')
-                                .doc(data.sessionId)
-                                .get();
-                            
-                            if (!doc.exists) {
-                                // Сессия не существует — удаляем уведомление
-                                await firebase.firestore()
-                                    .collection('notifications')
-                                    .doc(change.doc.id)
-                                    .delete();
-                                console.log('🗑️ Уведомление удалено (сессия не существует)');
-                                continue;
-                            }
-                            
-                            const sessionData = doc.data();
-                            // Если сессия завершена или оба завершили — удаляем уведомление
-                            if (sessionData.status === 'completed' || 
-                                (sessionData.hostFinished && sessionData.guestFinished)) {
-                                await firebase.firestore()
-                                    .collection('notifications')
-                                    .doc(change.doc.id)
-                                    .delete();
-                                console.log('🗑️ Уведомление удалено (сессия завершена)');
-                                continue;
-                            }
-                        } catch (error) {
-                            console.error('❌ Ошибка проверки сессии:', error);
-                            // Если ошибка — всё равно показываем уведомление
-                        }
+// В listenForInvites, внутри onSnapshot, в блоке где обрабатывается приглашение:
+try {
+    const doc = await firebase.firestore()
+        .collection('trainingSessions')
+        .doc(data.sessionId)
+        .get();
+    
+    if (!doc.exists) {
+        await firebase.firestore()
+            .collection('notifications')
+            .doc(change.doc.id)
+            .delete();
+        console.log('🗑️ Уведомление удалено (сессия не существует)');
+        continue;
+    }
+    
+    const sessionData = doc.data();
+    
+    // ★★★ ПРОВЕРЯЕМ, НЕ ИСТЕКЛА ЛИ СЕССИЯ ★★★
+    if (isSessionExpired(sessionData.createdAt)) {
+        await firebase.firestore()
+            .collection('notifications')
+            .doc(change.doc.id)
+            .delete();
+        await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(data.sessionId)
+            .delete();
+        console.log('🗑️ Уведомление и сессия удалены (истекло время)');
+        continue;
+    }
+    
+    if (sessionData.status === 'completed' || 
+        (sessionData.hostFinished && sessionData.guestFinished)) {
+        await firebase.firestore()
+            .collection('notifications')
+            .doc(change.doc.id)
+            .delete();
+        console.log('🗑️ Уведомление удалено (сессия завершена)');
+        continue;
+    }
+} catch (error) {
+    console.error('❌ Ошибка проверки сессии:', error);
+}
                         
                         // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ★★★
                         showNotification(
@@ -848,31 +904,20 @@ function showInviteNotification(data, notificationId) {
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ACCEPT INVITE ===================
 async function acceptInvite(sessionId, notificationId) {
-    console.log('🔥🔥🔥 [acceptInvite] НАЧАЛО');
-    console.log('🔥 [acceptInvite] sessionId:', sessionId);
-    console.log('🔥 [acceptInvite] notificationId:', notificationId);
-    
     try {
         const user = await getFirebaseUser();
-        console.log('🔥 [acceptInvite] getFirebaseUser результат:', user ? user.uid : 'null');
         if (!user) {
-            console.log('❌ [acceptInvite] Пользователь не авторизован');
             showToast('❌ Вы не авторизованы');
             return;
         }
-        console.log('✅ [acceptInvite] Пользователь авторизован:', user.uid);
         
-        console.log('🔍 [acceptInvite] Получаем сессию из Firestore...');
         const doc = await firebase.firestore()
             .collection('trainingSessions')
             .doc(sessionId)
             .get();
-        console.log('🔥 [acceptInvite] doc.exists:', doc.exists);
             
         if (!doc.exists) {
-            console.log('❌ [acceptInvite] Сессия не найдена');
             if (notificationId) {
-                console.log('📝 [acceptInvite] Помечаем уведомление как прочитанное');
                 await firebase.firestore()
                     .collection('notifications')
                     .doc(notificationId)
@@ -883,33 +928,35 @@ async function acceptInvite(sessionId, notificationId) {
         }
         
         const data = doc.data();
-        console.log('📄 [acceptInvite] Данные сессии:', {
-            status: data.status,
-            hostId: data.hostId,
-            guestId: data.guestId,
-            hostName: data.hostName,
-            guestName: data.guestName,
-            workoutTitle: data.workoutTitle,
-            totalExercises: data.totalExercises,
-            hostReady: data.hostReady,
-            guestReady: data.guestReady
-        });
+        
+        // ★★★ ПРОВЕРЯЕМ, НЕ ИСТЕКЛА ЛИ СЕССИЯ ★★★
+        if (isSessionExpired(data.createdAt)) {
+            await firebase.firestore()
+                .collection('trainingSessions')
+                .doc(sessionId)
+                .delete();
+            if (notificationId) {
+                await firebase.firestore()
+                    .collection('notifications')
+                    .doc(notificationId)
+                    .delete();
+            }
+            showToast('⏰ Приглашение устарело (более 6 часов)');
+            return;
+        }
         
         if (data.status === 'completed') {
-            console.log('❌ [acceptInvite] Тренировка уже завершена');
             showToast('❌ Тренировка уже завершена');
             return;
         }
         
         if (notificationId) {
-            console.log('📝 [acceptInvite] Помечаем уведомление как прочитанное');
             await firebase.firestore()
                 .collection('notifications')
                 .doc(notificationId)
                 .update({ read: true });
         }
         
-        console.log('🔄 [acceptInvite] Обновляем сессию: guestReady=true, hostReady=true, status=active');
         await firebase.firestore()
             .collection('trainingSessions')
             .doc(sessionId)
@@ -920,29 +967,18 @@ async function acceptInvite(sessionId, notificationId) {
                 startedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         
-        console.log('✅ [acceptInvite] Сессия обновлена');
-        
         currentSessionId = sessionId;
-        console.log('🔥 [acceptInvite] currentSessionId установлен:', currentSessionId);
         isHost = false;
-        console.log('🔥 [acceptInvite] isHost = false');
         
-        console.log('📍 [acceptInvite] Переходим на страницу ожидания');
         window.navigateTo('training-waiting');
-        console.log('✅ [acceptInvite] navigateTo выполнен');
         
-        // Подписываемся с задержкой
         setTimeout(() => {
-            console.log('👂 [acceptInvite] Подписываемся на изменения сессии (с задержкой)');
-            console.log('🔥 [acceptInvite] Вызов listenSession с sessionId:', sessionId);
             listenSession(sessionId);
         }, 500);
         
         showToast(`✅ Вы присоединились к ${data.hostName}`);
-        console.log('✅ [acceptInvite] ЗАВЕРШЕНА');
     } catch (error) {
-        console.error('❌ [acceptInvite] ОШИБКА:', error);
-        console.error('❌ [acceptInvite] stack:', error.stack);
+        console.error('❌ Ошибка принятия приглашения:', error);
         showToast('❌ Не удалось присоединиться к тренировке');
     }
 }
@@ -1033,224 +1069,144 @@ function listenSession(sessionId) {
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
 function handleSessionSnapshot(doc) {
-    console.log('🔥🔥🔥 [handleSessionSnapshot] НАЧАЛО');
-    console.log('🔥 [handleSessionSnapshot] doc.exists:', doc.exists);
-    console.log('🔥 [handleSessionSnapshot] isHost:', isHost);
-    console.log('🔥 [handleSessionSnapshot] coopStarted:', coopStarted);
-    console.log('🔥 [handleSessionSnapshot] finishPageShown:', finishPageShown);
-    console.log('🔥 [handleSessionSnapshot] currentSessionId:', currentSessionId);
-    
     if (!doc.exists) {
-        console.log('❌ [handleSessionSnapshot] Документ не существует (сессия удалена)');
+        console.log('❌ Сессия удалена');
         if (sessionListener) {
-            console.log('🔄 [handleSessionSnapshot] Отключаем слушатель');
             sessionListener();
             sessionListener = null;
         }
         const coopFinishPage = document.getElementById('page-coop-finish');
-        console.log('🔥 [handleSessionSnapshot] coopFinishPage существует?', !!coopFinishPage);
-        console.log('🔥 [handleSessionSnapshot] coopFinishPage active?', coopFinishPage?.classList.contains('page-active'));
         if (coopFinishPage && coopFinishPage.classList.contains('page-active')) {
-            console.log('📍 [handleSessionSnapshot] Переходим на workouts');
             window.navigateTo('workouts');
             showToast('✅ Сессия завершена');
             document.getElementById('bottomNav').style.display = 'block';
         }
-        console.log('❌ [handleSessionSnapshot] ЗАВЕРШЕНА (документ не существует)');
         return;
     }
     
     const data = doc.data();
-    console.log('📄 [handleSessionSnapshot] Данные из onSnapshot ПОЛНЫЕ:', JSON.stringify(data, null, 2));
-    console.log('📄 [handleSessionSnapshot] Ключевые данные:', {
-        status: data.status,
-        hostReady: data.hostReady,
-        guestReady: data.guestReady,
-        hostProgress: data.hostProgress,
-        guestProgress: data.guestProgress,
-        hostFinished: data.hostFinished,
-        guestFinished: data.guestFinished,
-        hostFinishedSeconds: data.hostFinishedSeconds,
-        guestFinishedSeconds: data.guestFinishedSeconds
-    });
     
-    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС ★★★
-    console.log('🔄 [handleSessionSnapshot] Обновляем прогресс из Firestore');
+    // ★★★ ПРОВЕРЯЕМ, НЕ ИСТЕКЛА ЛИ СЕССИЯ ★★★
+    if (isSessionExpired(data.createdAt)) {
+        console.log('⏰ Сессия истекла (6 часов), удаляем');
+        deleteSessionIfExpired(currentSessionId, data);
+        const isOnTrainingPage = document.getElementById('page-training-session').classList.contains('page-active');
+        const isOnWaitingPage = document.getElementById('page-training-waiting').classList.contains('page-active');
+        const isOnFinishPage = document.getElementById('page-coop-finish').classList.contains('page-active');
+        if (isOnTrainingPage || isOnWaitingPage || isOnFinishPage) {
+            showToast('⏰ Время сессии истекло (6 часов)');
+            window.navigateTo('workouts');
+            document.getElementById('bottomNav').style.display = 'block';
+        }
+        return;
+    }
+    
+    // Обновляем прогресс из Firestore
     if (isHost) {
-        console.log('🔥 [handleSessionSnapshot] Я ХОСТ');
         partnerProgress = data.guestProgress || 0;
         myProgress = data.hostProgress || 0;
-        console.log('🔥 [handleSessionSnapshot] partnerProgress =', partnerProgress, 'myProgress =', myProgress);
         if (data.guestFinishedSeconds !== undefined) {
             partnerFinishedSeconds = data.guestFinishedSeconds;
-            console.log('🔥 [handleSessionSnapshot] partnerFinishedSeconds =', partnerFinishedSeconds);
         }
         if (data.hostFinishedSeconds !== undefined) {
             myFinishedSeconds = data.hostFinishedSeconds;
-            console.log('🔥 [handleSessionSnapshot] myFinishedSeconds =', myFinishedSeconds);
         }
         if (data.guestXp !== undefined) {
             partnerXp = data.guestXp;
-            console.log('🔥 [handleSessionSnapshot] partnerXp =', partnerXp);
         }
         if (data.hostXp !== undefined) {
             myXp = data.hostXp;
-            console.log('🔥 [handleSessionSnapshot] myXp =', myXp);
         }
     } else {
-        console.log('🔥 [handleSessionSnapshot] Я ГОСТЬ');
         partnerProgress = data.hostProgress || 0;
         myProgress = data.guestProgress || 0;
-        console.log('🔥 [handleSessionSnapshot] partnerProgress =', partnerProgress, 'myProgress =', myProgress);
         if (data.hostFinishedSeconds !== undefined) {
             partnerFinishedSeconds = data.hostFinishedSeconds;
-            console.log('🔥 [handleSessionSnapshot] partnerFinishedSeconds =', partnerFinishedSeconds);
         }
         if (data.guestFinishedSeconds !== undefined) {
             myFinishedSeconds = data.guestFinishedSeconds;
-            console.log('🔥 [handleSessionSnapshot] myFinishedSeconds =', myFinishedSeconds);
         }
         if (data.hostXp !== undefined) {
             partnerXp = data.hostXp;
-            console.log('🔥 [handleSessionSnapshot] partnerXp =', partnerXp);
         }
         if (data.guestXp !== undefined) {
             myXp = data.guestXp;
-            console.log('🔥 [handleSessionSnapshot] myXp =', myXp);
         }
     }
-    console.log('📊 [handleSessionSnapshot] Итоговый прогресс: myProgress=' + myProgress + ', partnerProgress=' + partnerProgress);
     
-    // Обновляем UI всегда
-    console.log('🔄 [handleSessionSnapshot] Вызов updateCoopUI()');
     updateCoopUI();
 
     // Если оба готовы и тренировка ещё не запущена
-    console.log('🔍 [handleSessionSnapshot] Проверяем условие старта тренировки');
-    console.log('🔥 [handleSessionSnapshot] data.status === "active":', data.status === 'active');
-    console.log('🔥 [handleSessionSnapshot] data.hostReady:', data.hostReady);
-    console.log('🔥 [handleSessionSnapshot] data.guestReady:', data.guestReady);
-    console.log('🔥 [handleSessionSnapshot] !coopStarted:', !coopStarted);
-    
     if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
-        console.log('🎯 [handleSessionSnapshot] УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
+        console.log('🎯 Запускаем тренировку');
         coopStarted = true;
-        console.log('🔥 [handleSessionSnapshot] coopStarted = true');
         finishPageShown = false;
-        console.log('🔥 [handleSessionSnapshot] finishPageShown = false');
-        console.log('🔥 [handleSessionSnapshot] Вызов startCoopTraining(data)');
         startCoopTraining(data);
-        console.log('✅ [handleSessionSnapshot] startCoopTraining вызван');
         return;
     }
-    console.log('⏭️ [handleSessionSnapshot] Условие старта НЕ выполнено');
 
     // Если уже на странице тренировки, обновляем UI
     const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
-    console.log('🔥 [handleSessionSnapshot] isTrainingSessionActive:', isTrainingSessionActive);
     
     if (isTrainingSessionActive) {
-        console.log('🔄 [handleSessionSnapshot] Мы на странице тренировки, обновляем UI');
-        console.log('🔄 [handleSessionSnapshot] Вызов updateCoopUI()');
         updateCoopUI();
         
         const total = coopExercises.length || 0;
-        console.log('🔥 [handleSessionSnapshot] total упражнений:', total);
         
         if (partnerProgress >= total && myProgress < total && total > 0) {
-            console.log('👀 [handleSessionSnapshot] Партнер завершил, показываем уведомление');
             if (!partnerFinishedNotified) {
-                console.log('📢 [handleSessionSnapshot] Показываем тост "Партнер завершил тренировку!"');
                 showToast('👀 Партнер завершил тренировку!');
                 partnerFinishedNotified = true;
-                console.log('🔥 [handleSessionSnapshot] partnerFinishedNotified = true');
             }
         }
         
-        // ★★★ ПРОВЕРКА ПО ФЛАГАМ ★★★
-        console.log('🔍 [handleSessionSnapshot] Проверяем финиш по флагам');
-        console.log('🔥 [handleSessionSnapshot] data.hostFinished:', data.hostFinished);
-        console.log('🔥 [handleSessionSnapshot] data.guestFinished:', data.guestFinished);
-        console.log('🔥 [handleSessionSnapshot] !finishPageShown:', !finishPageShown);
-        
-        // В handleSessionSnapshot перед вызовом showCoopFinishPage()
         const coopFinishPage = document.getElementById('page-coop-finish');
-        console.log('🔥 [handleSessionSnapshot] coopFinishPage существует?', !!coopFinishPage);
-        console.log('🔥 [handleSessionSnapshot] coopFinishPage active?', coopFinishPage?.classList.contains('page-active'));
         if (coopFinishPage && coopFinishPage.classList.contains('page-active')) {
-            console.log('📱 [handleSessionSnapshot] Уже на странице финиша, пропускаем');
             return;
         }
 
         if (data.hostFinished && data.guestFinished && !finishPageShown) {
-            console.log('🎉🎉🎉 [handleSessionSnapshot] ОБА ЗАВЕРШИЛИ! Показываем финиш.');
-            console.log('🔥 [handleSessionSnapshot] finishPageShown = true');
-            console.log('🔄 [handleSessionSnapshot] Вызов stopSessionTimer()');
-            stopSessionTimer();
-            console.log('🔄 [handleSessionSnapshot] Вызов showCoopFinishPage()');
-            showCoopFinishPage();
-            console.log('✅ [handleSessionSnapshot] showCoopFinishPage вызван');
-            return;
-        }
-        
-        // ★★★ НОВАЯ ПРОВЕРКА: СТАТУС "COMPLETED" ★★★
-        if (data.status === 'completed' && !finishPageShown) {
-            console.log('🏁🏁🏁 [handleSessionSnapshot] СЕССИЯ ПОМЕЧЕНА КАК COMPLETED! Показываем финиш.');
+            console.log('🎉 Оба завершили! Показываем финиш.');
             finishPageShown = true;
-            console.log('🔥 [handleSessionSnapshot] finishPageShown = true');
-            console.log('🔄 [handleSessionSnapshot] Вызов stopSessionTimer()');
             stopSessionTimer();
-            console.log('🔄 [handleSessionSnapshot] Вызов showCoopFinishPage()');
             showCoopFinishPage();
-            console.log('✅ [handleSessionSnapshot] showCoopFinishPage вызван');
             return;
         }
         
-        console.log('⏭️ [handleSessionSnapshot] Финиш НЕ показан, продолжаем');
+        if (data.status === 'completed' && !finishPageShown) {
+            console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
+            finishPageShown = true;
+            stopSessionTimer();
+            showCoopFinishPage();
+            return;
+        }
+        
         return;
     }
 
     const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
-    console.log('🔥 [handleSessionSnapshot] isWaitingActive:', isWaitingActive);
     
     if (isWaitingActive) {
-        console.log('📱 [handleSessionSnapshot] Мы на странице ожидания');
-        console.log('🔥 [handleSessionSnapshot] data.guestReady:', data.guestReady);
-        console.log('🔥 [handleSessionSnapshot] data.hostReady:', data.hostReady);
-        
         if (data.guestReady && data.hostReady) {
-            console.log('🎯 [handleSessionSnapshot] Оба готовы!');
             if (!coopStarted) {
-                console.log('🚀 [handleSessionSnapshot] Запускаем тренировку из страницы ожидания');
+                console.log('🚀 Запускаем тренировку из страницы ожидания');
                 coopStarted = true;
-                console.log('🔥 [handleSessionSnapshot] coopStarted = true');
                 finishPageShown = false;
-                console.log('🔥 [handleSessionSnapshot] finishPageShown = false');
-                console.log('🔥 [handleSessionSnapshot] Вызов startCoopTraining(data)');
                 startCoopTraining(data);
-                console.log('✅ [handleSessionSnapshot] startCoopTraining вызван');
             }
         } else if (data.guestReady) {
-            console.log('👤 [handleSessionSnapshot] Друг присоединился!');
             showToast('👤 Друг присоединился! Начинаем.');
         }
         return;
     }
 
-    // ★★★ НОВАЯ ПРОВЕРКА: СТАТУС "COMPLETED" ДЛЯ ДРУГИХ СТРАНИЦ ★★★
     if (data.status === 'completed' && !finishPageShown) {
-        console.log('🏁🏁🏁 [handleSessionSnapshot] СЕССИЯ ПОМЕЧЕНА КАК COMPLETED (другая страница)! Показываем финиш.');
+        console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
         finishPageShown = true;
-        console.log('🔥 [handleSessionSnapshot] finishPageShown = true');
-        console.log('🔄 [handleSessionSnapshot] Вызов stopSessionTimer()');
         stopSessionTimer();
-        console.log('🔄 [handleSessionSnapshot] Вызов showCoopFinishPage()');
         showCoopFinishPage();
-        console.log('✅ [handleSessionSnapshot] showCoopFinishPage вызван');
         return;
     }
-    
-    console.log('✅ [handleSessionSnapshot] ЗАВЕРШЕНА');
 }
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ СТАРТА ТРЕНИРОВКИ ===================
@@ -1907,7 +1863,6 @@ finishTrainingSession = async function() {
             if (mainBtn) {
                 mainBtn.textContent = 'Ожидание';
                 mainBtn.disabled = true;
-                mainBtn.style.opacity = '0.6';
                 console.log('✅ [finishTrainingSession] Кнопка изменена на "Ожидание"');
             }
             console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА (ожидание)');
@@ -3421,22 +3376,18 @@ function updateSessionButtons() {
     if (isFirst) {
         prevBtn.style.visibility = 'visible';
         prevBtn.style.pointerEvents = 'none';
-        prevBtn.style.opacity = '0.3';
     } else {
         prevBtn.style.visibility = 'visible';
         prevBtn.style.pointerEvents = 'auto';
-        prevBtn.style.opacity = '1';
     }
 
     if (isLast) {
         nextBtn.style.visibility = 'visible';
-        nextBtn.style.pointerEvents = 'none';
-        nextBtn.style.opacity = '0.3';
+        nextBtn.style.pointerEvents = 'auto';
         mainBtn.textContent = 'ФИНИШ';
     } else {
         nextBtn.style.visibility = 'visible';
         nextBtn.style.pointerEvents = 'auto';
-        nextBtn.style.opacity = '1';
         mainBtn.textContent = 'ГОТОВО';
     }
 }
@@ -3456,22 +3407,22 @@ function goToNextExercise() {
     console.log('🔥 [goToNextExercise] sessionExercises.length:', sessionExercises.length);
     console.log('🔥 [goToNextExercise] sessionCompleted.has(sessionCurrentIndex):', sessionCompleted.has(sessionCurrentIndex));
     
-    if (sessionCurrentIndex < sessionExercises.length - 1) {
+    // ★★★ ПРОВЕРЯЕМ, ЕСТЬ ЛИ СЛЕДУЮЩЕЕ УПРАЖНЕНИЕ ★★★
+    const hasNext = sessionCurrentIndex < sessionExercises.length - 1;
+    
+    if (hasNext) {
+        // Есть следующее упражнение — обычная логика
         if (!sessionCompleted.has(sessionCurrentIndex)) {
-            console.log('⚠️ [goToNextExercise] Упражнение не выполнено, показываем модалку');
             showConfirmModal(
                 'Упражнение не выполнено',
-                'Вы пропускаете упражнение без отметки. Оно не засчитается в статистику. Продолжить?',
+                'Вы пропускаете упражнение без отметки, оно не засчитается в статистику, продолжить?',
                 function() {
                     console.log('✅ [goToNextExercise] Пользователь подтвердил пропуск');
                     sessionCurrentIndex++;
-                    console.log('🔥 [goToNextExercise] sessionCurrentIndex:', sessionCurrentIndex);
                     renderSessionExercise();
                     renderSessionProgress();
                     updateSessionButtons();
-                    
                     if (currentSessionId && sessionData) {
-                        console.log('🔄 [goToNextExercise] Вызов updateCoopProgress(' + sessionCompleted.size + ', false)');
                         updateCoopProgress(sessionCompleted.size, false);
                     }
                 },
@@ -3480,15 +3431,32 @@ function goToNextExercise() {
         } else {
             console.log('✅ [goToNextExercise] Упражнение выполнено, переходим');
             sessionCurrentIndex++;
-            console.log('🔥 [goToNextExercise] sessionCurrentIndex:', sessionCurrentIndex);
             renderSessionExercise();
             renderSessionProgress();
             updateSessionButtons();
-            
             if (currentSessionId && sessionData) {
-                console.log('🔄 [goToNextExercise] Вызов updateCoopProgress(' + sessionCompleted.size + ', false)');
                 updateCoopProgress(sessionCompleted.size, false);
             }
+        }
+    } else {
+        // ★★★ ЭТО ПОСЛЕДНЕЕ УПРАЖНЕНИЕ ★★★
+        console.log('🏁 [goToNextExercise] Это последнее упражнение');
+        
+        if (!sessionCompleted.has(sessionCurrentIndex)) {
+            // Последнее упражнение НЕ ВЫПОЛНЕНО — спрашиваем
+            showConfirmModal(
+                'Упражнение не выполнено',
+                'Вы пропускаете последнее упражнение. Оно не засчитается в статистику. Завершить тренировку?',
+                function() {
+                    console.log('✅ [goToNextExercise] Пользователь подтвердил пропуск последнего упражнения');
+                    finishTrainingSession();
+                },
+                'Завершить'
+            );
+        } else {
+            // Последнее упражнение выполнено — завершаем
+            console.log('✅ [goToNextExercise] Последнее упражнение выполнено, завершаем');
+            finishTrainingSession();
         }
     }
     console.log('✅ [goToNextExercise] ЗАВЕРШЕНА');
