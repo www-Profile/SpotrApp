@@ -885,17 +885,13 @@ body {
 
 .history-scroll-wrapper::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 4px;
+    border-radius: 50%;
 }
 
 .history-scroll-wrapper::-webkit-scrollbar-thumb {
     background: var(--slate);
-    border-radius: 4px;
+    border-radius: 50%;
     opacity: 0.5;
-}
-
-.history-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--dark);
 }
 
 .history-scroll-wrapper {

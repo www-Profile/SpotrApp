@@ -1184,7 +1184,6 @@ function handleSessionSnapshot(doc) {
 
         if (data.hostFinished && data.guestFinished && !finishPageShown) {
             console.log('🎉🎉🎉 [handleSessionSnapshot] ОБА ЗАВЕРШИЛИ! Показываем финиш.');
-            finishPageShown = true;
             console.log('🔥 [handleSessionSnapshot] finishPageShown = true');
             console.log('🔄 [handleSessionSnapshot] Вызов stopSessionTimer()');
             stopSessionTimer();
@@ -1403,11 +1402,6 @@ function showCoopFinishPage() {
     console.log('🔥🔥🔥 [showCoopFinishPage] НАЧАЛО');
     console.log('🔥 [showCoopFinishPage] finishPageShown:', finishPageShown);
     
-    // ★★★ ПРОВЕРЯЕМ ФЛАГ ★★★
-    if (finishPageShown) {
-        console.log('⏭️ [showCoopFinishPage] Финиш уже показан, пропускаем');
-        return;
-    }
     finishPageShown = true;
     console.log('🔥 [showCoopFinishPage] finishPageShown = true');
     
@@ -1640,7 +1634,6 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             
             if (data.hostFinished && data.guestFinished && !finishPageShown) {
                 console.log('🎉🎉🎉 [updateCoopProgress] ОБА ЗАВЕРШИЛИ! Показываем финиш.');
-                finishPageShown = true;
                 console.log('🔥 [updateCoopProgress] finishPageShown = true');
                 console.log('🔄 [updateCoopProgress] Вызов stopSessionTimer()');
                 stopSessionTimer();
