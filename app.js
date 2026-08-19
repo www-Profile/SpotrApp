@@ -559,6 +559,140 @@ function getWorkoutIcon(workout) {
     return 'bodybuilding';
 }
 
+// ===================ЕДИНАЯ СИСТЕМА УПРАВЛЕНИЯ ВКЛАДКАМИ ===================
+const TabManager = {
+    // Ключ для localStorage
+    STORAGE_KEY: 'sportapp_tabs',
+    
+    // Состояние
+    state: {
+        stats: 'personal',
+        workouts: 'ready',
+        profile: 'my'
+    },
+    
+    // Загрузить состояние из localStorage
+    load() {
+        const saved = localStorage.getItem(this.STORAGE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                this.state = { ...this.state, ...parsed };
+            } catch (e) {
+                console.warn('Ошибка загрузки вкладок:', e);
+            }
+        }
+        return this.state;
+    },
+    
+    // Сохранить состояние
+    save() {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+    },
+    
+    // Переключить вкладку статистики
+stats(tab) {
+    this.state.stats = tab;
+    activeStatsTab = tab;
+        // Обновляем UI
+        document.querySelectorAll('#page-stats .tab-btn').forEach(btn => {
+            btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
+        });
+        document.querySelectorAll('#page-stats .stats-tab-content').forEach(content => {
+            content.classList.remove('stats-tab-content-active');
+        });
+        const target = document.getElementById('stats-' + tab);
+        if (target) target.classList.add('stats-tab-content-active');
+        this.save();
+    },
+    
+    // Переключить вкладку тренировок
+workouts(tab) {
+    this.state.workouts = tab;
+    activeWorkoutsTab = tab;
+        // Обновляем UI
+        document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
+            btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
+        });
+        document.querySelectorAll('#page-workouts .tab-content').forEach(content => {
+            content.classList.remove('tab-content-active');
+        });
+        document.getElementById('tab-' + tab).classList.add('tab-content-active');
+        
+        const resetBtn = document.getElementById('resetWorkoutsBtn');
+        if (resetBtn) {
+            const pagesEnabled = localStorage.getItem(EDIT_PAGES_KEY) !== 'false';
+            resetBtn.style.display = (tab === 'ready' && pagesEnabled) ? 'block' : 'none';
+        }
+        this.save();
+    },
+    
+    // Переключить вкладку профиля
+profile(tab) {
+    this.state.profile = tab;
+    activeProfileTab = tab;
+        // Обновляем UI
+        const profileTabs = document.querySelectorAll('.profile-tab-btn');
+        profileTabs.forEach(btn => {
+            btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
+        });
+        const contents = document.querySelectorAll('.profile-tab-content');
+        contents.forEach(content => {
+            content.classList.remove('profile-tab-content-active');
+        });
+        const target = document.getElementById('profileTab-' + tab);
+        if (target) {
+            target.classList.add('profile-tab-content-active');
+        }
+        if (tab === 'friends') {
+            setTimeout(() => renderFriendsInProfile(), 100);
+        }
+        this.save();
+    },
+    
+    // Применить все сохранённые вкладки
+    applyAll() {
+        this.stats(this.state.stats);
+        this.workouts(this.state.workouts);
+        this.profile(this.state.profile);
+        console.log('✅ Вкладки восстановлены:', this.state);
+    }
+};
+
+// Загружаем состояние при инициализации
+TabManager.load();
+
+// Единый обработчик для всех вкладок (готовые, личные, мировая, личная, мой, друзья)
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('.tab-btn, .profile-tab-btn');
+    if (!target) return;
+    const tab = target.dataset.tab;
+    if (!tab) return;
+
+    const page = target.closest('.page');
+    if (!page) return;
+
+    if (page.id === 'page-workouts') {
+        TabManager.workouts(tab);
+    } else if (page.id === 'page-stats') {
+        TabManager.stats(tab);
+    } else if (page.id === 'page-profile') {
+        TabManager.profile(tab);
+    }
+});
+
+// Создаём глобальные переменные для совместимости со старым кодом
+let activeStatsTab = TabManager.state.stats;
+let activeWorkoutsTab = TabManager.state.workouts;
+let activeProfileTab = TabManager.state.profile;
+
+// Обёртки для совместимости
+function applyStatsTab(tab) { TabManager.stats(tab); activeStatsTab = tab; }
+function applyWorkoutsTab(tab) { TabManager.workouts(tab); activeWorkoutsTab = tab; }
+function switchProfileTab(tab) { TabManager.profile(tab); activeProfileTab = tab; }
+function loadTabsState() { TabManager.load(); }
+function saveTabsState() { TabManager.save(); }
+
 // ===================ЗАЩИТА ОТ СПАМА КНОПОК ===================
 const buttonCooldowns = new Map();
 
@@ -1270,10 +1404,9 @@ window.navigateTo = function(page, params) {
         return;
     }
 
-    // Основное переключение страниц
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('page-active');
-        p.style.display = ''; // убираем инлайн display
+        p.style.display = '';
     });
 
     const target = document.getElementById('page-' + page);
@@ -1285,8 +1418,11 @@ window.navigateTo = function(page, params) {
         btn.classList.toggle('nav-item-active', btn.dataset.page === page);
     });
 
-    // Вызовы загрузчиков
-    if (page === 'profile') loadProfile();
+    // ===== ВЫЗОВЫ СТРАНИЦ =====
+if (page === 'profile') {
+    loadProfile();
+    setTimeout(() => TabManager.profile(TabManager.state.profile), 300);
+}
     if (page === 'level-select' && params) loadLevelSelect(params.category);
     if (page === 'workout-detail' && params) {
         loadWorkoutDetail(
@@ -1307,21 +1443,21 @@ window.navigateTo = function(page, params) {
             params.exercises
         );
     }
-    if (page === 'workouts') {
-        applyWorkoutsTab(activeWorkoutsTab);
-        renderMyWorkouts();
-    }
+if (page === 'workouts') {
+    TabManager.workouts(TabManager.state.workouts);
+    renderMyWorkouts();
+}
     if (page === 'exercise-list') renderExerciseListPage();
-    if (page === 'stats') {
-        applyStatsTab(activeStatsTab);
-        if (activeStatsTab === 'world') {
-            loadWorldLeaderboard();
-            loadFriendsLeaderboard();
-            setTimeout(applySavedWorldStatsOrder, 100);
-        } else {
-            loadStats();
-        }
+if (page === 'stats') {
+    TabManager.stats(TabManager.state.stats);
+    if (TabManager.state.stats === 'world') {
+        loadWorldLeaderboard();
+        loadFriendsLeaderboard();
+        setTimeout(applySavedWorldStatsOrder, 100);
+    } else {
+        loadStats();
     }
+}
 
     if (page === 'training-session' || page === 'finish') {
         document.getElementById('bottomNav').style.display = 'none';
@@ -1348,36 +1484,6 @@ function closeModal(modalId) {
     if (modal) modal.style.display = 'none';
 }
 
-// ===================УНИВЕРСАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ВКЛАДОК ===================
-function initTabs(containerSelector, tabSelector, activeTab, loaders) {
-    const container = document.querySelector(containerSelector);
-    if (!container) return;
-    const tabs = container.querySelectorAll(tabSelector);
-    tabs.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            tabs.forEach(b => b.classList.remove('tab-btn-active'));
-            this.classList.add('tab-btn-active');
-            const parent = this.closest('.page') || document;
-            const contents = parent.querySelectorAll('.tab-content, .stats-tab-content');
-            contents.forEach(c => c.classList.remove('tab-content-active', 'stats-tab-content-active'));
-            const targetContent = document.getElementById('tab-' + tab) || document.getElementById('stats-' + tab);
-            if (targetContent) {
-                if (targetContent.classList.contains('stats-tab-content')) {
-                    targetContent.classList.add('stats-tab-content-active');
-                } else {
-                    targetContent.classList.add('tab-content-active');
-                }
-            }
-            if (loaders && typeof loaders[tab] === 'function') {
-                loaders[tab]();
-            }
-        });
-    });
-    const activeBtn = container.querySelector(tabSelector + '[data-tab="' + activeTab + '"]');
-    if (activeBtn) activeBtn.click();
-}
-
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
 window.switchStatsTab = function(tab) {
     const activeTab = document.querySelector('#page-stats .tab-btn.tab-btn-active');
@@ -1394,54 +1500,6 @@ window.switchStatsTab = function(tab) {
         loadStats();
     }
 };
-
-// ===================ВКЛАДКИ ТРЕНИРОВОК ===================
-let activeWorkoutsTab = 'ready';
-let activeStatsTab = 'personal';
-
-function applyWorkoutsTab(tab) {
-    document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
-        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
-    });
-    document.querySelectorAll('#page-workouts .tab-content').forEach(content => {
-        content.classList.remove('tab-content-active');
-    });
-    document.getElementById('tab-' + tab).classList.add('tab-content-active');
-
-    const resetBtn = document.getElementById('resetWorkoutsBtn');
-    if (resetBtn) {
-        const pagesEnabled = localStorage.getItem(EDIT_PAGES_KEY) !== 'false';
-        resetBtn.style.display = (tab === 'ready' && pagesEnabled) ? 'block' : 'none';
-    }
-}
-
-// Функция applyStatsTab - уже правильная
-function applyStatsTab(tab) {
-    document.querySelectorAll('#page-stats .tab-btn').forEach(btn => {
-        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
-    });
-    document.querySelectorAll('#page-stats .stats-tab-content').forEach(content => {
-        content.classList.remove('stats-tab-content-active');
-    });
-    document.getElementById('stats-' + tab).classList.add('stats-tab-content-active');
-}
-
-initTabs('#page-stats .tabs', '.tab-btn', 'personal', {
-    personal: loadStats,
-    world: function() {
-        loadWorldLeaderboard();
-        loadFriendsLeaderboard();
-    }
-});
-
-document.querySelectorAll('#page-workouts .tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const tab = this.dataset.tab;
-        activeWorkoutsTab = tab;
-        applyWorkoutsTab(tab);
-        if (tab === 'my') renderMyWorkouts();
-    });
-});
 
 // ===================КАТЕГОРИИ ТРЕНИРОВОК ===================
 document.querySelectorAll('.item-card:not([data-premium="true"])').forEach(card => {
@@ -2850,7 +2908,7 @@ async function loadStats() {
             }).join('');
         }
     }
-
+    applyStatsTab(activeStatsTab);
     initAccordion();
 }
 
@@ -2962,6 +3020,7 @@ async function loadProfile() {
     }
     localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
     initProfileBlocks();
+    switchProfileTab(activeProfileTab);
 }
 
 // ===================ПРОФИЛЬ - РЕДАКТИРОВАНИЕ ===================
@@ -3124,25 +3183,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
             // ★★★ ДАННЫЕ ЗАГРУЖЕНЫ, НО СТРАНИЦУ ЗАГРУЗКИ НЕ ЗАКРЫВАЕМ ★★★
             console.log('✅ Данные загружены, ждем нажатия кнопки');
          
-        } else {
-            // Пользователь не авторизован - сбрасываем флаг
-            isDataLoaded = false;
-            console.log('👤 Пользователь не авторизован');
-            if (bottomNav) bottomNav.style.display = 'none';
-            
-            document.querySelectorAll('.page').forEach(p => {
-                p.style.display = 'none';
-                p.classList.remove('page-active');
-            });
-            
-            const heroPage = document.getElementById('page-hero');
-            if (heroPage) {
-                heroPage.style.display = 'block';
-                heroPage.classList.add('page-active');
-                console.log('📱 Страница приветствия показана');
-            }
-            clearAuthFields();
-        }
+    } else {
+        // Пользователь не авторизован - сбрасываем флаг
+        isDataLoaded = false;
+        console.log('👤 Пользователь не авторизован');
+        if (bottomNav) bottomNav.style.display = 'none';
+        
+        showHero(); // <-- ВМЕСТО ручного переключения
+        
+        clearAuthFields();
+    }
     } catch (error) {
         console.error('❌ Ошибка в onAuthStateChanged:', error);
         // При ошибке сбрасываем флаг
@@ -3165,21 +3215,42 @@ firebase.auth().onAuthStateChanged(async (user) => {
 });
 
 // ===================ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ===================
-function showLogin() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-    document.getElementById('page-login').classList.add('page-active');
+function showRegister() {
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = ''; // Убираем инлайн display
+    });
+    const registerPage = document.getElementById('page-register');
+    if (registerPage) {
+        registerPage.classList.add('page-active');
+        registerPage.style.display = 'block'; // Явно показываем
+    }
     clearAuthFields();
 }
 
-function showRegister() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-    document.getElementById('page-register').classList.add('page-active');
+function showLogin() {
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = '';
+    });
+    const loginPage = document.getElementById('page-login');
+    if (loginPage) {
+        loginPage.classList.add('page-active');
+        loginPage.style.display = 'block';
+    }
     clearAuthFields();
 }
 
 function showHero() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-    document.getElementById('page-hero').classList.add('page-active');
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = '';
+    });
+    const heroPage = document.getElementById('page-hero');
+    if (heroPage) {
+        heroPage.classList.add('page-active');
+        heroPage.style.display = 'block';
+    }
     clearAuthFields();
 }
 
@@ -3382,37 +3453,25 @@ if (loginForm) {
                 window.location.reload();
             }, 500);
             
-        } catch (error) {
-            let message = '';
-            if (error.code === 'auth/invalid-credential' ||
-                error.code === 'auth/user-not-found' ||
-                error.code === 'auth/wrong-password') {
-                try {
-                    const methods = await firebase.auth().fetchSignInMethodsForEmail(email);
-                    if (methods.length === 0) {
-                        message = 'Мы не нашли аккаунт, привязанный к этой почте';
-                    } else {
-                        message = 'Неверный пароль. Попробуйте ещё раз';
-                    }
-                } catch (fetchError) {
-                    message = 'Неверный email или пароль. Проверьте введённые данные';
-                }
-            } else if (error.code === 'auth/invalid-email') {
-                message = 'Неверный формат email. Проверьте ввод';
-            } else if (error.code === 'auth/too-many-requests') {
-                message = 'Слишком много попыток. Подождите 5 минут и попробуйте снова';
-            } else if (error.code === 'auth/network-request-failed') {
-                message = 'Проверьте интернет-соединение';
-            } else if (error.code === 'auth/user-disabled') {
-                message = 'Этот аккаунт был заблокирован';
-            } else if (error.code === 'auth/internal-error') {
-                message = 'Внутренняя ошибка сервера. Попробуйте позже';
-            } else {
-                message = 'Ошибка входа. Проверьте данные и попробуйте снова';
-            }
-            
-            passwordInput.classList.add('error');
-            showToast('❌ ' + message);
+} catch (error) {
+    let message = '';
+    
+    if (error.code === 'auth/invalid-credential' || 
+        error.code === 'auth/user-not-found' || 
+        error.code === 'auth/wrong-password') {
+        message = 'Неверный email или пароль.';
+    } else if (error.code === 'auth/invalid-email') {
+        message = 'Неверный формат email.';
+    } else if (error.code === 'auth/too-many-requests') {
+        message = 'Слишком много попыток.';
+    } else if (error.code === 'auth/network-request-failed') {
+        message = 'Проверьте интернет-соединение';
+    } else {
+        message = 'Ошибка входа. Попробуйте позже';
+    }
+    
+    passwordInput.classList.add('error');
+    showToast('❌ ' + message);
             
             // Разблокируем кнопку
             isSubmitting = false;
@@ -3481,6 +3540,9 @@ function enterApp() {
 
     // Переходим на страницу тренировок
     window.navigateTo('workouts');
+
+        // Убеждаемся, что нижнее меню видно
+    document.getElementById('bottomNav').style.display = 'block';
 
     refreshNotificationData();
 
@@ -3590,15 +3652,12 @@ async function getFriendRequests() {
         await firebase.firestore().disableNetwork();
         await firebase.firestore().enableNetwork();
         
-        console.log('🔍 Ищем заявки для пользователя:', user.uid);
-        
         const snapshot = await firebase.firestore()
             .collection('friendRequests')
             .where('to', '==', user.uid)
             .where('status', '==', 'pending')
             .get();
         
-        console.log('📦 Найдено заявок:', snapshot.size);
         const requests = [];
         for (const doc of snapshot.docs) {
             const data = doc.data();
@@ -3719,9 +3778,6 @@ async function getFriendsList() {
 
 // ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
 async function renderFriendsInProfile() {
-    
-    console.log('Рендер друзей...');
-    
     const searchBtn = document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('searchResults');
@@ -4612,7 +4668,13 @@ function createTutorialOverlay(step) {
 
     let dotsHtml = '';
     for (let i = 0; i < tutorialSteps.length; i++) {
-        dotsHtml += `<div class="tutorial-dot ${i === currentTutorialStep ? 'tutorial-dot-active' : ''}"></div>`;
+        let dotClass = 'tutorial-dot';
+if (i < currentTutorialStep) {
+    dotClass += ' tutorial-dot-active';
+} else if (i === currentTutorialStep) {
+    dotClass += ' tutorial-dot-active';
+}
+dotsHtml += `<div class="${dotClass}"></div>`;
     }
     const isLast = step.isLast || false;
     const buttonText = isLast ? 'Начать тренироваться' : 'Понятно';
@@ -4639,7 +4701,7 @@ function createTutorialOverlay(step) {
     `;
     document.body.appendChild(tooltip);
 
-    const autoSteps = [1, 6, 10, 11, 16, 17];
+    const autoSteps = [1, 8, 9, 15, 16];
     const isAuto = autoSteps.includes(step.id) && highlightElements.length > 0;
 
     if (isAuto) {
@@ -4733,49 +4795,40 @@ const tutorialSteps = [
         id: 1,
         page: 'workouts',
         highlight: '#bottomNav',
-        text: 'Это главное меню.\nЗдесь есть три раздела: статистика, тренировки и профиль.',
+        text: 'Это главное меню, здесь есть три раздела:\nстатистика, тренировки и профиль.',
+        action: () => {
+            activeWorkoutsTab = 'ready';
+            applyWorkoutsTab('ready');
+        }
     },
     {
         id: 2,
         page: 'stats',
         highlight: ['#page-stats .tab-btn[data-tab="personal"]', '#page-stats .tab-btn[data-tab="world"]'],
-        text: 'Статистика делится на два раздела:\nмировая и личная.',
+        text: 'Статистика делится на два раздела:\nМировая и Личная.',
         action: () => { switchStatsTab('personal'); }
     },
     {
         id: 3,
         page: 'stats',
         highlight: ['#page-stats .tab-btn[data-tab="personal"]', '.stat-card'],
-        text: 'В личной статистике хранятся ваши данные.\nТакие как общее количество тренировок, минуты, упражнения, статистика упражнений по группам мышц, тренировки по категориям, календарь тренировок и история тренировок.'
+        text: 'В личной статистике собрана вся информация о ваших тренировках.\nКоличество тренировок, минут, упражнений, распределение по группам мышц и категориям, календарь и история - всё в одном месте.'
     },
     {
         id: 4,
         page: 'stats',
-        highlight: ['#page-stats .tab-btn[data-tab="world"]', '.section-block[data-block-id="world-leaderboard"]'],
-        text: 'В мировой статистике находится рейтинг пользователей.',
+        highlight: '#page-stats .tab-btn[data-tab="world"]',
+        text: 'В мировом разделе вы можете увидеть рейтинг всех пользователей и отдельно рейтинг ваших друзей.\nСоревнуйтесь и поднимайтесь выше!',
         action: () => { switchStatsTab('world'); }
     },
     {
         id: 5,
-        page: 'stats',
-        highlight: '.section-block[data-block-id="friends-leaderboard"]',
-        text: 'Также есть рейтинг ваших друзей.\nЗдесь вы можете увидеть, кто из ваших друзей больше всех тренируется и соревноваться с ними.',
-        action: () => { switchStatsTab('world'); }
+        page: 'workouts',
+        highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '#page-workouts .tab-btn[data-tab="my"]'],
+        text: 'Страница тренировок делится на два раздела:\nГотовые и Личные.'
     },
     {
         id: 6,
-        page: 'stats',
-        highlight: '#editStatsBtn',
-        text: 'Также вы можете редактировать страницы.\nВы можете как передвигать местами сами разделы, так и содержание этих разделов.\nТакже это доступно на странице тренировок.',
-    },
-    {
-        id: 7,
-        page: 'workouts',
-        highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '#page-workouts .tab-btn[data-tab="my"]'],
-        text: 'Страница тренировок делится на два раздела:\nготовые и личные.'
-    },
-    {
-        id: 8,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="ready"]', '.item-card[data-category="Руки"]'],
         text: 'Здесь уже собраны готовые тренировки.',
@@ -4785,19 +4838,19 @@ const tutorialSteps = [
         }
     },
     {
-        id: 9,
+        id: 7,
         page: 'level-select',
         highlight: '.item-card',
-        text: 'Каждая тренировка разделена на 3 уровня сложности.\nВы сможете найти подходящий для себя.',
+        text: 'Каждая тренировка разделена на 3 уровня сложности.\nНачинайте с первого и постепенно прогрессируйте.',
         action: () => {
             window.navigateTo('level-select', { category: 'Руки' });
         }
     },
     {
-        id: 10,
+        id: 8,
         page: 'workout-detail',
         highlight: '#actionButton',
-        text: 'После выбора уровня вы переходите в саму тренировку,\nгде видите полный список упражнений для этой тренировки.\nСнизу нажимаете "Начать тренировку" и начинаете тренироваться.',
+        text: 'После выбора уровня сложности вы видите список упражнений.\nНажмите "Начать тренировку" и приступайте к занятиям.',
         action: () => {
             window.navigateTo('workout-detail', {
                 category: 'Руки',
@@ -4807,10 +4860,10 @@ const tutorialSteps = [
         }
     },
     {
-        id: 11,
+        id: 9,
         page: 'workout-detail',
         highlight: '#editWorkoutBtn',
-        text: 'Вы можете редактировать тренировку.\nМенять название, добавлять и удалять упражнения.',
+        text: 'Можете редактировать любую тренировку:\nменять название, добавлять и удалять упражнения.',
         action: () => {
             const editWorkoutBtn = document.getElementById('editWorkoutBtn');
             if (editWorkoutBtn) {
@@ -4819,60 +4872,66 @@ const tutorialSteps = [
         }
     },
     {
-        id: 12,
+        id: 10,
         page: 'workout-detail',
         highlight: null,
-        text: 'Очень просим вас редактировать количество подходов и повторений/секунд, и честно отмечать упражнения, которые вы выполнили.\nЭто нужно для точного подсчёта XP и статистики.',
+        text: 'Важно: честно отмечайте выполненные упражнения и регулируйте количество подходов и повторений под себя.\nОт этого зависит точность расчёта XP и ваша статистика.'
     },
     {
-        id: 13,
+        id: 11,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="my"]', '.custom-workout .btn-primary'],
-        text: 'Здесь вы можете создавать свои собственные тренировки и редактировать их.',
+        text: 'В разделе "Личные" вы можете создавать свои собственные тренировки и редактировать их.',
         action: () => {
             activeWorkoutsTab = 'my';
             applyWorkoutsTab('my');
         }
     },
     {
+        id: 12,
+        page: 'profile',
+        highlight: [ '.profile-tab-btn[data-tab="my"]', '.profile-tab-btn[data-tab="friends"]'],
+        text: 'Профиль делится на два раздела:\nМой и Друзья.'
+    },
+    {
+    id: 13,
+    page: 'profile',
+    highlight: '.profile-card',
+    text: 'Это ваш профиль.'
+    },
+    {
         id: 14,
         page: 'profile',
-        highlight: ['.profile-card', '.profile-tab-btn[data-tab="my"]'],
-        text: 'Это ваш профиль :)'
+        highlight: '.level-block',
+        text: 'Это система уровней.\nТренируйтесь, получайте XP и повышайте свой уровень.\nСоревнуйтесь с друзьями и другими пользователями!'
     },
     {
         id: 15,
         page: 'profile',
-        highlight: '.level-block',
-        text: 'Это система уровней.\nПо ней вы будете соревноваться с друзьями и другими пользователями.\nЧтобы повысить уровень, нужно тренироваться.'
+        highlight: '#settings-block-main .settings-block',
+        text: 'В дополнительных настройках вы можете настроить приложение под себя.'
     },
     {
         id: 16,
         page: 'profile',
-        highlight: '#settings-block-main .settings-block',
-        text: 'Это дополнительные настройки.\nЗдесь вы можете подключить PREMIUM, изменить акцентный цвет,пройти это обучение еще раз,включать и выключать кнопки редактирования.'
+        highlight: '#dangerSettings .settings-block',
+        text: 'Здесь находятся важные настройки.\nБудьте внимательны - эти действия нельзя отменить.'
     },
     {
         id: 17,
         page: 'profile',
-        highlight: '#dangerSettings .settings-block',
-        text: 'Это невозвратные настройки.\nЗдесь вы можете сбросить весь свой прогресс — это действие безвозвратно удалит всю вашу статистику и обнулит XP.\nТакже здесь можно выйти из аккаунта или полностью удалить свой профиль со всеми данными.\nБудьте осторожны с этими действиями!'
-    },
-    {
-        id: 18,
-        page: 'profile',
         highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block'],
-        text: 'Здесь вы можете найти своих друзей.\nДобавляйте их в друзья, чтобы соревноваться и видеть их прогресс в рейтинге.',
+        text: 'В разделе "Друзья" вы можете находить друзей, отправлять заявки и следить за их прогрессом в рейтинге.',
         action: () => {
             switchProfileTab('friends');
             renderFriendsInProfile();
         }
     },
     {
-        id: 19,
+        id: 18,
         page: 'workouts',
         highlight: null,
-        text: 'Пара важных правил!\nОтмечайте только те упражнения, которые действительно выполнили.\nРегулируйте количество подходов и повторений под себя.\nОт вашей честности зависит точность расчёта XP.\nТренируйтесь с умом и достигайте своих целей!',
+        text: 'И главное правило!\nОтмечайте только те упражнения, которые действительно выполнили.\nНастраивайте подходы и повторения под себя.\nТренируйтесь с умом и достигайте целей!',
         isLast: true,
         action: () => {
             activeWorkoutsTab = 'ready';
@@ -5069,19 +5128,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 7. Состояние блоков
     setTimeout(loadBlocksState, 1000);
     
-    // 8. Вкладки профиля
-    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            if (tab) switchProfileTab(tab);
-        });
-    });
-    
     // 9. Pull-to-refresh
     initPullToRefresh();
 
     // 10. Применить сохраненный порядок
     applySavedWorldStatsOrder();
+    
+    // 11. Применяем сохранённые вкладки
+    setTimeout(() => {
+        TabManager.applyAll();
+    }, 100);
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -5411,60 +5467,85 @@ class PageEditor {
         this.disableEdit(false);
     }
 
-    reset() {
-        showConfirmModal(
-            'Сбросить порядок?',
-            'Вернуть стандартный порядок элементов?',
-            () => {
-                localStorage.removeItem(this.storageKey);
-                showToast('🔄 Порядок сброшен к стандартному');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300);
-            },
-            'Сбросить'
-        );
-    }
+reset() {
+    showConfirmModal(
+        'Сбросить порядок?',
+        'Вернуть стандартный порядок элементов?',
+        () => {
+            // 1. Удаляем сохранённый лейаут
+            localStorage.removeItem(this.storageKey);
+            
+            // 2. Отключаем режим редактирования
+            this.disableEdit(false);
+            
+            // 3. Применяем дефолтный лейаут
+            this.applyLayout(this.defaultLayout);
+            
+            showToast('🔄 Порядок сброшен к стандартному');
+        },
+        'Сбросить'
+    );
+}
 
-    blockNavigation() {
-        document.addEventListener('click', this.blockedClickHandler = (e) => {
-            if (e.target.closest('#statsEditActions') ||
-                e.target.closest('#workoutsEditActions') ||
-                e.target.closest('#worldStatsEditActions') ||
-                e.target.closest('#editStatsBtn') ||
-                e.target.closest('#editWorkoutsBtn') ||
-                e.target.closest('#editWorldStatsBtn')) {
-                return;
-            }
-            if (e.target.closest('.section-drag') ||
-                e.target.closest('.sortable-ghost') ||
-                e.target.closest('#statsEditActions') ||
-                e.target.closest('#workoutsEditActions') ||
-                e.target.closest('#worldStatsEditActions')) {
-                return;
-            }
-            if (e.target.closest('.nav-item')) {
-                e.preventDefault();
-                e.stopPropagation();
-                showToast('⚠️ Сначала завершите редактирование страницы');
-                return false;
-            }
-            if (e.target.closest('.tab-btn') ||
-                e.target.closest('.item-card') ||
-                e.target.closest('.custom-workout .btn-primary') ||
-                e.target.closest('.btn-primary') ||
-                e.target.closest('.btn-secondary') ||
-                e.target.closest('.friend-delete-btn') ||
-                e.target.closest('.workout-delete') ||
-                e.target.closest('#editProfileBtn') ||
-                e.target.closest('.settings-item')) {
-                e.preventDefault();
-                e.stopPropagation();
-                showToast('⚠️ Сначала завершите редактирование страницы');
-                return false;
-            }
-        }, true);
-    }
+blockNavigation() {
+    document.addEventListener('click', this.blockedClickHandler = (e) => {
+        // ВСЕГДА пропускаем клики по модальным окнам и их элементам
+        if (e.target.closest('.modal-overlay') || 
+            e.target.closest('.modal-content') ||
+            e.target.closest('#confirmModal')) {
+            return;
+        }
+
+        // Исключаем все кнопки редактирования
+        if (e.target.closest('#statsEditActions') ||
+            e.target.closest('#workoutsEditActions') ||
+            e.target.closest('#worldStatsEditActions') ||
+            e.target.closest('#friendsEditActions') ||
+            e.target.closest('#editStatsBtn') ||
+            e.target.closest('#editWorkoutsBtn') ||
+            e.target.closest('#editWorldStatsBtn') ||
+            e.target.closest('#editFriendsBtn') ||
+            e.target.closest('#saveStatsBtn') ||
+            e.target.closest('#saveWorkoutsBtn') ||
+            e.target.closest('#saveWorldStatsBtn') ||
+            e.target.closest('#saveFriendsBtn') ||
+            e.target.closest('#cancelStatsBtn') ||
+            e.target.closest('#cancelWorkoutsBtn') ||
+            e.target.closest('#cancelWorldStatsBtn') ||
+            e.target.closest('#cancelFriendsBtn') ||
+            e.target.closest('#resetStatsBtn') ||
+            e.target.closest('#resetWorkoutsBtn') ||
+            e.target.closest('#resetWorldStatsBtn') ||
+            e.target.closest('#resetFriendsBtn')) {
+            return;
+        }
+
+        // Разрешаем перетаскивание
+        if (e.target.closest('.section-drag') ||
+            e.target.closest('.sortable-ghost') ||
+            e.target.closest('.sortable-chosen')) {
+            return;
+        }
+
+        // Блокируем навигацию и клики по элементам
+        if (e.target.closest('.nav-item') ||
+            e.target.closest('.tab-btn') ||
+            e.target.closest('.item-card') ||
+            e.target.closest('.btn-primary') ||
+            e.target.closest('.btn-secondary') ||
+            e.target.closest('.btn-danger') ||
+            e.target.closest('.custom-workout .btn-primary') ||
+            e.target.closest('.friend-delete-btn') ||
+            e.target.closest('.workout-delete') ||
+            e.target.closest('#editProfileBtn') ||
+            e.target.closest('.settings-item')) {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('⚠️ Сначала завершите редактирование страницы');
+            return false;
+        }
+    }, true);
+}
 
     unblockNavigation() {
         if (this.blockedClickHandler) {
@@ -5473,31 +5554,34 @@ class PageEditor {
         }
     }
 
-    initSortables() {
-        this.containers.forEach(container => {
-            const element = document.getElementById(container.id);
-            if (!element) return;
+initSortables() {
+    this.containers.forEach(container => {
+        const element = document.getElementById(container.id);
+        if (!element) return;
 
-            const workoutContainers = ['catalogGridStrength', 'catalogGridFitness', 'catalogGridPremium', 'myWorkoutsList'];
-            let handle = container.handle || null;
-            if (workoutContainers.includes(container.id)) {
-                handle = null;
-            }
+        let filter = container.filter || null;
+        let handle = container.handle || null;
 
-            const s = new Sortable(element, {
-                animation: 150,
-                handle: handle,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                forceFallback: true,
-                filter: '.workout-delete',
-                preventOnFilter: false,
-                delay: 200,
-                delayOnTouchOnly: true
-            });
-            this.sortableInstances.push(s);
+        // Для списков тренировок исключаем кнопки удаления
+        if (['catalogGridStrength', 'catalogGridFitness', 'catalogGridPremium', 'myWorkoutsList'].includes(container.id)) {
+            filter = '.workout-delete';
+            handle = null;
+        }
+
+        const s = new Sortable(element, {
+            animation: 150,
+            handle: handle,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            forceFallback: true,
+            filter: filter,
+            preventOnFilter: false,
+            delay: 200,
+            delayOnTouchOnly: true
         });
-    }
+        this.sortableInstances.push(s);
+    });
+}
 
     destroySortables() {
         this.sortableInstances.forEach(s => s.destroy());
@@ -5567,6 +5651,52 @@ window.worldStatsEditor = new PageEditor({
         'worldStatsBlocksContainer': ['world-leaderboard', 'friends-leaderboard']
     }
 });
+
+// ===================РЕДАКТОР СТРАНИЦЫ ДРУЗЕЙ ===================
+window.friendsEditor = new PageEditor({
+    pageId: 'page-profile',
+    storageKey: 'friendsLayout',
+    editBtnId: 'editFriendsBtn',
+    saveBtnId: 'saveFriendsBtn',
+    cancelBtnId: 'cancelFriendsBtn',
+    resetBtnId: 'resetFriendsBtn',
+    actionsId: 'friendsEditActions',
+    containers: [
+        { 
+            id: 'profileTab-friends', 
+            dataAttr: 'blockId', 
+            handle: '.section-drag',
+            filter: '#friendsEditButtons'   // <-- Игнорируем кнопки при сортировке
+        }
+    ],
+    defaultLayout: {
+        'profileTab-friends': ['friends-search', 'friends-list', 'friend-requests']
+    }
+});
+
+// Обновляем функцию renderFriendsInProfile, чтобы она применяла сохранённый порядок
+const originalRenderFriends = renderFriendsInProfile;
+renderFriendsInProfile = async function() {
+    await originalRenderFriends();
+    setTimeout(() => {
+        const layout = JSON.parse(localStorage.getItem('friendsLayout'));
+        if (!layout) return;
+        const container = document.getElementById('profileTab-friends');
+        if (!container) return;
+        const items = layout['profileTab-friends'] || [];
+        if (items.length === 0) return;
+        const childMap = {};
+        container.querySelectorAll('.section-block').forEach(el => {
+            const id = el.dataset.blockId;
+            if (id) childMap[id] = el;
+        });
+        items.forEach(id => {
+            if (childMap[id]) {
+                container.appendChild(childMap[id]);
+            }
+        });
+    }, 200);
+};
 
 document.getElementById('resetWorkoutsBtn')?.addEventListener('click', function() {
     showConfirmModal(
@@ -5665,16 +5795,6 @@ function loadBlocksState() {
         });
     } catch (e) {}
 }
-
-document.addEventListener('click', function(e) {
-    const header = e.target.closest('.section-header');
-    if (header) {
-        const block = header.closest('.section-block');
-        if (block) {
-            setTimeout(saveBlocksState, 100);
-        }
-    }
-});
 
 window.addEventListener('load', function() {
     setTimeout(loadBlocksState, 500);
@@ -5823,41 +5943,6 @@ if (Array.isArray(levelData)) {
 // =================== ФУНКЦИЯ ПОЛУЧЕНИЯ КАТЕГОРИИ ПО ИКОНКЕ ===================
 function getCategoryByIcon(icon) {
     return ICON_TO_CATEGORY[icon] || 'Без категории';
-}
-
-// ===================ВКЛАДКИ ПРОФИЛЯ ===================
-let activeProfileTab = 'my';
-
-function switchProfileTab(tab) {
-    activeProfileTab = tab;
-    
-    // Переключаем кнопки
-    const profileTabs = document.querySelectorAll('.profile-tab-btn');
-    
-    profileTabs.forEach(btn => {
-        btn.classList.toggle('tab-btn-active', btn.dataset.tab === tab);
-    });
-    
-    // Переключаем контент
-    const contents = document.querySelectorAll('.profile-tab-content');
-    
-    contents.forEach(content => {
-        content.classList.remove('profile-tab-content-active');
-    });
-    
-    const target = document.getElementById('profileTab-' + tab);
-    if (target) {
-        target.classList.add('profile-tab-content-active');
-    } else {
-        console.error('❌ Вкладка не найдена:', 'profileTab-' + tab);
-    }
-    
-    // Загружаем данные для вкладки друзей
-    if (tab === 'friends') {
-        setTimeout(() => {
-            renderFriendsInProfile();
-        }, 100);
-    }
 }
 
 // ===================ПРОФИЛЬ ДРУГА ===================
@@ -6029,8 +6114,6 @@ async function removeFriendFromList(friendId) {
 
 // ===================ОБНОВЛЕНИЕ ТОЛЬКО СТРАНИЦ С УВЕДОМЛЕНИЯМИ ===================
 function refreshNotificationData() {
-    console.log('🔄 Обновление страниц с уведомлениями...');
-    
     renderFriendsInProfile();
     loadWorldLeaderboard();
     loadFriendsLeaderboard();
@@ -6039,29 +6122,34 @@ function refreshNotificationData() {
     console.log('✅ Страницы с уведомлениями обновлены');
 }
 
-// ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ ВСЕХ КЛИКОВ
+// ===================ЕДИНЫЙ ОБРАБОТЧИК ВСЕХ КЛИКОВ ===================
 document.addEventListener('click', function(e) {
-    // Клик по навигации (нижнее меню)
+    // 1. Сохранение состояния блоков (аккордеон)
+    const header = e.target.closest('.section-header');
+    if (header) {
+        const block = header.closest('.section-block');
+        if (block) {
+            setTimeout(saveBlocksState, 100);
+        }
+    }
+
+    // 2. Клик по навигации (нижнее меню)
     const navItem = e.target.closest('.nav-item');
     if (navItem) {
-        console.log('🔄 Навигация -> обновление');
         setTimeout(refreshNotificationData, 300);
         return;
     }
     
-    // Клик по ЛЮБОЙ вкладке (статистика, тренировки, профиль)
+    // 3. Клик по ЛЮБОЙ вкладке (статистика, тренировки, профиль)
     const tabBtn = e.target.closest('.tab-btn');
     if (tabBtn) {
-        console.log('🔄 Вкладка -> обновление');
         setTimeout(refreshNotificationData, 300);
         return;
     }
     
-    // ===== КНОПКА "ЗАВЕРШИТЬ ТРЕНИРОВКУ" =====
+    // 4. Кнопка "Завершить тренировку"
     const finishBtn = e.target.closest('#finishDoneBtn');
     if (finishBtn) {
-        console.log('🔄 Кнопка "Завершить тренировку" -> обновление');
-        // Даём время на сохранение тренировки, потом обновляем
         setTimeout(refreshNotificationData, 1000);
         return;
     }

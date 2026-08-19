@@ -127,7 +127,7 @@ body {
 
 .section-title {
     flex: 1;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--dark);
     margin-bottom: 0.2rem;
@@ -1277,7 +1277,7 @@ body {
     align-items: center;
     gap: 0.8rem;
     background: var(--white);
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 0.8rem;
     border-radius: 16px;
     margin-bottom: 0.8rem;
     cursor: pointer;
@@ -1291,7 +1291,7 @@ body {
     align-items: center;
     gap: 0.8rem;
     background: var(--light);
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 0.8rem;
     border-radius: 16px;
     margin-bottom: 0.6rem;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
@@ -1365,7 +1365,7 @@ body {
     align-items: center;
     gap: 0.8rem;
     background: var(--white);
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 0.8rem;
     border-radius: 16px;
     margin-bottom: 0.8rem;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
@@ -2220,6 +2220,7 @@ font-style: italic;
     padding: 8px 12px;
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 50px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -2435,12 +2436,13 @@ font-style: italic;
     gap: 0.4rem;
     justify-content: center;
     margin-bottom: 0.8rem;
+    width: 100%;
 }
 
 .tutorial-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    flex: 1;  /* ← ДОБАВЛЯЕМ flex: 1 */
+    height: 6px;
+    border-radius: 16px;
     background: var(--slate);
     opacity: 0.4;
     transition: all 0.3s ease;
@@ -2449,11 +2451,10 @@ font-style: italic;
 .tutorial-dot-active {
     opacity: 1;
     background: var(--accent);
-    transform: scale(1.2);
 }
 
 .tutorial-text {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--dark);
     margin-bottom: 1rem;
     line-height: 1.5;
@@ -2467,8 +2468,8 @@ font-style: italic;
 }
 
 .tutorial-buttons .btn {
-    padding: 0.7rem 2rem;
-    font-size: 0.95rem;
+    padding: 0.6rem 2rem;
+    font-size: 0.9rem;
     width: auto;
     min-width: 140px;
     display: inline-block;
@@ -2702,7 +2703,7 @@ font-style: italic;
     }
 
     .friends-section-title {
-        font-size: 0.9rem;
+        font-size: 1rem;
     }
 
     .exercise-search-block {

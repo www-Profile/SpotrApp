@@ -190,7 +190,6 @@
                     <div class="section-header">
                         <h2 class="section-title">Ваши тренировки</h2>
                         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                        <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
                     </div>
                     <div class="section-body">
                         <div id="myWorkoutsList" class="item-grid"></div>
@@ -795,16 +794,19 @@
 
 <!-- Вкладка: Друзья -->
 <div id="profileTab-friends" class="profile-tab-content">
+    <!-- Блок 1: Поиск -->
     <div class="section-block" data-block-id="friends-search">
         <div class="friends-list-block">
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
                 <button class="btn btn-primary search-btn" id="searchBtn">Найти</button>
+                <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
             </div>
             <div id="searchResults" class="item-grid"></div>
         </div>
     </div>
 
+    <!-- Блок 2: Друзья -->
     <div class="section-block" data-block-id="friends-list">
         <div class="section-header">
             <h2 class="section-title">Друзья</h2>
@@ -816,6 +818,7 @@
         </div>
     </div>
 
+    <!-- Блок 3: Заявки -->
     <div class="section-block" data-block-id="friend-requests">
         <div class="section-header">
             <h2 class="section-title">Заявки</h2>
@@ -826,20 +829,20 @@
             <div id="friendRequests" class="item-grid"></div>
         </div>
     </div>
+</div>
 
-    <!-- Кнопки редактирования -->
-    <div id="friendsEditButtons" style="margin-top: 0.5rem; width: 100%;">
-        <button id="editFriendsBtn" class="btn btn-primary btn-center">
-            <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
+<!-- ⬇️ КНОПКИ РЕДАКТИРОВАНИЯ ВНЕ КОНТЕЙНЕРА ⬇️ -->
+<div id="friendsEditButtons" style="margin-top: 0.5rem; width: 100%;">
+    <button id="editFriendsBtn" class="btn btn-primary btn-center">
+        <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
+    </button>
+    <div id="friendsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
+        <button id="resetFriendsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
         </button>
-        <div id="friendsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
-            <button id="resetFriendsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
-            </button>
-            <div style="display: flex; gap: 0.5rem; width: 100%;">
-                <button id="saveFriendsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
-                <button id="cancelFriendsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
-            </div>
+        <div style="display: flex; gap: 0.5rem; width: 100%;">
+            <button id="saveFriendsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
+            <button id="cancelFriendsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
         </div>
     </div>
 </div>
