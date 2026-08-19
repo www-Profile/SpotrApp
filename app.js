@@ -1059,12 +1059,12 @@ function handleSessionSnapshot(doc) {
         }
         
         // ★★★ ИСПРАВЛЕННАЯ ПРОВЕРКА — ТОЛЬКО ЕСЛИ ФЛАГ НЕ УСТАНОВЛЕН ★★★
-        if (myProgress >= total && partnerProgress >= total && total > 0 && !finishPageShown) {
-            console.log('🎉 Оба завершили! Показываем финиш.');
-            finishPageShown = true; // ★★★ УСТАНАВЛИВАЕМ ФЛАГ ★★★
-            stopSessionTimer();
-            showCoopFinishPage();
-        }
+if (data.hostFinished && data.guestFinished && !finishPageShown) {
+    console.log('🎉 Оба завершили! Показываем финиш.');
+    finishPageShown = true;
+    stopSessionTimer();
+    showCoopFinishPage();
+}
         return;
     }
 
