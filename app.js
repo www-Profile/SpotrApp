@@ -811,11 +811,13 @@ async function acceptInvite(sessionId, notificationId) {
                 .doc(notificationId)
                 .update({ read: true });
         }
+        // Обновляем сессию: гость готов, хост тоже становится готовым (автоматически)
         await firebase.firestore()
             .collection('trainingSessions')
             .doc(sessionId)
             .update({
                 guestReady: true,
+                hostReady: true,  // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ
                 status: 'active',
                 startedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -823,8 +825,6 @@ async function acceptInvite(sessionId, notificationId) {
         isHost = false;
         sessionData = data;
         coopExercises = data.exercises || [];
-        document.getElementById('waitingFriendName').textContent = data.hostName || 'Пользователь';
-        document.getElementById('waitingStatus').textContent = 'Присоединяемся...';
         window.navigateTo('training-waiting');
         listenSession(sessionId);
         showToast(`✅ Вы присоединились к ${data.hostName}`);
@@ -860,20 +860,28 @@ function listenSession(sessionId) {
                 partnerProgress = data.hostProgress || 0;
                 myProgress = data.guestProgress || 0;
             }
+            
+            // ✅ Проверяем, готовы ли оба
             if (data.status === 'active' && data.hostReady && data.guestReady) {
+                // Если уже на странице тренировки — обновляем UI
                 if (document.getElementById('page-training-session').classList.contains('page-active')) {
                     updateCoopUI();
                     return;
                 }
+                // Иначе запускаем тренировку
                 startCoopTraining(data);
+                return;
             }
+            
             if (document.getElementById('page-training-waiting').classList.contains('page-active')) {
-                if (data.status === 'active') {
-                    document.getElementById('waitingStatus').textContent = 'Друг присоединился! Начинаем...';
+                if (data.guestReady && data.hostReady) {
+                    // Если оба готовы — сразу запускаем
+                    startCoopTraining(data);
                 } else if (data.guestReady) {
-                    document.getElementById('waitingStatus').textContent = 'Друг готов!';
+                    showToast('👤 Друг присоединился! Начинаем...');
                 }
             }
+            
             if (data.status === 'completed') {
                 showToast('🎉 Тренировка завершена!');
                 if (sessionListener) {
@@ -888,6 +896,12 @@ function listenSession(sessionId) {
 }
 
 function startCoopTraining(data) {
+    // Останавливаем слушатель, чтобы не запускать повторно
+    if (sessionListener) {
+        sessionListener();
+        sessionListener = null;
+    }
+    
     coopExercises = data.exercises || [];
     if (isHost) {
         myProgress = data.hostProgress || 0;
@@ -1099,8 +1113,7 @@ async function sendCoopInvite(friendId, friendName) {
             read: false
         });
         showToast(`✅ Приглашение отправлено ${friendName}`);
-        document.getElementById('waitingFriendName').textContent = friendName;
-        document.getElementById('waitingStatus').textContent = 'Ожидаем подтверждения...';
+        // Переходим на страницу ожидания (без имени друга, оно теперь не нужно)
         window.navigateTo('training-waiting');
         listenSession(currentSessionId);
     } catch (error) {

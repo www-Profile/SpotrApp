@@ -2950,8 +2950,3 @@ textarea.error {
     font-weight: 600;
     color: var(--dark);
 }
-
-/* ===================СОВМЕСТНАЯ ТРЕНИРОВКА =================== */
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
