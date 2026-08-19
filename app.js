@@ -694,6 +694,8 @@ let coopStarted = false;
 let partnerFinishedNotified = false;
 let partnerFinishedSeconds = null;    // Время завершения партнёра в секундах
 let myFinishedSeconds = null;  
+let partnerXp = 0;
+let myXp = 0;
 
 // =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 
@@ -992,6 +994,13 @@ if (isHost) {
     if (data.hostFinishedSeconds !== undefined) {
         myFinishedSeconds = data.hostFinishedSeconds;
     }
+    // ★★★ ПОЛУЧАЕМ XP ПАРТНЁРА ★★★
+    if (data.guestXp !== undefined) {
+        partnerXp = data.guestXp;
+    }
+    if (data.hostXp !== undefined) {
+        myXp = data.hostXp;
+    }
 } else {
     partnerProgress = data.hostProgress || 0;
     myProgress = data.guestProgress || 0;
@@ -1000,6 +1009,13 @@ if (isHost) {
     }
     if (data.guestFinishedSeconds !== undefined) {
         myFinishedSeconds = data.guestFinishedSeconds;
+    }
+    // ★★★ ПОЛУЧАЕМ XP ПАРТНЁРА ★★★
+    if (data.hostXp !== undefined) {
+        partnerXp = data.hostXp;
+    }
+    if (data.guestXp !== undefined) {
+        myXp = data.guestXp;
     }
 }
     console.log('📊 Прогресс из Firestore:', { myProgress, partnerProgress });
@@ -1082,6 +1098,8 @@ function startCoopTraining(data) {
     partnerFinishedNotified = false;
     partnerFinishedSeconds = null;
     myFinishedSeconds = null;
+    partnerXp = 0;  // ★★★ ДОБАВЛЯЕМ ★★★
+    myXp = 0;       // ★★★ ДОБАВЛЯЕМ ★★★
 
     console.log('📄 Данные:', {
         workoutTitle: data.workoutTitle,
@@ -1195,24 +1213,26 @@ function showCoopFinishPage() {
     
     // Мои данные
     const myExercises = sessionCompleted.size;
-    const myXp = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+    // ★★★ ИСПОЛЬЗУЕМ СОХРАНЁННОЕ XP ИЛИ СЧИТАЕМ ЗАНОВО ★★★
+    const myXpValue = myXp > 0 ? myXp : calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
     const myTime = sessionSeconds;
     
     // Данные партнёра из Firestore
     const partnerExercises = partnerProgress;
-    const partnerXp = 0; // XP партнёра мы не считаем, т.к. у нас нет его упражнений
+    // ★★★ ИСПОЛЬЗУЕМ XP ПАРТНЁРА ИЗ FIRESTORE ★★★
+    const partnerXpValue = partnerXp || 0;
     const partnerTime = partnerFinishedSeconds || 0;
     
     // Заполняем мою статистику
     document.getElementById('coopMyExercises').textContent = `${myExercises}/${total}`;
     document.getElementById('coopMyTime').textContent = formatTime(myTime);
-    document.getElementById('coopMyXp').textContent = `+${Math.round(myXp)}`;
+    document.getElementById('coopMyXp').textContent = `+${Math.round(myXpValue)}`;
     
     // Заполняем статистику партнёра
     document.getElementById('coopPartnerName').textContent = partnerName;
     document.getElementById('coopPartnerExercises').textContent = `${partnerExercises}/${total}`;
     document.getElementById('coopPartnerTime').textContent = formatTime(partnerTime);
-    document.getElementById('coopPartnerXp').textContent = `+${Math.round(partnerXp)}`;
+    document.getElementById('coopPartnerXp').textContent = `+${Math.round(partnerXpValue)}`;
     
     // Переходим на страницу финиша с небольшой задержкой
     setTimeout(() => {
@@ -1250,29 +1270,33 @@ async function updateCoopProgress(completedCount) {
         const update = {};
         const currentTime = sessionSeconds; // текущее время таймера
         
-        if (isHost) {
-            update.hostProgress = completedCount;
-            if (completedCount >= total) {
-                update.hostFinishedSeconds = currentTime;
-                // ★★★ СОХРАНЯЕМ МОЁ ВРЕМЯ ★★★
-                myFinishedSeconds = currentTime;
-            }
-            update['exercises'] = coopExercises.map((ex, index) => ({
-                ...ex,
-                hostCompleted: index < completedCount
-            }));
-        } else {
-            update.guestProgress = completedCount;
-            if (completedCount >= total) {
-                update.guestFinishedSeconds = currentTime;
-                // ★★★ СОХРАНЯЕМ МОЁ ВРЕМЯ ★★★
-                myFinishedSeconds = currentTime;
-            }
-            update['exercises'] = coopExercises.map((ex, index) => ({
-                ...ex,
-                guestCompleted: index < completedCount
-            }));
-        }
+if (isHost) {
+    update.hostProgress = completedCount;
+    if (completedCount >= total) {
+        update.hostFinishedSeconds = currentTime;
+        myFinishedSeconds = currentTime;
+        // ★★★ СОХРАНЯЕМ XP ★★★
+        const completedExercises = coopExercises.filter((_, index) => index < completedCount);
+        update.hostXp = calculateWorkoutXp(completedExercises);
+    }
+    update['exercises'] = coopExercises.map((ex, index) => ({
+        ...ex,
+        hostCompleted: index < completedCount
+    }));
+} else {
+    update.guestProgress = completedCount;
+    if (completedCount >= total) {
+        update.guestFinishedSeconds = currentTime;
+        myFinishedSeconds = currentTime;
+        // ★★★ СОХРАНЯЕМ XP ★★★
+        const completedExercises = coopExercises.filter((_, index) => index < completedCount);
+        update.guestXp = calculateWorkoutXp(completedExercises);
+    }
+    update['exercises'] = coopExercises.map((ex, index) => ({
+        ...ex,
+        guestCompleted: index < completedCount
+    }));
+}
         
         // Обновляем документ
         await firebase.firestore()
@@ -1455,8 +1479,10 @@ const sessionRef = await firebase.firestore().collection('trainingSessions').add
     hostProgress: 0,
     guestProgress: 0,
     totalExercises: workoutData.exercises.length,
-    hostFinished: false,     // ★★★ ДОБАВЛЯЕМ ★★★
-    guestFinished: false     // ★★★ ДОБАВЛЯЕМ ★★★
+    hostFinished: false,
+    guestFinished: false,
+    hostXp: 0,      // ★★★ ДОБАВЛЯЕМ ★★★
+    guestXp: 0      // ★★★ ДОБАВЛЯЕМ ★★★
 });
         
         console.log('✅ Сессия создана, sessionId:', sessionRef.id);
@@ -3108,7 +3134,7 @@ document.getElementById('sessionCloseBtn')?.addEventListener('click', function()
     const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
     const xpEarned = calculateWorkoutXp(completedExercises);
 
-    document.getElementById('sessionExitTitle').textContent = sessionWorkoutTitle;
+    document.getElementById('sessionExitTitle').textContent = 'ТРЕНИРОВКА';
     document.getElementById('exitExercises').textContent = `${completed}/${total}`;
     document.getElementById('exitMinutes').textContent = `${mins}:${secs}`;
     document.getElementById('exitXp').textContent = `+${Math.round(xpEarned)} XP`;
@@ -3122,7 +3148,6 @@ document.getElementById('exitContinueBtn')?.addEventListener('click', function()
 document.getElementById('exitFinishBtn')?.addEventListener('click', function() {
     closeModal('sessionExitModal');
     stopSessionTimer();
-    showToast('💾 Тренировка сохранена');
     finishTrainingSession();
 });
 
