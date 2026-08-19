@@ -15,6 +15,7 @@ body {
     -webkit-touch-callout: none;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+    padding-top: calc(env(safe-area-inset-top, 40px) - 20px);
 }
 
 /* ===================ПЕРЕМЕННЫЕ ==================== */
@@ -80,7 +81,6 @@ body {
     text-align: center;
     margin-bottom: 0rem;
     margin-top: 0px;
-    padding-top: env(safe-area-inset-top, 20px);
 }
 
 .dashboard-title {
@@ -2267,7 +2267,6 @@ font-style: italic;
     pointer-events: none;
     padding-top: calc(0.8rem + env(safe-area-inset-top, 12px));
     display: block !important;
-    padding-top: env(safe-area-inset-top, 20px);
 }
 
 #notificationCard {
