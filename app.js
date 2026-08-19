@@ -691,6 +691,9 @@ let partnerProgress = 0;
 let myProgress = 0;
 let sessionData = null;
 let coopStarted = false;
+let partnerFinishedNotified = false;
+let partnerFinishedTime = null; // Время завершения партнёра
+let myFinishedTime = null;     // Моё время завершения
 
 // =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 
@@ -749,10 +752,7 @@ function listenForInvites() {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === 'added') {
                         const data = change.doc.data();
-                        const id = 'invite_' + data.sessionId;
-                        // Проверяем, не было ли уже показано
-                        if (isNotificationSeen(id)) return;
-                        // Показываем уведомление с кнопкой "Принять"
+                        // ★★★ УДАЛЯЕМ ПРОВЕРКУ И МАРКИРОВКУ ★★★
                         showNotification(
                             '🏋️',
                             `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
@@ -761,7 +761,7 @@ function listenForInvites() {
                                 acceptInvite(data.sessionId, change.doc.id);
                             }
                         );
-                        markNotificationSeen(id);
+                        // Больше не вызываем markNotificationSeen(id)
                     }
                 });
             });
@@ -781,41 +781,6 @@ function showInviteNotification(data, notificationId) {
         }
     );
     markNotificationSeen(id);
-}
-
-// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ showNotification ===================
-function showNotification(icon, text, actionCallback) {
-    // ★★★ Приглашения - отдельная логика ★★★
-    const isInvite = text.includes('приглашает');
-    
-    if (isInvite) {
-        // Для приглашений - НЕ проверяем localStorage, показываем всегда
-        const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-        notificationQueue.push({ 
-            icon, 
-            text, 
-            actionCallback, 
-            id: uniqueId, 
-            isInvite: true 
-        });
-        if (!isNotificationShowing) {
-            processNotificationQueue();
-        }
-        return;
-    }
-    
-    // Обычные уведомления - проверяем localStorage
-    const notificationId = text + icon;
-    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-    if (seen.includes(notificationId)) {
-        console.log('Уведомление уже показано:', text);
-        return;
-    }
-    
-    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
-    if (!isNotificationShowing) {
-        processNotificationQueue();
-    }
 }
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ACCEPT INVITE ===================
@@ -967,14 +932,21 @@ function handleSessionSnapshot(doc) {
         guestProgress: data.guestProgress
     });
     
-    // ★★★ ВСЕГДА ОБНОВЛЯЕМ ПРОГРЕСС ИЗ FIRESTORE ★★★
-    if (isHost) {
-        partnerProgress = data.guestProgress || 0;
-        myProgress = data.hostProgress || 0;
-    } else {
-        partnerProgress = data.hostProgress || 0;
-        myProgress = data.guestProgress || 0;
+// ★★★ ВСЕГДА ОБНОВЛЯЕМ ПРОГРЕСС ИЗ FIRESTORE ★★★
+if (isHost) {
+    partnerProgress = data.guestProgress || 0;
+    myProgress = data.hostProgress || 0;
+    // ★★★ ПОЛУЧАЕМ ВРЕМЯ ЗАВЕРШЕНИЯ ПАРТНЁРА ★★★
+    if (data.guestFinishedTime) {
+        partnerFinishedTime = data.guestFinishedTime;
     }
+} else {
+    partnerProgress = data.hostProgress || 0;
+    myProgress = data.guestProgress || 0;
+    if (data.hostFinishedTime) {
+        partnerFinishedTime = data.hostFinishedTime;
+    }
+}
     console.log('📊 Прогресс из Firestore:', { myProgress, partnerProgress });
     
     // Обновляем UI всегда
@@ -991,43 +963,47 @@ function handleSessionSnapshot(doc) {
     // Если уже на странице тренировки, обновляем UI
     const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
     
-    if (isTrainingSessionActive) {
-        console.log('🔄 Обновляем UI тренировки из снапшота');
-        updateCoopUI();
-        
-        const total = coopExercises.length || 0;
-        
-        // Проверяем, завершил ли партнер
-        if (partnerProgress >= total && myProgress < total && total > 0) {
-            console.log('👀 Партнер завершил, показываем уведомление');
-            showToast('👀 Партнер завершил тренировку! Доделайте свои упражнения.');
-        }
-        
-        // Проверяем, завершили ли оба
-        if (myProgress >= total && partnerProgress >= total && total > 0) {
-            console.log('🎉 Оба завершили!');
-            if (data.status !== 'completed') {
-                firebase.firestore()
-                    .collection('trainingSessions')
-                    .doc(currentSessionId)
-                    .update({
-                        status: 'completed',
-                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    })
-                    .then(() => {
-                        console.log('✅ Статус обновлен на completed');
-                        showToast('🎉 Тренировка завершена!');
-                        setTimeout(() => {
-                            window.navigateTo('workouts');
-                        }, 2000);
-                    })
-                    .catch(err => {
-                        console.error('❌ Ошибка обновления статуса:', err);
-                    });
-            }
-        }
-        return;
+// ★★★ ИСПРАВЛЕННЫЙ БЛОК В ФУНКЦИИ handleSessionSnapshot ★★★
+if (isTrainingSessionActive) {
+    console.log('🔄 Обновляем UI тренировки из снапшота');
+    updateCoopUI();
+    
+    const total = coopExercises.length || 0;
+    
+    // ★★★ ПРОВЕРЯЕМ ФЛАГ ПЕРЕД ПОКАЗОМ ★★★
+if (partnerProgress >= total && myProgress < total && total > 0) {
+    console.log('👀 Партнер завершил, показываем уведомление');
+    if (!partnerFinishedNotified) {
+        showToast('👀 Партнер завершил тренировку!');
+        partnerFinishedNotified = true;
     }
+}
+    
+    // Проверяем, завершили ли оба
+    if (myProgress >= total && partnerProgress >= total && total > 0) {
+        console.log('🎉 Оба завершили!');
+        if (data.status !== 'completed') {
+            firebase.firestore()
+                .collection('trainingSessions')
+                .doc(currentSessionId)
+                .update({
+                    status: 'completed',
+                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log('✅ Статус обновлен на completed');
+                    showToast('🎉 Тренировка завершена!');
+                    setTimeout(() => {
+                        window.navigateTo('workouts');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('❌ Ошибка обновления статуса:', err);
+                });
+        }
+    }
+    return;
+}
 
     const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
     
@@ -1041,9 +1017,9 @@ function handleSessionSnapshot(doc) {
                 startCoopTraining(data);
             }
         } else if (data.guestReady) {
-            console.log('👤 Друг присоединился!');
-            showToast('👤 Друг присоединился! Начинаем...');
-        }
+    console.log('👤 Друг присоединился!');
+    showToast('👤 Друг присоединился! Начинаем.');
+}
     }
 
     if (data.status === 'completed') {
@@ -1062,6 +1038,12 @@ function handleSessionSnapshot(doc) {
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ СТАРТА ТРЕНИРОВКИ ===================
 function startCoopTraining(data) {
     console.log('🔵 startCoopTraining вызвана');
+    
+    // ★★★ СБРАСЫВАЕМ ФЛАГИ ПРИ НОВОЙ ТРЕНИРОВКЕ ★★★
+    partnerFinishedNotified = false;
+    partnerFinishedTime = null;
+    myFinishedTime = null;
+
     console.log('📄 Данные:', {
         workoutTitle: data.workoutTitle,
         exercisesCount: data.exercises?.length || 0,
@@ -1114,6 +1096,7 @@ function updateCoopUI() {
     const partnerName = isHost ? (sessionData?.guestName || 'Друг') : (sessionData?.hostName || 'Друг');
     
     console.log('🔄 updateCoopUI вызвана, partnerProgress:', partnerProgress, 'total:', total);
+    console.log('🕐 partnerFinishedTime:', partnerFinishedTime);
     
     let partnerEl = document.getElementById('partnerInfo');
     if (!partnerEl) {
@@ -1132,11 +1115,22 @@ function updateCoopUI() {
                 font-size: 0.8rem;
             `;
             div.innerHTML = `
-                <span>👤 ${partnerName}</span>
+                <span id="partnerNameDisplay">👤 ${partnerName}</span>
                 <span id="partnerProgressText">0/${total}</span>
             `;
             progressRow.appendChild(div);
         }
+    }
+    
+    // ★★★ ВСЕГДА ПОКАЗЫВАЕМ ИМЯ ★★★
+    const nameDisplay = document.getElementById('partnerNameDisplay');
+    if (nameDisplay) {
+        let displayText = `👤 ${partnerName}`;
+        // ★★★ ЕСЛИ ПАРТНЁР ЗАВЕРШИЛ — ДОБАВЛЯЕМ ВРЕМЯ ★★★
+        if (partnerProgress >= total && partnerFinishedTime) {
+            displayText = `👤 ${partnerName} · ${partnerFinishedTime}`;
+        }
+        nameDisplay.textContent = displayText;
     }
     
     const progressText = document.getElementById('partnerProgressText');
@@ -1146,13 +1140,11 @@ function updateCoopUI() {
         console.log('📊 Обновлен UI: partnerProgress =', displayProgress, '/', total);
     }
     
-    if (partnerProgress >= total && total > 0) {
-        const statusEl = document.querySelector('#partnerInfo span:first-child');
-        if (statusEl) {
-            statusEl.innerHTML = '✅ Партнёр завершил!';
-            console.log('✅ Партнер завершил, обновлен статус');
-        }
-    }
+// Уведомление показываем только один раз
+if (partnerProgress >= total && total > 0 && !partnerFinishedNotified) {
+    console.log('✅ Партнер завершил, имя и время отображаются');
+    partnerFinishedNotified = true;
+}
 }
 
 // =================== ИСПРАВЛЕННЫЙ markCurrentComplete ===================
@@ -1175,14 +1167,28 @@ async function updateCoopProgress(completedCount) {
     try {
         console.log('🔄 updateCoopProgress вызвана, completedCount:', completedCount);
         
+        const total = coopExercises.length || 0;
         const update = {};
+        const now = new Date();
+        const timeStr = now.toTimeString().slice(0, 5); // HH:MM
+        
         if (isHost) {
             update.hostProgress = completedCount;
+            // ★★★ ЕСЛИ ЗАВЕРШИЛ ВСЕ УПРАЖНЕНИЯ — СОХРАНЯЕМ ВРЕМЯ ★★★
+            if (completedCount >= total) {
+                update.hostFinishedAt = firebase.firestore.FieldValue.serverTimestamp();
+                update.hostFinishedTime = timeStr;
+            }
             update['exercises'] = coopExercises.map((ex, index) => ({
                 ...ex,
-                hostCompleted: index < completedCount            }));
+                hostCompleted: index < completedCount
+            }));
         } else {
             update.guestProgress = completedCount;
+            if (completedCount >= total) {
+                update.guestFinishedAt = firebase.firestore.FieldValue.serverTimestamp();
+                update.guestFinishedTime = timeStr;
+            }
             update['exercises'] = coopExercises.map((ex, index) => ({
                 ...ex,
                 guestCompleted: index < completedCount
@@ -1220,8 +1226,15 @@ async function updateCoopProgress(completedCount) {
             // Получаем прогресс партнера из Firestore
             if (isHost) {
                 partnerProgress = data.guestProgress || 0;
+                // ★★★ ПОЛУЧАЕМ ВРЕМЯ ЗАВЕРШЕНИЯ ПАРТНЁРА ★★★
+                if (data.guestFinishedTime) {
+                    partnerFinishedTime = data.guestFinishedTime;
+                }
             } else {
                 partnerProgress = data.hostProgress || 0;
+                if (data.hostFinishedTime) {
+                    partnerFinishedTime = data.hostFinishedTime;
+                }
             }
             
             console.log('📊 После обновления: myProgress:', myProgress, 'partnerProgress:', partnerProgress, 'total:', total);
@@ -1230,10 +1243,13 @@ async function updateCoopProgress(completedCount) {
             updateCoopUI();
             
             // Проверяем, завершил ли партнер
-            if (partnerProgress >= total && myProgress < total) {
-                console.log('👀 Партнер завершил, ждем вас...');
-                showToast('👀 Партнер завершил тренировку! Доделайте свои упражнения.');
-            }
+if (partnerProgress >= total && myProgress < total) {
+    console.log('👀 Партнер завершил, ждем вас...');
+    if (!partnerFinishedNotified) {
+        showToast('👀 Партнер завершил, ждем вас.');
+        partnerFinishedNotified = true;
+    }
+}
             
             // Проверяем, завершили ли оба
             if (myProgress >= total && partnerProgress >= total && total > 0) {
@@ -1418,6 +1434,8 @@ async function sendCoopInvite(friendId, friendName) {
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ===================
 const originalFinish = finishTrainingSession;
 finishTrainingSession = function() {
+    // ★★★ СБРАСЫВАЕМ ФЛАГ ПРИ ЗАВЕРШЕНИИ ★★★
+    partnerFinishedNotified = false;
     console.log('🏁 finishTrainingSession вызвана');
     console.log('currentSessionId:', currentSessionId);
     console.log('sessionData:', sessionData);
@@ -1429,7 +1447,7 @@ finishTrainingSession = function() {
         // Проверяем, завершил ли партнер
         if (partnerProgress < total) {
             console.log('👀 Ожидаем завершения партнера...');
-            showToast('👀 Ожидаем завершения партнёра...');
+            showToast('👀 Ожидаем завершения партнера.');
             return;
         }
         
@@ -1456,7 +1474,7 @@ finishTrainingSession = function() {
                     });
             } else {
                 // Партнер еще не завершил
-                showToast('👀 Ожидаем завершения партнёра...');
+                showToast('👀 Ожидаем завершения партнёра.');
                 return;
             }
         }
@@ -1605,15 +1623,34 @@ const notificationOkBtn = document.getElementById('notificationOkBtn');
 notificationContainer.style.display = 'block';
 
 function showNotification(icon, text, actionCallback) {
+    // ★★★ РАСПОЗНАЁМ ПРИГЛАШЕНИЕ ★★★
+    const isInvite = text.includes('приглашает') || text.includes('пригласил');
+    
+    if (isInvite) {
+        // Приглашения — всегда показываем, без проверки localStorage
+        const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        notificationQueue.push({ 
+            icon, 
+            text, 
+            actionCallback, 
+            id: uniqueId, 
+            isInvite: true 
+        });
+        if (!isNotificationShowing) {
+            processNotificationQueue();
+        }
+        return;
+    }
+    
+    // Обычные уведомления — проверяем localStorage
     const notificationId = text + icon;
     const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
     if (seen.includes(notificationId)) {
         console.log('Уведомление уже показано:', text);
         return;
     }
-
-    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
     
+    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
     if (!isNotificationShowing) {
         processNotificationQueue();
     }
