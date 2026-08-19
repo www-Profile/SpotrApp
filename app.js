@@ -996,16 +996,23 @@ const result = await saveWorkoutToFirestore(user.uid, {
     }
 }
 
-// ===================УРОВНИ ===================
+// ===================УРОВНИ (15 УРОВНЕЙ) ===================
 const levels = [
-    { id: 1, name: 'НАЧИНАЮЩИЙ', minXp: 0, maxXp: 99.9 },
-    { id: 2, name: 'ЛЮБИТЕЛЬ', minXp: 100, maxXp: 199.9 },
-    { id: 3, name: 'ПРОДВИНУТЫЙ', minXp: 200, maxXp: 299.9 },
-    { id: 4, name: 'ЭКСПЕРТ', minXp: 300, maxXp: 499.9 },
-    { id: 5, name: 'ПРОФЕССИОНАЛ', minXp: 500, maxXp: 699.9 },
-    { id: 6, name: 'МАСТЕР', minXp: 700, maxXp: 999.9 },
-    { id: 7, name: 'ГРАНДМАСТЕР', minXp: 1000, maxXp: 1499.9 },
-    { id: 8, name: 'ЛЕГЕНДА', minXp: 1500, maxXp: Infinity }
+    { id: 1, name: 'НОВИЧОК', minXp: 0, maxXp: 99 },
+    { id: 2, name: 'ЛЮБИТЕЛЬ', minXp: 100, maxXp: 249 },
+    { id: 3, name: 'УЧЕНИК', minXp: 250, maxXp: 449 },
+    { id: 4, name: 'ПРОДВИНУТЫЙ', minXp: 450, maxXp: 699 },
+    { id: 5, name: 'ЭКСПЕРТ', minXp: 700, maxXp: 999 },
+    { id: 6, name: 'ПРОФЕССИОНАЛ', minXp: 1000, maxXp: 1499 },
+    { id: 7, name: 'МАСТЕР', minXp: 1500, maxXp: 1999 },
+    { id: 8, name: 'ГРАНДМАСТЕР', minXp: 2000, maxXp: 2599 },
+    { id: 9, name: 'ЧЕМПИОН', minXp: 2600, maxXp: 3299 },
+    { id: 10, name: 'ЮНОШЕСКИЙ РАЗРЯД', minXp: 3300, maxXp: 4199 },
+    { id: 11, name: 'СПОРТИВНЫЙ РАЗРЯД', minXp: 4200, maxXp: 5299 },
+    { id: 12, name: 'КАНДИДАТ В МАСТЕРЫ СПОРТА', minXp: 5300, maxXp: 6599 },
+    { id: 13, name: 'МАСТЕР СПОРТА', minXp: 6600, maxXp: 8199 },
+    { id: 14, name: 'МЕЖДУНАРОДНЫЙ МАСТЕР СПОРТА', minXp: 8200, maxXp: 9999 },
+    { id: 15, name: 'ЗАСЛУЖЕННЫЙ МАСТЕР СПОРТА', minXp: 10000, maxXp: Infinity }
 ];
 
 function getCurrentLevel(xp) {
