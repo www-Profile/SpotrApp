@@ -992,7 +992,9 @@ function handleSessionSnapshot(doc) {
         hostReady: data.hostReady,
         guestReady: data.guestReady,
         hostProgress: data.hostProgress,
-        guestProgress: data.guestProgress
+        guestProgress: data.guestProgress,
+        hostFinished: data.hostFinished,
+        guestFinished: data.guestFinished
     });
     
     // ★★★ ВСЕГДА ОБНОВЛЯЕМ ПРОГРЕСС ИЗ FIRESTORE ★★★
@@ -1036,7 +1038,7 @@ function handleSessionSnapshot(doc) {
     if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
         console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
         coopStarted = true;
-        finishPageShown = false; // ★★★ СБРАСЫВАЕМ ФЛАГ ★★★
+        finishPageShown = false;
         startCoopTraining(data);
         return;
     }
@@ -1058,13 +1060,24 @@ function handleSessionSnapshot(doc) {
             }
         }
         
-        // ★★★ ИСПРАВЛЕННАЯ ПРОВЕРКА — ТОЛЬКО ЕСЛИ ФЛАГ НЕ УСТАНОВЛЕН ★★★
-if (data.hostFinished && data.guestFinished && !finishPageShown) {
-    console.log('🎉 Оба завершили! Показываем финиш.');
-    finishPageShown = true;
-    stopSessionTimer();
-    showCoopFinishPage();
-}
+        // ★★★ ПРОВЕРКА ПО ФЛАГАМ ЗАВЕРШЕНИЯ (НЕ ПО ПРОГРЕССУ) ★★★
+        if (data.hostFinished && data.guestFinished && !finishPageShown) {
+            console.log('🎉 Оба завершили! Показываем финиш.');
+            finishPageShown = true;
+            stopSessionTimer();
+            showCoopFinishPage();
+            return;
+        }
+        
+        // ★★★ НОВАЯ ПРОВЕРКА: ЕСЛИ СТАТУС СЕССИИ "COMPLETED" ★★★
+        if (data.status === 'completed' && !finishPageShown) {
+            console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
+            finishPageShown = true;
+            stopSessionTimer();
+            showCoopFinishPage();
+            return;
+        }
+        
         return;
     }
 
@@ -1084,13 +1097,15 @@ if (data.hostFinished && data.guestFinished && !finishPageShown) {
             console.log('👤 Друг присоединился!');
             showToast('👤 Друг присоединился! Начинаем.');
         }
+        return;
     }
 
-    if (data.status === 'completed') {
-        console.log('🏁 Тренировка завершена!');
-        if (document.getElementById('page-training-session').classList.contains('page-active')) {
-            showToast('🎉 Тренировка завершена!');
-        }
+    // ★★★ НОВАЯ ПРОВЕРКА: ЕСЛИ СТАТУС СЕССИИ "COMPLETED" ДЛЯ ДРУГИХ СТРАНИЦ ★★★
+    if (data.status === 'completed' && !finishPageShown) {
+        console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
+        finishPageShown = true;
+        stopSessionTimer();
+        showCoopFinishPage();
         return;
     }
 }
