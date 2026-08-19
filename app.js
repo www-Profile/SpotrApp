@@ -798,6 +798,7 @@ function showNotificationWithAction(icon, text, actionCallback) {
     }
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ACCEPT INVITE ===================
 async function acceptInvite(sessionId, notificationId) {
     console.log('🔵 acceptInvite вызвана, sessionId:', sessionId);
     try {
@@ -856,12 +857,6 @@ async function acceptInvite(sessionId, notificationId) {
         
         console.log('✅ Сессия обновлена');
         
-        // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ: отключаем и включаем сеть
-       // console.log('🔄 Принудительное обновление Firestore...');
-       // await firebase.firestore().disableNetwork();
-       // await firebase.firestore().enableNetwork();
-       // console.log('✅ Сеть перезапущена');
-        
         currentSessionId = sessionId;
         isHost = false;
         
@@ -882,11 +877,13 @@ async function acceptInvite(sessionId, notificationId) {
     }
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ СЛУШАТЕЛЯ СЕССИИ ===================
 function listenSession(sessionId) {
     console.log('🔵 listenSession вызвана, sessionId:', sessionId);
     console.log('🔵 isHost:', isHost);
     console.log('🔵 coopStarted:', coopStarted);
     
+    // Отключаем старый слушатель
     if (sessionListener) {
         console.log('🔄 Отключаем старый слушатель');
         sessionListener();
@@ -905,14 +902,14 @@ function listenSession(sessionId) {
             }
             console.log('✅ Сессия существует, подписываемся на изменения');
             
-            // ПРАВИЛЬНАЯ ПОДПИСКА
+            // ★★★ ПОДПИСКА С ВКЛЮЧЕННЫМИ МЕТАДАННЫМИ ★★★
             sessionListener = firebase.firestore()
                 .collection('trainingSessions')
                 .doc(sessionId)
                 .onSnapshot(
                     { includeMetadataChanges: true },
                     (doc) => {
-                        console.log('📡 onSnapshot сработал (с метаданными)');
+                        console.log('📡 onSnapshot сработал');
                         handleSessionSnapshot(doc);
                     },
                     (error) => {
@@ -927,9 +924,9 @@ function listenSession(sessionId) {
     console.log('✅ listenSession завершена');
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
 function handleSessionSnapshot(doc) {
     console.log('📡 handleSessionSnapshot вызвана');
-    console.log('📡 Метаданные:', doc.metadata);
     
     if (!doc.exists) {
         console.log('❌ Документ не существует');
@@ -947,11 +944,10 @@ function handleSessionSnapshot(doc) {
         hostReady: data.hostReady,
         guestReady: data.guestReady,
         hostProgress: data.hostProgress,
-        guestProgress: data.guestProgress,
-        hostName: data.hostName,
-        guestName: data.guestName
+        guestProgress: data.guestProgress
     });
     
+    // ★★★ ВСЕГДА ОБНОВЛЯЕМ ПРОГРЕСС ИЗ FIRESTORE ★★★
     if (isHost) {
         partnerProgress = data.guestProgress || 0;
         myProgress = data.hostProgress || 0;
@@ -959,38 +955,61 @@ function handleSessionSnapshot(doc) {
         partnerProgress = data.hostProgress || 0;
         myProgress = data.guestProgress || 0;
     }
-    console.log('📊 Прогресс:', { myProgress, partnerProgress });
+    console.log('📊 Прогресс из Firestore:', { myProgress, partnerProgress });
+    
+    // Обновляем UI всегда
+    updateCoopUI();
 
     // Если оба готовы и тренировка ещё не запущена
     if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
         console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
-        console.log('   status:', data.status);
-        console.log('   hostReady:', data.hostReady);
-        console.log('   guestReady:', data.guestReady);
-        console.log('   coopStarted:', coopStarted);
         coopStarted = true;
         startCoopTraining(data);
         return;
-    } else {
-        console.log('⏳ Условие НЕ выполнено:');
-        console.log('   status === "active":', data.status === 'active');
-        console.log('   hostReady:', data.hostReady);
-        console.log('   guestReady:', data.guestReady);
-        console.log('   !coopStarted:', !coopStarted);
     }
 
     // Если уже на странице тренировки, обновляем UI
     const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
-    console.log('📱 Страница тренировки активна?', isTrainingSessionActive);
     
     if (isTrainingSessionActive) {
-        console.log('🔄 Обновляем UI тренировки');
+        console.log('🔄 Обновляем UI тренировки из снапшота');
         updateCoopUI();
+        
+        const total = coopExercises.length || 0;
+        
+        // Проверяем, завершил ли партнер
+        if (partnerProgress >= total && myProgress < total && total > 0) {
+            console.log('👀 Партнер завершил, показываем уведомление');
+            showToast('👀 Партнер завершил тренировку! Доделайте свои упражнения.');
+        }
+        
+        // Проверяем, завершили ли оба
+        if (myProgress >= total && partnerProgress >= total && total > 0) {
+            console.log('🎉 Оба завершили!');
+            if (data.status !== 'completed') {
+                firebase.firestore()
+                    .collection('trainingSessions')
+                    .doc(currentSessionId)
+                    .update({
+                        status: 'completed',
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    })
+                    .then(() => {
+                        console.log('✅ Статус обновлен на completed');
+                        showToast('🎉 Тренировка завершена!');
+                        setTimeout(() => {
+                            window.navigateTo('workouts');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('❌ Ошибка обновления статуса:', err);
+                    });
+            }
+        }
         return;
     }
 
     const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
-    console.log('📱 Страница ожидания активна?', isWaitingActive);
     
     if (isWaitingActive) {
         console.log('📱 Мы на странице ожидания');
@@ -1020,6 +1039,7 @@ function handleSessionSnapshot(doc) {
     }
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ СТАРТА ТРЕНИРОВКИ ===================
 function startCoopTraining(data) {
     console.log('🔵 startCoopTraining вызвана');
     console.log('📄 Данные:', {
@@ -1030,14 +1050,8 @@ function startCoopTraining(data) {
         isHost: isHost
     });
     
-    // Останавливаем слушатель, чтобы не запускать повторно
-    if (sessionListener) {
-        console.log('🔄 Останавливаем слушатель');
-        sessionListener();
-        sessionListener = null;
-    }
-    
-    // Сбрасываем флаг, чтобы при повторных вызовах не было проблем
+    // ★★★ НЕ ОСТАНАВЛИВАЕМ СЛУШАТЕЛЬ ★★★
+    // Просто устанавливаем данные
     coopStarted = true;
     
     coopExercises = data.exercises || [];
@@ -1074,9 +1088,13 @@ function startCoopTraining(data) {
     }, 500);
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ UI ===================
 function updateCoopUI() {
     const total = coopExercises.length || 0;
     const partnerName = isHost ? (sessionData?.guestName || 'Друг') : (sessionData?.hostName || 'Друг');
+    
+    console.log('🔄 updateCoopUI вызвана, partnerProgress:', partnerProgress, 'total:', total);
+    
     let partnerEl = document.getElementById('partnerInfo');
     if (!partnerEl) {
         const progressRow = document.querySelector('.session-progress-row');
@@ -1100,38 +1118,49 @@ function updateCoopUI() {
             progressRow.appendChild(div);
         }
     }
+    
     const progressText = document.getElementById('partnerProgressText');
     if (progressText) {
-        progressText.textContent = `${Math.min(partnerProgress, total)}/${total}`;
+        const displayProgress = Math.min(partnerProgress, total);
+        progressText.textContent = `${displayProgress}/${total}`;
+        console.log('📊 Обновлен UI: partnerProgress =', displayProgress, '/', total);
     }
+    
     if (partnerProgress >= total && total > 0) {
         const statusEl = document.querySelector('#partnerInfo span:first-child');
         if (statusEl) {
             statusEl.innerHTML = '✅ Партнёр завершил!';
+            console.log('✅ Партнер завершил, обновлен статус');
         }
     }
 }
 
-// Переопределяем markCurrentComplete для обновления прогресса
+// =================== ИСПРАВЛЕННЫЙ markCurrentComplete ===================
 const originalMarkComplete = markCurrentComplete;
 markCurrentComplete = function() {
+    console.log('🔄 markCurrentComplete вызвана');
     originalMarkComplete();
+    
+    // Обновляем прогресс
     if (currentSessionId && sessionData) {
         const completedCount = sessionCompleted.size;
+        console.log('📊 Завершено упражнений:', completedCount);
         updateCoopProgress(completedCount);
     }
 };
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ПРОГРЕССА ===================
 async function updateCoopProgress(completedCount) {
     if (!currentSessionId) return;
     try {
+        console.log('🔄 updateCoopProgress вызвана, completedCount:', completedCount);
+        
         const update = {};
         if (isHost) {
             update.hostProgress = completedCount;
             update['exercises'] = coopExercises.map((ex, index) => ({
                 ...ex,
-                hostCompleted: index < completedCount
-            }));
+                hostCompleted: index < completedCount            }));
         } else {
             update.guestProgress = completedCount;
             update['exercises'] = coopExercises.map((ex, index) => ({
@@ -1139,22 +1168,71 @@ async function updateCoopProgress(completedCount) {
                 guestCompleted: index < completedCount
             }));
         }
-        const doc = await firebase.firestore()
-            .collection('trainingSessions')
-            .doc(currentSessionId)
-            .get();
-        const data = doc.data();
-        const total = data.totalExercises || data.exercises?.length || 0;
-        const hostDone = data.hostProgress >= total;
-        const guestDone = data.guestProgress >= total;
-        if (hostDone && guestDone && total > 0) {
-            update.status = 'completed';
-            update.completedAt = firebase.firestore.FieldValue.serverTimestamp();
-        }
+        
+        // Обновляем документ
         await firebase.firestore()
             .collection('trainingSessions')
             .doc(currentSessionId)
             .update(update);
+        
+        console.log('✅ Прогресс обновлён в Firestore');
+        
+        // Обновляем локальное состояние
+        if (isHost) {
+            myProgress = completedCount;
+        } else {
+            myProgress = completedCount;
+        }
+        
+        // Обновляем UI
+        updateCoopUI();
+        
+        // Проверяем, завершил ли партнер
+        const doc = await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(currentSessionId)
+            .get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            const total = data.totalExercises || data.exercises?.length || 0;
+            
+            // Получаем прогресс партнера из Firestore
+            if (isHost) {
+                partnerProgress = data.guestProgress || 0;
+            } else {
+                partnerProgress = data.hostProgress || 0;
+            }
+            
+            console.log('📊 После обновления: myProgress:', myProgress, 'partnerProgress:', partnerProgress, 'total:', total);
+            
+            // Обновляем UI с новым прогрессом партнера
+            updateCoopUI();
+            
+            // Проверяем, завершил ли партнер
+            if (partnerProgress >= total && myProgress < total) {
+                console.log('👀 Партнер завершил, ждем вас...');
+                showToast('👀 Партнер завершил тренировку! Доделайте свои упражнения.');
+            }
+            
+            // Проверяем, завершили ли оба
+            if (myProgress >= total && partnerProgress >= total && total > 0) {
+                console.log('🎉 Оба завершили! Завершаем тренировку');
+                await firebase.firestore()
+                    .collection('trainingSessions')
+                    .doc(currentSessionId)
+                    .update({
+                        status: 'completed',
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                
+                showToast('🎉 Тренировка завершена!');
+                setTimeout(() => {
+                    window.navigateTo('workouts');
+                }, 2000);
+            }
+        }
+        
     } catch (error) {
         console.error('Ошибка обновления прогресса:', error);
     }
@@ -1317,15 +1395,53 @@ async function sendCoopInvite(friendId, friendName) {
     }
 }
 
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ===================
 const originalFinish = finishTrainingSession;
 finishTrainingSession = function() {
+    console.log('🏁 finishTrainingSession вызвана');
+    console.log('currentSessionId:', currentSessionId);
+    console.log('sessionData:', sessionData);
+    
     if (currentSessionId && sessionData) {
         const total = sessionData.totalExercises || coopExercises.length || 0;
+        console.log('📊 total:', total, 'partnerProgress:', partnerProgress, 'myProgress:', myProgress);
+        
+        // Проверяем, завершил ли партнер
         if (partnerProgress < total) {
+            console.log('👀 Ожидаем завершения партнера...');
             showToast('👀 Ожидаем завершения партнёра...');
             return;
         }
-        // очистка
+        
+        // Если оба завершили или только мы завершили, а партнер уже завершил
+        if (myProgress >= total) {
+            console.log('🎉 Вы завершили все упражнения!');
+            
+            // Если партнер уже завершил, обновляем статус
+            if (partnerProgress >= total) {
+                console.log('🎉 Партнер тоже завершил!');
+                firebase.firestore()
+                    .collection('trainingSessions')
+                    .doc(currentSessionId)
+                    .update({
+                        status: 'completed',
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    })
+                    .then(() => {
+                        console.log('✅ Статус обновлен на completed');
+                        showToast('🎉 Тренировка завершена!');
+                    })
+                    .catch(err => {
+                        console.error('❌ Ошибка обновления статуса:', err);
+                    });
+            } else {
+                // Партнер еще не завершил
+                showToast('👀 Ожидаем завершения партнёра...');
+                return;
+            }
+        }
+        
+        // Очищаем данные
         currentSessionId = null;
         isHost = false;
         sessionData = null;
@@ -1338,6 +1454,8 @@ finishTrainingSession = function() {
             sessionListener = null;
         }
     }
+    
+    // Вызываем оригинальную функцию
     originalFinish();
 };
 
