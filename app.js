@@ -755,7 +755,7 @@ function listenForInvites() {
                         // ★★★ УДАЛЯЕМ ПРОВЕРКУ И МАРКИРОВКУ ★★★
                         showNotification(
                             '🏋️',
-                            `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
+                            `${data.fromName} приглашает вас на тренировку!`,
                             function() {
                                 console.log('🔵 actionCallback вызван!');
                                 acceptInvite(data.sessionId, change.doc.id);
@@ -1034,9 +1034,6 @@ if (partnerProgress >= total && myProgress < total && total > 0) {
             sessionListener();
             sessionListener = null;
         }
-        setTimeout(() => {
-            window.navigateTo('workouts');
-        }, 2000);
     }
 }
 
@@ -1292,25 +1289,25 @@ async function updateCoopProgress(completedCount) {
                     partnerFinishedNotified = true;
                 }
             }
-            // Проверяем, завершили ли оба
-            if (myProgress >= total && partnerProgress >= total && total > 0) {
-                console.log('🎉 Оба завершили!');
-                
-                // ★★★ ОСТАНАВЛИВАЕМ ТАЙМЕР ★★★
-                stopSessionTimer();
-                
-                // ★★★ ПОКАЗЫВАЕМ НОВУЮ СТРАНИЦУ ФИНИША ★★★
-                showCoopFinishPage();
-                
-                // Обновляем статус в Firestore
-                await firebase.firestore()
-                    .collection('trainingSessions')
-                    .doc(currentSessionId)
-                    .update({
-                        status: 'completed',
-                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-            }
+// Проверяем, завершили ли оба
+if (myProgress >= total && partnerProgress >= total && total > 0) {
+    console.log('🎉 Оба завершили!');
+    
+    // ★★★ ОСТАНАВЛИВАЕМ ТАЙМЕР ★★★
+    stopSessionTimer();
+    
+    // ★★★ ПОКАЗЫВАЕМ НОВУЮ СТРАНИЦУ ФИНИША ★★★
+    showCoopFinishPage();
+    
+    // Обновляем статус в Firestore
+    await firebase.firestore()
+        .collection('trainingSessions')
+        .doc(currentSessionId)
+        .update({
+            status: 'completed',
+            completedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+}
         }
         
     } catch (error) {
@@ -1507,19 +1504,19 @@ finishTrainingSession = function() {
             return;
         }
         
-        // Если партнер уже завершил — показываем финиш
-        if (partnerProgress >= total) {
-            console.log('🎉 Партнер уже завершил! Показываем финиш.');
-            stopSessionTimer();
-            
-            // Сохраняем наш прогресс
-            const completedCount = sessionCompleted.size;
-            updateCoopProgress(completedCount).then(() => {
-                // ★★★ ПОКАЗЫВАЕМ НОВУЮ СТРАНИЦУ ФИНИША ★★★
-                showCoopFinishPage();
-            });
-            return;
-        }
+// Если партнер уже завершил — показываем финиш
+if (partnerProgress >= total) {
+    console.log('🎉 Партнер уже завершил! Показываем финиш.');
+    stopSessionTimer();
+    
+    // Сохраняем наш прогресс
+    const completedCount = sessionCompleted.size;
+    updateCoopProgress(completedCount).then(() => {
+        // ★★★ ПОКАЗЫВАЕМ НОВУЮ СТРАНИЦУ ФИНИША ★★★
+        showCoopFinishPage();
+    });
+    return;
+}
     }
     
     // Если это не совместная тренировка — стандартный финиш
@@ -1540,7 +1537,6 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
     const btn = this;
     btn.disabled = true;
     btn.textContent = 'Сохранение...';
-    btn.style.opacity = '1';
 
     try {
         // Сохраняем тренировку
@@ -1583,25 +1579,21 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
             showToast('⚠️ Тренировка сохранена локально');
         }
 
-        // Очищаем данные сессии
+        // ★★★ ЗАКРЫВАЕМ СЕССИЮ В FIRESTORE ★★★
+        if (currentSessionId) {
+            await firebase.firestore()
+                .collection('trainingSessions')
+                .doc(currentSessionId)
+                .delete(); // Удаляем сессию, чтобы можно было начать новую
+        }
+
+        // Очищаем все данные
         sessionExercises = [];
         sessionCompleted = new Set();
         sessionSeconds = 0;
         sessionWorkoutTitle = '';
         sessionCategory = '';
         sessionWorkoutIcon = 'bodybuilding';
-        
-        // Закрываем сессию
-        if (currentSessionId) {
-            await firebase.firestore()
-                .collection('trainingSessions')
-                .doc(currentSessionId)
-                .update({
-                    status: 'completed',
-                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-        }
-        
         currentSessionId = null;
         isHost = false;
         sessionData = null;
@@ -1612,21 +1604,21 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
         partnerFinishedNotified = false;
         partnerFinishedSeconds = null;
         myFinishedSeconds = null;
-        
+
         if (sessionListener) {
             sessionListener();
             sessionListener = null;
         }
-        
+
         window.navigateTo('workouts');
-        
+        showToast('✅ Тренировка завершена!');
+
     } catch (error) {
         console.error('Ошибка сохранения:', error);
         showToast('❌ Ошибка сохранения тренировки');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Закончить';
-        btn.style.opacity = '1';
     }
 });
 
