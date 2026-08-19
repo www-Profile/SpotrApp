@@ -113,6 +113,12 @@ body {
     padding: 0.2rem 0.2rem 0.4rem;
 }
 
+.section-blockFriend {
+    background: var(--light);
+    border-radius: 16px;
+    padding: 0.2rem 0.2rem 0.4rem;
+}
+
 .section-header {
     display: flex;
     align-items: center;
@@ -1898,6 +1904,7 @@ font-style: italic;
     margin: 0 auto;
     padding: 0 1.2rem 0rem;
     background: #f8fafc;
+    padding-top: calc(env(safe-area-inset-top, 40px) - 20px);
 }
 
 .session-header {
@@ -2919,4 +2926,9 @@ textarea.error {
     font-size: 1rem;
     font-weight: 600;
     color: var(--dark);
+}
+
+/* ===================СОВМЕСТНАЯ ТРЕНИРОВКА =================== */
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }

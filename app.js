@@ -681,6 +681,430 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// ===================СОВМЕСТНЫЕ ТРЕНИРОВКИ ===================
+let currentSessionId = null;
+let isHost = false;
+let sessionListener = null;
+let inviteListener = null;
+let coopExercises = [];
+let partnerProgress = 0;
+let myProgress = 0;
+let sessionData = null;
+
+// =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
+
+// Отмена приглашения
+window.cancelInvite = async function() {
+    if (!currentSessionId) return;
+    try {
+        await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(currentSessionId)
+            .delete();
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+        currentSessionId = null;
+        isHost = false;
+        showToast('❌ Приглашение отменено');
+        window.navigateTo('workouts');
+    } catch (error) {
+        console.error('Ошибка отмены:', error);
+        showToast('❌ Не удалось отменить приглашение');
+    }
+};
+
+// Слушаем входящие приглашения
+function listenForInvites() {
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+            if (inviteListener) {
+                inviteListener();
+                inviteListener = null;
+            }
+            return;
+        }
+        if (inviteListener) {
+            inviteListener();
+            inviteListener = null;
+        }
+        inviteListener = firebase.firestore()
+            .collection('notifications')
+            .where('to', '==', user.uid)
+            .where('type', '==', 'train_invite')
+            .where('read', '==', false)
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        const id = 'invite_' + data.sessionId;
+                        if (isNotificationSeen(id)) return;
+                        showInviteNotification(data, change.doc.id);
+                    }
+                });
+            });
+    });
+}
+
+function showInviteNotification(data, notificationId) {
+    const id = 'invite_' + data.sessionId;
+    if (isNotificationSeen(id)) return;
+    showNotification(
+        '🏋️',
+        `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
+        function() {
+            acceptInvite(data.sessionId, notificationId);
+        }
+    );
+    markNotificationSeen(id);
+}
+
+async function acceptInvite(sessionId, notificationId) {
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            showToast('❌ Вы не авторизованы');
+            return;
+        }
+        const doc = await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(sessionId)
+            .get();
+        if (!doc.exists) {
+            showToast('❌ Приглашение устарело');
+            return;
+        }
+        const data = doc.data();
+        if (data.status === 'completed') {
+            showToast('❌ Тренировка уже завершена');
+            return;
+        }
+        if (notificationId) {
+            await firebase.firestore()
+                .collection('notifications')
+                .doc(notificationId)
+                .update({ read: true });
+        }
+        await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(sessionId)
+            .update({
+                guestReady: true,
+                status: 'active',
+                startedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        currentSessionId = sessionId;
+        isHost = false;
+        sessionData = data;
+        coopExercises = data.exercises || [];
+        document.getElementById('waitingFriendName').textContent = data.hostName || 'Пользователь';
+        document.getElementById('waitingStatus').textContent = 'Присоединяемся...';
+        window.navigateTo('training-waiting');
+        listenSession(sessionId);
+        showToast(`✅ Вы присоединились к ${data.hostName}`);
+    } catch (error) {
+        console.error('Ошибка принятия:', error);
+        showToast('❌ Не удалось присоединиться к тренировке');
+    }
+}
+
+function listenSession(sessionId) {
+    if (sessionListener) {
+        sessionListener();
+        sessionListener = null;
+    }
+    sessionListener = firebase.firestore()
+        .collection('trainingSessions')
+        .doc(sessionId)
+        .onSnapshot((doc) => {
+            if (!doc.exists) {
+                showToast('❌ Сессия удалена');
+                if (sessionListener) {
+                    sessionListener();
+                    sessionListener = null;
+                }
+                window.navigateTo('workouts');
+                return;
+            }
+            const data = doc.data();
+            if (isHost) {
+                partnerProgress = data.guestProgress || 0;
+                myProgress = data.hostProgress || 0;
+            } else {
+                partnerProgress = data.hostProgress || 0;
+                myProgress = data.guestProgress || 0;
+            }
+            if (data.status === 'active' && data.hostReady && data.guestReady) {
+                if (document.getElementById('page-training-session').classList.contains('page-active')) {
+                    updateCoopUI();
+                    return;
+                }
+                startCoopTraining(data);
+            }
+            if (document.getElementById('page-training-waiting').classList.contains('page-active')) {
+                if (data.status === 'active') {
+                    document.getElementById('waitingStatus').textContent = 'Друг присоединился! Начинаем...';
+                } else if (data.guestReady) {
+                    document.getElementById('waitingStatus').textContent = 'Друг готов!';
+                }
+            }
+            if (data.status === 'completed') {
+                showToast('🎉 Тренировка завершена!');
+                if (sessionListener) {
+                    sessionListener();
+                    sessionListener = null;
+                }
+                setTimeout(() => {
+                    window.navigateTo('workouts');
+                }, 2000);
+            }
+        });
+}
+
+function startCoopTraining(data) {
+    coopExercises = data.exercises || [];
+    if (isHost) {
+        myProgress = data.hostProgress || 0;
+        partnerProgress = data.guestProgress || 0;
+    } else {
+        myProgress = data.guestProgress || 0;
+        partnerProgress = data.hostProgress || 0;
+    }
+    const title = data.workoutTitle || 'Совместная тренировка';
+    const category = 'Совместная';
+    const exercises = coopExercises.map((ex, index) => ({
+        ...ex,
+        completed: index < myProgress
+    }));
+    startTrainingSession(exercises, title, category, 'bodybuilding');
+    sessionWorkoutTitle = title + ' (совместно)';
+    sessionData = data;
+    setTimeout(updateCoopUI, 500);
+}
+
+function updateCoopUI() {
+    const total = coopExercises.length || 0;
+    const partnerName = isHost ? (sessionData?.guestName || 'Друг') : (sessionData?.hostName || 'Друг');
+    let partnerEl = document.getElementById('partnerInfo');
+    if (!partnerEl) {
+        const progressRow = document.querySelector('.session-progress-row');
+        if (progressRow) {
+            const div = document.createElement('div');
+            div.id = 'partnerInfo';
+            div.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.3rem 0.5rem;
+                background: var(--accent-light);
+                border-radius: 8px;
+                margin-top: 0.3rem;
+                font-size: 0.8rem;
+            `;
+            div.innerHTML = `
+                <span>👤 ${partnerName}</span>
+                <span id="partnerProgressText">0/${total}</span>
+            `;
+            progressRow.appendChild(div);
+        }
+    }
+    const progressText = document.getElementById('partnerProgressText');
+    if (progressText) {
+        progressText.textContent = `${Math.min(partnerProgress, total)}/${total}`;
+    }
+    if (partnerProgress >= total && total > 0) {
+        const statusEl = document.querySelector('#partnerInfo span:first-child');
+        if (statusEl) {
+            statusEl.innerHTML = '✅ Партнёр завершил!';
+        }
+    }
+}
+
+// Переопределяем markCurrentComplete для обновления прогресса
+const originalMarkComplete = markCurrentComplete;
+markCurrentComplete = function() {
+    originalMarkComplete();
+    if (currentSessionId && sessionData) {
+        const completedCount = sessionCompleted.size;
+        updateCoopProgress(completedCount);
+    }
+};
+
+async function updateCoopProgress(completedCount) {
+    if (!currentSessionId) return;
+    try {
+        const update = {};
+        if (isHost) {
+            update.hostProgress = completedCount;
+            update['exercises'] = coopExercises.map((ex, index) => ({
+                ...ex,
+                hostCompleted: index < completedCount
+            }));
+        } else {
+            update.guestProgress = completedCount;
+            update['exercises'] = coopExercises.map((ex, index) => ({
+                ...ex,
+                guestCompleted: index < completedCount
+            }));
+        }
+        const doc = await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(currentSessionId)
+            .get();
+        const data = doc.data();
+        const total = data.totalExercises || data.exercises?.length || 0;
+        const hostDone = data.hostProgress >= total;
+        const guestDone = data.guestProgress >= total;
+        if (hostDone && guestDone && total > 0) {
+            update.status = 'completed';
+            update.completedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(currentSessionId)
+            .update(update);
+    } catch (error) {
+        console.error('Ошибка обновления прогресса:', error);
+    }
+}
+
+function showFriendSelectModal(friends) {
+    const oldModal = document.getElementById('friendSelectModal');
+    if (oldModal) oldModal.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'friendSelectModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-title">Выберите друга</div>
+            <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;">
+                ${friends.map(f => `
+                    <div class="friend-item" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer;">
+                        <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
+                        <div class="friend-info">
+                            <strong>${f.displayName || 'Пользователь'}</strong>
+                            <span>Уровень ${getCurrentLevel(f.totalXp || 0).id}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="btn btn-secondary" onclick="document.getElementById('friendSelectModal').remove()">Закрыть</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+window.selectFriendForCoop = function(friendId) {
+    const modal = document.getElementById('friendSelectModal');
+    if (modal) modal.remove();
+    // Загружаем данные друга и отправляем приглашение
+    getUserProfile(friendId).then(result => {
+        if (result.success) {
+            const friendName = result.data.displayName || 'Пользователь';
+            sendCoopInvite(friendId, friendName);
+        } else {
+            showToast('❌ Не удалось загрузить данные друга');
+        }
+    });
+};
+
+async function sendCoopInvite(friendId, friendName) {
+    const workoutData = window._currentWorkoutForInvite;
+    if (!workoutData || !workoutData.exercises || workoutData.exercises.length === 0) {
+        showToast('❌ Сначала выберите тренировку');
+        return;
+    }
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            showToast('❌ Вы не авторизованы');
+            return;
+        }
+        // Проверка, не занят ли друг
+        const busyCheck = await firebase.firestore()
+            .collection('trainingSessions')
+            .where('guestId', '==', friendId)
+            .where('status', 'in', ['waiting', 'active'])
+            .get();
+        if (!busyCheck.empty) {
+            showToast('⚠️ Друг уже участвует в тренировке');
+            return;
+        }
+        // Создаём сессию
+        const sessionRef = await firebase.firestore().collection('trainingSessions').add({
+            hostId: user.uid,
+            guestId: friendId,
+            hostName: user.displayName || 'Пользователь',
+            guestName: friendName,
+            workoutTitle: workoutData.title,
+            exercises: workoutData.exercises.map(ex => ({ ...ex, hostCompleted: false, guestCompleted: false })),
+            status: 'waiting',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            hostReady: false,
+            guestReady: false,
+            hostProgress: 0,
+            guestProgress: 0,
+            totalExercises: workoutData.exercises.length
+        });
+        currentSessionId = sessionRef.id;
+        isHost = true;
+        sessionData = {
+            hostId: user.uid,
+            guestId: friendId,
+            guestName: friendName,
+            workoutTitle: workoutData.title,
+            exercises: workoutData.exercises,
+            totalExercises: workoutData.exercises.length
+        };
+        coopExercises = workoutData.exercises;
+        // Отправляем уведомление другу
+        await firebase.firestore().collection('notifications').add({
+            to: friendId,
+            from: user.uid,
+            fromName: user.displayName || 'Пользователь',
+            type: 'train_invite',
+            sessionId: sessionRef.id,
+            workoutTitle: workoutData.title,
+            message: `${user.displayName || 'Пользователь'} приглашает вас на совместную тренировку!`,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false
+        });
+        showToast(`✅ Приглашение отправлено ${friendName}`);
+        document.getElementById('waitingFriendName').textContent = friendName;
+        document.getElementById('waitingStatus').textContent = 'Ожидаем подтверждения...';
+        window.navigateTo('training-waiting');
+        listenSession(currentSessionId);
+    } catch (error) {
+        console.error('Ошибка отправки приглашения:', error);
+        showToast('❌ Не удалось отправить приглашение');
+    }
+}
+
+// Переопределяем finishTrainingSession для совместных тренировок (если нужно)
+const originalFinish = finishTrainingSession;
+finishTrainingSession = function() {
+    if (currentSessionId && sessionData) {
+        const total = sessionData.totalExercises || coopExercises.length || 0;
+        if (partnerProgress < total) {
+            showToast('👀 Ожидаем завершения партнёра...');
+            return;
+        }
+        // очистка
+        currentSessionId = null;
+        isHost = false;
+        sessionData = null;
+        coopExercises = [];
+        partnerProgress = 0;
+        myProgress = 0;
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+    }
+    originalFinish();
+};
+
 // Создаём глобальные переменные для совместимости со старым кодом
 let activeStatsTab = TabManager.state.stats;
 let activeWorkoutsTab = TabManager.state.workouts;
@@ -1649,7 +2073,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
 
     let exercises = [];
     let displayTitle = '';
-    let workoutIcon = 'bodybuilding'; // ← для личных тренировок
+    let workoutIcon = 'bodybuilding';
 
     if (isCustom && id) {
         const workout = getWorkoutById(id);
@@ -1657,7 +2081,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             exercises = workout.exercises || [];
             displayTitle = workout.title;
             currentCategory = workout.title;
-            workoutIcon = workout.icon || 'bodybuilding'; // ← берём иконку из личной тренировки
+            workoutIcon = workout.icon || 'bodybuilding';
         }
     } else {
         let found = false;
@@ -1718,7 +2142,6 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             displayTitle = category + ' ' + (level || '1 LVL');
         }
 
-        // Для готовых тренировок иконка определяется по карте категорий
         const CATEGORY_ICON_MAP = {
             'Руки': 'bodybuilding',
             'Плечи': 'shoulder',
@@ -1739,6 +2162,12 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
     }
 
     _quickEditExercises = exercises;
+
+    // Сохраняем тренировку для приглашения (ДО того как используем displayTitle)
+    window._currentWorkoutForInvite = {
+        title: displayTitle,
+        exercises: exercises
+    };
 
     const titleEl = document.getElementById('workoutDetailTitle');
     if (titleEl) {
@@ -1796,7 +2225,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             }
             
             let sessionExercises = [];
-            let finalWorkoutIcon = workoutIcon; // ← используем полученную иконку
+            let finalWorkoutIcon = workoutIcon;
             
             if (currentIsCustom && currentWorkoutId) {
                 const workout = getWorkoutById(currentWorkoutId);
@@ -1805,9 +2234,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
                     finalWorkoutIcon = workout.icon || 'bodybuilding';
                 }
             } else {
-                // Для готовых тренировок exercises уже загружены
                 sessionExercises = exercises;
-                // finalWorkoutIcon уже установлен
             }
 
             if (sessionExercises.length === 0) {
@@ -1815,13 +2242,10 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
                 return;
             }
 
-            // Определяем категорию для статистики (по иконке)
             let resolvedCategory = 'Без категории';
             if (currentIsCustom && currentWorkoutId) {
-                // Для личной тренировки категория = ICON_TO_CATEGORY[finalWorkoutIcon] или 'Всё тело'
                 resolvedCategory = ICON_TO_CATEGORY[finalWorkoutIcon] || 'Всё тело';
             } else {
-                // Для готовой – используем resolveWorkoutCategory
                 let parent = parentCategory || '';
                 if (!parent) {
                     for (const p in exercisesData) {
@@ -1835,10 +2259,30 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             }
 
             const cleanTitle = currentCategory + ' ' + currentLevel;
-            
-            // ЗАПУСКАЕМ СЕССИЮ С ИКОНКОЙ И КАТЕГОРИЕЙ
             startTrainingSession(sessionExercises, cleanTitle, resolvedCategory, finalWorkoutIcon);
         };
+    }
+
+    // Настраиваем кнопку "Совместная тренировка" (уже есть в HTML)
+    const inviteBtn = document.getElementById('coopInviteBtn');
+    if (inviteBtn) {
+        inviteBtn.onclick = function() {
+            getFriendsList().then(result => {
+                if (!result.success || result.data.length === 0) {
+                    showToast('⚠️ Сначала добавьте друзей в профиле');
+                    TabManager.profile('friends');
+                    return;
+                }
+                showFriendSelectModal(result.data);
+            });
+        };
+        // Если нужно скрыть для премиум-тренировок или по другим условиям:
+        // inviteBtn.style.display = (isPremiumWorkout) ? 'none' : 'block';
+    }
+    
+    // Вставляем кнопку после actionButton
+    if (actionButton) {
+        actionButton.parentNode.insertBefore(inviteBtn, actionButton.nextSibling);
     }
 }
 
@@ -4897,7 +5341,7 @@ const tutorialSteps = [
     id: 13,
     page: 'profile',
     highlight: '.profile-card',
-    text: 'Это ваш профиль.'
+    text: 'Это ваш профиль :)'
     },
     {
         id: 14,
@@ -5138,6 +5582,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         TabManager.applyAll();
     }, 100);
+
+    setTimeout(() => {
+    listenForInvites();
+}, 1000);
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -6006,48 +6454,6 @@ document.getElementById('friendProfileCloseBtn')?.addEventListener('click', func
     closeModal('friendProfileModal');
     currentFriendId = null;
     currentFriendData = null;
-});
-
-document.getElementById('friendInviteBtn')?.addEventListener('click', async function() {
-    if (!currentFriendId || !currentFriendData) {
-        showToast('❌ Данные друга не загружены');
-        return;
-    }
-    
-    const friendName = currentFriendData.displayName || 'Пользователь';
-    
-    showConfirmModal(
-        'Совместная тренировка',
-        `Отправить приглашение ${friendName} на совместную тренировку?`,
-        async function() {
-            try {
-                const user = await getFirebaseUser();
-                if (!user) {
-                    showToast('❌ Вы не авторизованы');
-                    return;
-                }
-                
-                await firebase.firestore().collection('notifications').add({
-                    to: currentFriendId,
-                    from: user.uid,
-                    fromName: user.displayName || 'Пользователь',
-                    type: 'invite',
-                    message: `${user.displayName || 'Пользователь'} приглашает вас на совместную тренировку!`,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    read: false
-                });
-                
-                showToast(`✅ Приглашение отправлено ${friendName}`);
-                closeModal('friendProfileModal');
-                currentFriendId = null;
-                currentFriendData = null;
-            } catch (error) {
-                console.error('Ошибка отправки приглашения:', error);
-                showToast('❌ Не удалось отправить приглашение');
-            }
-        },
-        'Отправить'
-    );
 });
 
 document.getElementById('friendRemoveBtn')?.addEventListener('click', function() {

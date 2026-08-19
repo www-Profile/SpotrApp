@@ -219,20 +219,28 @@
         </main>
     </div>
 
-    <!-- ===== СТРАНИЦА: ДЕТАЛИ ТРЕНИРОВКИ ===== -->
-    <div id="page-workout-detail" class="page">
-        <main class="dashboard-container">
-            <header class="dashboard-header">
-                <h1 class="dashboard-title" id="workoutDetailTitle">ТРЕНИРОВКА</h1>
-            </header>
-            <h3 class="section-title">Упражнения</h3>
-            <div id="exercisesContainer" class="item-grid"></div>
-            <button class="btn btn-primary" style="margin-top: 1rem;" id="actionButton">Начать тренировку</button>
-            <button class="btn btn-primary btn-center" id="editWorkoutBtn" style="margin-top:0.5rem;">
-                <i class="fa-regular fa-pen-to-square"></i> Редактировать тренировку
+<!-- ===== СТРАНИЦА: ДЕТАЛИ ТРЕНИРОВКИ ===== -->
+<div id="page-workout-detail" class="page">
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 class="dashboard-title" id="workoutDetailTitle">ТРЕНИРОВКА</h1>
+        </header>
+        <h3 class="section-title">Упражнения</h3>
+        <div id="exercisesContainer" class="item-grid"></div>
+        
+        <!-- ДВЕ КНОПКИ В ОДНОЙ СТРОКЕ -->
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <button class="btn btn-secondary" style="flex: 1;" id="coopInviteBtn">
+                <i class="fa-solid fa-users"></i> Совместная
             </button>
-        </main>
-    </div>
+            <button class="btn btn-primary" style="flex: 1;" id="actionButton">Начать тренировку</button>
+        </div>
+        
+        <button class="btn btn-primary btn-center" id="editWorkoutBtn" style="margin-top:0.5rem;">
+            <i class="fa-regular fa-pen-to-square"></i> Редактировать тренировку
+        </button>
+    </main>
+</div>
 
     <!-- ===== СТРАНИЦА: ВЫБОР УРОВНЯ ===== -->
     <div id="page-level-select" class="page">
@@ -479,6 +487,24 @@
             <div id="exerciseListContainer" class="item-grid"></div>
         </main>
     </div>
+
+    <!-- ===== СТРАНИЦА: ОЖИДАНИЕ СОВМЕСТНОЙ ТРЕНИРОВКИ ===== -->
+<div id="page-training-waiting" class="page">
+    <main class="training-session-container" style="justify-content: center;">
+        <div style="text-align: center; padding: 2rem;">
+            <i class="fa-solid fa-users" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <h2 style="color: var(--dark); margin-bottom: 0.5rem;">Ожидание друга...</h2>
+            <p style="color: var(--slate); margin-bottom: 0.5rem;" id="waitingFriendName">Имя друга</p>
+            <p style="color: var(--slate); font-size: 0.9rem;" id="waitingStatus">Ожидаем подтверждения...</p>
+            <div style="margin: 1.5rem 0;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; border: 4px solid var(--light); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="cancelInvite()" style="max-width: 200px; margin: 0 auto;">
+                Отменить приглашение
+            </button>
+        </div>
+    </main>
+</div>
 
     <!-- ===== СТРАНИЦА: СТАТИСТИКА ===== -->
     <div id="page-stats" class="page">
@@ -795,12 +821,11 @@
 <!-- Вкладка: Друзья -->
 <div id="profileTab-friends" class="profile-tab-content">
     <!-- Блок 1: Поиск -->
-    <div class="section-block" data-block-id="friends-search">
+    <div class="section-blockFriend" data-block-id="friends-search">
         <div class="friends-list-block">
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
                 <button class="btn btn-primary search-btn" id="searchBtn">Найти</button>
-                <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
             </div>
             <div id="searchResults" class="item-grid"></div>
         </div>
@@ -1155,10 +1180,6 @@
                     <span class="stat-number" id="friendTotalExercises">0</span>
                 </div>
             </div>
-
-            <button class="btn btn-secondary btn-center" style="margin-bottom:0.5rem; margin-top:0.5rem;" id="friendInviteBtn">
-                <i class="fa-regular fa-paper-plane"></i> Совместная тренировка
-            </button>
             <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-danger" style="flex:1;" id="friendRemoveBtn">Удалить</button>
                 <button class="btn btn-primary" style="flex:1;" id="friendProfileCloseBtn">Готово</button>
