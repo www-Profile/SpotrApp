@@ -690,6 +690,7 @@ let coopExercises = [];
 let partnerProgress = 0;
 let myProgress = 0;
 let sessionData = null;
+let coopStarted = false;
 
 // =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 
@@ -839,28 +840,16 @@ async function acceptInvite(sessionId, notificationId) {
                 startedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-        // Получаем обновлённые данные
-        const updatedDoc = await firebase.firestore()
-            .collection('trainingSessions')
-            .doc(sessionId)
-            .get();
-        const updatedData = updatedDoc.data();
-
         currentSessionId = sessionId;
         isHost = false;
-        sessionData = updatedData;
-        coopExercises = updatedData.exercises || [];
+        // sessionData и coopExercises будут установлены в listenSession
 
-        // Переходим на страницу ожидания (на случай, если вдруг не запустится)
+        // Переходим на страницу ожидания
         window.navigateTo('training-waiting');
+        // Подписываемся на изменения
         listenSession(sessionId);
 
-        // Если данные уже активны и оба готовы, запускаем тренировку сразу
-        if (updatedData.status === 'active' && updatedData.hostReady && updatedData.guestReady) {
-            startCoopTraining(updatedData);
-        } else {
-            showToast(`✅ Вы присоединились к ${updatedData.hostName}`);
-        }
+        showToast(`✅ Вы присоединились к ${data.hostName}`);
     } catch (error) {
         console.error('Ошибка принятия:', error);
         showToast('❌ Не удалось присоединиться к тренировке');
@@ -877,7 +866,6 @@ function listenSession(sessionId) {
         .doc(sessionId)
         .onSnapshot((doc) => {
             if (!doc.exists) {
-                showToast('❌ Сессия удалена');
                 if (sessionListener) {
                     sessionListener();
                     sessionListener = null;
@@ -893,28 +881,31 @@ function listenSession(sessionId) {
                 partnerProgress = data.hostProgress || 0;
                 myProgress = data.guestProgress || 0;
             }
-            
-            // ✅ Проверяем, готовы ли оба
-            if (data.status === 'active' && data.hostReady && data.guestReady) {
-                // Если уже на странице тренировки — обновляем UI
-                if (document.getElementById('page-training-session').classList.contains('page-active')) {
-                    updateCoopUI();
-                    return;
-                }
-                // Иначе запускаем тренировку
+
+            // Если оба готовы и тренировка ещё не запущена
+            if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
+                coopStarted = true;
                 startCoopTraining(data);
                 return;
             }
-            
+
+            // Если уже на странице тренировки, обновляем UI
+            if (document.getElementById('page-training-session').classList.contains('page-active')) {
+                updateCoopUI();
+                return;
+            }
+
             if (document.getElementById('page-training-waiting').classList.contains('page-active')) {
                 if (data.guestReady && data.hostReady) {
-                    // Если оба готовы — сразу запускаем
-                    startCoopTraining(data);
+                    if (!coopStarted) {
+                        coopStarted = true;
+                        startCoopTraining(data);
+                    }
                 } else if (data.guestReady) {
                     showToast('👤 Друг присоединился! Начинаем...');
                 }
             }
-            
+
             if (data.status === 'completed') {
                 showToast('🎉 Тренировка завершена!');
                 if (sessionListener) {
@@ -929,12 +920,13 @@ function listenSession(sessionId) {
 }
 
 function startCoopTraining(data) {
-    // Останавливаем слушатель, чтобы не запускать повторно
     if (sessionListener) {
         sessionListener();
         sessionListener = null;
     }
-    
+    // Сбрасываем флаг, чтобы при повторных вызовах не было проблем
+    coopStarted = true; // уже установлено, но на всякий случай
+
     coopExercises = data.exercises || [];
     if (isHost) {
         myProgress = data.hostProgress || 0;
@@ -1155,7 +1147,6 @@ async function sendCoopInvite(friendId, friendName) {
     }
 }
 
-// Переопределяем finishTrainingSession для совместных тренировок (если нужно)
 const originalFinish = finishTrainingSession;
 finishTrainingSession = function() {
     if (currentSessionId && sessionData) {
@@ -1171,6 +1162,7 @@ finishTrainingSession = function() {
         coopExercises = [];
         partnerProgress = 0;
         myProgress = 0;
+        coopStarted = false;
         if (sessionListener) {
             sessionListener();
             sessionListener = null;
