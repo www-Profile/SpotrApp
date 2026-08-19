@@ -1304,7 +1304,7 @@ markCurrentComplete = function() {
     }
 };
 
-async function updateCoopProgress(completedCount) {
+async function updateCoopProgress(completedCount, isFinishing = false) {
     if (!currentSessionId) return;
     try {
         console.log('🔄 updateCoopProgress вызвана, completedCount:', completedCount);
@@ -1417,13 +1417,14 @@ function showFriendSelectModal(friends) {
                     const level = getCurrentLevel(f.totalXp || 0).id;
                     const xp = (f.totalXp || 0).toFixed(1);
                     return `
-                    <div class="friend-itemMOD" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer;">
-                        <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
-                        <div class="friend-info">
-                            <strong>${f.displayName || 'Пользователь'}</strong>
-                            <span>Уровень ${level} · ${xp} XP</span>
-                        </div>
-                    </div>
+<div class="friend-itemMOD" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer;">
+    <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
+    <div class="friend-info">
+        <strong>${f.displayName || 'Пользователь'}</strong>
+        <span>Уровень ${level} · ${xp} XP</span>
+    </div>
+    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
                 `}).join('')}
             </div>
             <button class="btn btn-primary" onclick="document.getElementById('friendSelectModal').remove()">Закрыть</button>
@@ -3130,7 +3131,7 @@ function goToNextExercise() {
             
             // Обновляем прогресс в совместной тренировке
             if (currentSessionId && sessionData) {
-                updateCoopProgress(sessionCompleted.size);
+                updateCoopProgress(sessionCompleted.size, false); // ← false, так как это НЕ завершение
             }
         }
     }
