@@ -693,14 +693,25 @@ let sessionData = null;
 
 // =================== ФУНКЦИИ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 
-// Отмена приглашения
 window.cancelInvite = async function() {
     if (!currentSessionId) return;
     try {
+        // Удаляем сессию
         await firebase.firestore()
             .collection('trainingSessions')
             .doc(currentSessionId)
             .delete();
+
+        // Удаляем все уведомления с этим sessionId
+        const snapshot = await firebase.firestore()
+            .collection('notifications')
+            .where('sessionId', '==', currentSessionId)
+            .where('type', '==', 'train_invite')
+            .get();
+        const batch = firebase.firestore().batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
         if (sessionListener) {
             sessionListener();
             sessionListener = null;
@@ -797,7 +808,13 @@ async function acceptInvite(sessionId, notificationId) {
             .doc(sessionId)
             .get();
         if (!doc.exists) {
-            showToast('❌ Приглашение устарело');
+            if (notificationId) {
+                await firebase.firestore()
+                    .collection('notifications')
+                    .doc(notificationId)
+                    .update({ read: true });
+            }
+            showToast('❌ Приглашение устарело или отменено');
             return;
         }
         const data = doc.data();
@@ -811,23 +828,39 @@ async function acceptInvite(sessionId, notificationId) {
                 .doc(notificationId)
                 .update({ read: true });
         }
-        // Обновляем сессию: гость готов, хост тоже становится готовым (автоматически)
+        // Обновляем сессию: гость и хост готовы, статус active
         await firebase.firestore()
             .collection('trainingSessions')
             .doc(sessionId)
             .update({
                 guestReady: true,
-                hostReady: true,  // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ
+                hostReady: true,
                 status: 'active',
                 startedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+        // Получаем обновлённые данные
+        const updatedDoc = await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(sessionId)
+            .get();
+        const updatedData = updatedDoc.data();
+
         currentSessionId = sessionId;
         isHost = false;
-        sessionData = data;
-        coopExercises = data.exercises || [];
+        sessionData = updatedData;
+        coopExercises = updatedData.exercises || [];
+
+        // Переходим на страницу ожидания (на случай, если вдруг не запустится)
         window.navigateTo('training-waiting');
         listenSession(sessionId);
-        showToast(`✅ Вы присоединились к ${data.hostName}`);
+
+        // Если данные уже активны и оба готовы, запускаем тренировку сразу
+        if (updatedData.status === 'active' && updatedData.hostReady && updatedData.guestReady) {
+            startCoopTraining(updatedData);
+        } else {
+            showToast(`✅ Вы присоединились к ${updatedData.hostName}`);
+        }
     } catch (error) {
         console.error('Ошибка принятия:', error);
         showToast('❌ Не удалось присоединиться к тренировке');
