@@ -748,11 +748,55 @@ function listenForInvites() {
             .where('to', '==', user.uid)
             .where('type', '==', 'train_invite')
             .where('read', '==', false)
-            .onSnapshot((snapshot) => {
-                snapshot.docChanges().forEach((change) => {
+            .onSnapshot(async (snapshot) => {
+                for (const change of snapshot.docChanges()) {
                     if (change.type === 'added') {
                         const data = change.doc.data();
-                        // ★★★ УДАЛЯЕМ ПРОВЕРКУ И МАРКИРОВКУ ★★★
+                        
+                        // ★★★ ПРОВЕРЯЕМ НАЛИЧИЕ SESSION ID ★★★
+                        if (!data.sessionId) {
+                            console.warn('⚠️ Уведомление без sessionId, удаляем');
+                            await firebase.firestore()
+                                .collection('notifications')
+                                .doc(change.doc.id)
+                                .delete();
+                            continue;
+                        }
+                        
+                        // ★★★ ПРОВЕРЯЕМ, НЕ ЗАВЕРШЕНА ЛИ СЕССИЯ ★★★
+                        try {
+                            const doc = await firebase.firestore()
+                                .collection('trainingSessions')
+                                .doc(data.sessionId)
+                                .get();
+                            
+                            if (!doc.exists) {
+                                // Сессия не существует — удаляем уведомление
+                                await firebase.firestore()
+                                    .collection('notifications')
+                                    .doc(change.doc.id)
+                                    .delete();
+                                console.log('🗑️ Уведомление удалено (сессия не существует)');
+                                continue;
+                            }
+                            
+                            const sessionData = doc.data();
+                            // Если сессия завершена или оба завершили — удаляем уведомление
+                            if (sessionData.status === 'completed' || 
+                                (sessionData.hostFinished && sessionData.guestFinished)) {
+                                await firebase.firestore()
+                                    .collection('notifications')
+                                    .doc(change.doc.id)
+                                    .delete();
+                                console.log('🗑️ Уведомление удалено (сессия завершена)');
+                                continue;
+                            }
+                        } catch (error) {
+                            console.error('❌ Ошибка проверки сессии:', error);
+                            // Если ошибка — всё равно показываем уведомление
+                        }
+                        
+                        // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ★★★
                         showNotification(
                             '🏋️',
                             `${data.fromName} приглашает вас на тренировку!`,
@@ -761,9 +805,8 @@ function listenForInvites() {
                                 acceptInvite(data.sessionId, change.doc.id);
                             }
                         );
-                        // Больше не вызываем markNotificationSeen(id)
                     }
-                });
+                }
             });
     });
 }
@@ -913,15 +956,22 @@ function listenSession(sessionId) {
 function handleSessionSnapshot(doc) {
     console.log('📡 handleSessionSnapshot вызвана');
     
-    if (!doc.exists) {
-        console.log('❌ Документ не существует');
-        if (sessionListener) {
-            sessionListener();
-            sessionListener = null;
-        }
-        window.navigateTo('workouts');
-        return;
+if (!doc.exists) {
+    console.log('❌ Документ не существует (сессия удалена)');
+    // ★★★ ЕСЛИ СЕССИЯ УДАЛЕНА, ПЕРЕХОДИМ НА ТРЕНИРОВКИ ★★★
+    if (sessionListener) {
+        sessionListener();
+        sessionListener = null;
     }
+    // Проверяем, не на странице ли финиша
+    const coopFinishPage = document.getElementById('page-coop-finish');
+    if (coopFinishPage && coopFinishPage.classList.contains('page-active')) {
+        // На странице финиша — переходим на тренировки
+        window.navigateTo('workouts');
+        showToast('✅ Сессия завершена');
+    }
+    return;
+}
     
     const data = doc.data();
     console.log('📄 Данные из onSnapshot:', {
@@ -1013,14 +1063,15 @@ if (isTrainingSessionActive) {
 }
     }
 
-    if (data.status === 'completed') {
-        console.log('🏁 Тренировка завершена!');
+if (data.status === 'completed') {
+    console.log('🏁 Тренировка завершена!');
+    // ★★★ НЕ ПЕРЕХОДИМ АВТОМАТИЧЕСКИ ★★★
+    // Просто показываем тост, если кто-то ещё на странице тренировки
+    if (document.getElementById('page-training-session').classList.contains('page-active')) {
         showToast('🎉 Тренировка завершена!');
-        if (sessionListener) {
-            sessionListener();
-            sessionListener = null;
-        }
     }
+    return;
+}
 }
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ СТАРТА ТРЕНИРОВКИ ===================
@@ -1369,42 +1420,44 @@ async function sendCoopInvite(friendId, friendName) {
         }
         console.log('✅ Пользователь авторизован:', user.uid);
         
-        // Проверка, не занят ли друг
-        console.log('🔍 Проверяем, не занят ли друг...');
-        const busyCheck = await firebase.firestore()
-            .collection('trainingSessions')
-            .where('guestId', '==', friendId)
-            .where('status', 'in', ['waiting', 'active'])
-            .get();
-        
-        if (!busyCheck.empty) {
-            console.log('⚠️ Друг уже участвует в тренировке');
-            showToast('⚠️ Друг уже участвует в тренировке');
-            return;
-        }
-        console.log('✅ Друг свободен');
+// Проверка, не занят ли друг (включая завершённые)
+console.log('🔍 Проверяем, не занят ли друг...');
+const busyCheck = await firebase.firestore()
+    .collection('trainingSessions')
+    .where('guestId', '==', friendId)
+    .where('status', 'in', ['waiting', 'active'])
+    .get();
+
+if (!busyCheck.empty) {
+    console.log('⚠️ Друг уже участвует в тренировке');
+    showToast('⚠️ Друг уже участвует в тренировке');
+    return;
+}
+console.log('✅ Друг свободен');
         
         // Создаём сессию
         console.log('📝 Создаём сессию...');
-        const sessionRef = await firebase.firestore().collection('trainingSessions').add({
-            hostId: user.uid,
-            guestId: friendId,
-            hostName: user.displayName || 'Пользователь',
-            guestName: friendName,
-            workoutTitle: workoutData.title,
-            exercises: workoutData.exercises.map(ex => ({ 
-                ...ex, 
-                hostCompleted: false, 
-                guestCompleted: false 
-            })),
-            status: 'waiting',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            hostReady: false,
-            guestReady: false,
-            hostProgress: 0,
-            guestProgress: 0,
-            totalExercises: workoutData.exercises.length
-        });
+const sessionRef = await firebase.firestore().collection('trainingSessions').add({
+    hostId: user.uid,
+    guestId: friendId,
+    hostName: user.displayName || 'Пользователь',
+    guestName: friendName,
+    workoutTitle: workoutData.title,
+    exercises: workoutData.exercises.map(ex => ({ 
+        ...ex, 
+        hostCompleted: false, 
+        guestCompleted: false 
+    })),
+    status: 'waiting',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    hostReady: false,
+    guestReady: false,
+    hostProgress: 0,
+    guestProgress: 0,
+    totalExercises: workoutData.exercises.length,
+    hostFinished: false,     // ★★★ ДОБАВЛЯЕМ ★★★
+    guestFinished: false     // ★★★ ДОБАВЛЯЕМ ★★★
+});
         
         console.log('✅ Сессия создана, sessionId:', sessionRef.id);
         console.log('📄 Данные сессии:', {
@@ -1567,15 +1620,42 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
             showToast('⚠️ Тренировка сохранена локально');
         }
 
-        // ★★★ ЗАКРЫВАЕМ СЕССИЮ В FIRESTORE ★★★
+        // ★★★ ПОМЕЧАЕМ, ЧТО ЭТОТ УЧАСТНИК ЗАВЕРШИЛ ★★★
         if (currentSessionId) {
+            const update = {};
+            if (isHost) {
+                update.hostFinished = true;
+            } else {
+                update.guestFinished = true;
+            }
+            
+            // Обновляем сессию в Firestore
             await firebase.firestore()
                 .collection('trainingSessions')
                 .doc(currentSessionId)
-                .delete(); // Удаляем сессию, чтобы можно было начать новую
+                .update(update);
+            
+            // Проверяем, завершили ли оба
+            const doc = await firebase.firestore()
+                .collection('trainingSessions')
+                .doc(currentSessionId)
+                .get();
+            
+            if (doc.exists) {
+                const data = doc.data();
+                // Если оба завершили — удаляем сессию
+                if (data.hostFinished && data.guestFinished) {
+                    await firebase.firestore()
+                        .collection('trainingSessions')
+                        .doc(currentSessionId)
+                        .delete();
+                    console.log('🗑️ Сессия удалена (оба завершили)');
+                }
+            }
         }
 
-        // Очищаем все данные
+        // ★★★ ЗАКРЫВАЕМ СТРАНИЦУ ФИНИША ТОЛЬКО У ЭТОГО УЧАСТНИКА ★★★
+        // Очищаем локальные данные
         sessionExercises = [];
         sessionCompleted = new Set();
         sessionSeconds = 0;
@@ -1598,8 +1678,9 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
             sessionListener = null;
         }
 
+        // ★★★ ПЕРЕХОДИМ НА СТРАНИЦУ ТРЕНИРОВОК ТОЛЬКО У ЭТОГО УЧАСТНИКА ★★★
         window.navigateTo('workouts');
-        showToast('✅ Тренировка завершена!');
+        showToast('✅ Тренировка сохранена!');
 
     } catch (error) {
         console.error('Ошибка сохранения:', error);
