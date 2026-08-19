@@ -855,14 +855,23 @@ async function acceptInvite(sessionId, notificationId) {
         
         console.log('✅ Сессия обновлена');
         
+        // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ: отключаем и включаем сеть
+        console.log('🔄 Принудительное обновление Firestore...');
+        await firebase.firestore().disableNetwork();
+        await firebase.firestore().enableNetwork();
+        console.log('✅ Сеть перезапущена');
+        
         currentSessionId = sessionId;
         isHost = false;
         
         console.log('📍 Переходим на страницу ожидания');
         window.navigateTo('training-waiting');
         
-        console.log('👂 Подписываемся на изменения сессии');
-        listenSession(sessionId);
+        // Подписываемся с задержкой
+        setTimeout(() => {
+            console.log('👂 Подписываемся на изменения сессии (с задержкой)');
+            listenSession(sessionId);
+        }, 500);
         
         showToast(`✅ Вы присоединились к ${data.hostName}`);
         console.log('✅ acceptInvite завершена');
@@ -883,101 +892,220 @@ function listenSession(sessionId) {
         sessionListener = null;
     }
     
-    sessionListener = firebase.firestore()
+    // Сначала проверяем, существует ли сессия
+    firebase.firestore()
         .collection('trainingSessions')
         .doc(sessionId)
-        .onSnapshot((doc) => {
-            console.log('📡 onSnapshot сработал');
-            
+        .get()
+        .then((doc) => {
             if (!doc.exists) {
-                console.log('❌ Документ не существует');
-                if (sessionListener) {
-                    sessionListener();
-                    sessionListener = null;
-                }
-                window.navigateTo('workouts');
+                console.log('❌ Сессия не существует при проверке');
                 return;
             }
+            console.log('✅ Сессия существует, подписываемся на изменения');
             
-            const data = doc.data();
-            console.log('📄 Данные из onSnapshot:', {
-                status: data.status,
-                hostReady: data.hostReady,
-                guestReady: data.guestReady,
-                hostProgress: data.hostProgress,
-                guestProgress: data.guestProgress,
-                hostName: data.hostName,
-                guestName: data.guestName
-            });
-            
-            if (isHost) {
-                partnerProgress = data.guestProgress || 0;
-                myProgress = data.hostProgress || 0;
-            } else {
-                partnerProgress = data.hostProgress || 0;
-                myProgress = data.guestProgress || 0;
-            }
-            console.log('📊 Прогресс:', { myProgress, partnerProgress });
+            // Теперь подписываемся
+            sessionListener = firebase.firestore()
+                .collection('trainingSessions')
+                .doc(sessionId)
+                .onSnapshot((snapshot) => {
+                    console.log('📡 onSnapshot сработал');
+                    handleSessionSnapshot(snapshot);
+                }, (error) => {
+                    console.error('❌ Ошибка в onSnapshot:', error);
+                });
+        })
+        .catch((error) => {
+            console.error('❌ Ошибка проверки сессии:', error);
+        });
+    
+    console.log('✅ listenSession завершена');
+}
 
-            // Если оба готовы и тренировка ещё не запущена
-            if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
-                console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
-                console.log('   status:', data.status);
-                console.log('   hostReady:', data.hostReady);
-                console.log('   guestReady:', data.guestReady);
-                console.log('   coopStarted:', coopStarted);
+// Выносим обработку в отдельную функцию
+function handleSessionSnapshot(doc) {
+    console.log('📡 handleSessionSnapshot вызвана');
+    
+    if (!doc.exists) {
+        console.log('❌ Документ не существует');
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+        window.navigateTo('workouts');
+        return;
+    }
+    
+    const data = doc.data();
+    console.log('📄 Данные из onSnapshot:', {
+        status: data.status,
+        hostReady: data.hostReady,
+        guestReady: data.guestReady,
+        hostProgress: data.hostProgress,
+        guestProgress: data.guestProgress,
+        hostName: data.hostName,
+        guestName: data.guestName
+    });
+    
+    if (isHost) {
+        partnerProgress = data.guestProgress || 0;
+        myProgress = data.hostProgress || 0;
+    } else {
+        partnerProgress = data.hostProgress || 0;
+        myProgress = data.guestProgress || 0;
+    }
+    console.log('📊 Прогресс:', { myProgress, partnerProgress });
+
+    // Если оба готовы и тренировка ещё не запущена
+    if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
+        console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
+        console.log('   status:', data.status);
+        console.log('   hostReady:', data.hostReady);
+        console.log('   guestReady:', data.guestReady);
+        console.log('   coopStarted:', coopStarted);
+        coopStarted = true;
+        startCoopTraining(data);
+        return;
+    } else {
+        console.log('⏳ Условие НЕ выполнено:');
+        console.log('   status === "active":', data.status === 'active');
+        console.log('   hostReady:', data.hostReady);
+        console.log('   guestReady:', data.guestReady);
+        console.log('   !coopStarted:', !coopStarted);
+    }
+
+    // Если уже на странице тренировки, обновляем UI
+    const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
+    console.log('📱 Страница тренировки активна?', isTrainingSessionActive);
+    
+    if (isTrainingSessionActive) {
+        console.log('🔄 Обновляем UI тренировки');
+        updateCoopUI();
+        return;
+    }
+
+    const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
+    console.log('📱 Страница ожидания активна?', isWaitingActive);
+    
+    if (isWaitingActive) {
+        console.log('📱 Мы на странице ожидания');
+        if (data.guestReady && data.hostReady) {
+            console.log('🎯 Оба готовы!');
+            if (!coopStarted) {
+                console.log('🚀 Запускаем тренировку из страницы ожидания');
                 coopStarted = true;
                 startCoopTraining(data);
-                return;
-            } else {
-                console.log('⏳ Условие НЕ выполнено:');
-                console.log('   status === "active":', data.status === 'active');
-                console.log('   hostReady:', data.hostReady);
-                console.log('   guestReady:', data.guestReady);
-                console.log('   !coopStarted:', !coopStarted);
             }
+        } else if (data.guestReady) {
+            console.log('👤 Друг присоединился!');
+            showToast('👤 Друг присоединился! Начинаем...');
+        }
+    }
 
-            // Если уже на странице тренировки, обновляем UI
-            const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
-            console.log('📱 Страница тренировки активна?', isTrainingSessionActive);
-            
-            if (isTrainingSessionActive) {
-                console.log('🔄 Обновляем UI тренировки');
-                updateCoopUI();
-                return;
-            }
+    if (data.status === 'completed') {
+        console.log('🏁 Тренировка завершена!');
+        showToast('🎉 Тренировка завершена!');
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+        setTimeout(() => {
+            window.navigateTo('workouts');
+        }, 2000);
+    }
+}
 
-            const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
-            console.log('📱 Страница ожидания активна?', isWaitingActive);
-            
-            if (isWaitingActive) {
-                console.log('📱 Мы на странице ожидания');
-                if (data.guestReady && data.hostReady) {
-                    console.log('🎯 Оба готовы!');
-                    if (!coopStarted) {
-                        console.log('🚀 Запускаем тренировку из страницы ожидания');
-                        coopStarted = true;
-                        startCoopTraining(data);
-                    }
-                } else if (data.guestReady) {
-                    console.log('👤 Друг присоединился!');
-                    showToast('👤 Друг присоединился! Начинаем...');
-                }
-            }
+// Выносим обработку в отдельную функцию
+function handleSessionSnapshot(doc) {
+    console.log('📡 handleSessionSnapshot вызвана');
+    
+    if (!doc.exists) {
+        console.log('❌ Документ не существует');
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+        window.navigateTo('workouts');
+        return;
+    }
+    
+    const data = doc.data();
+    console.log('📄 Данные из onSnapshot:', {
+        status: data.status,
+        hostReady: data.hostReady,
+        guestReady: data.guestReady,
+        hostProgress: data.hostProgress,
+        guestProgress: data.guestProgress,
+        hostName: data.hostName,
+        guestName: data.guestName
+    });
+    
+    if (isHost) {
+        partnerProgress = data.guestProgress || 0;
+        myProgress = data.hostProgress || 0;
+    } else {
+        partnerProgress = data.hostProgress || 0;
+        myProgress = data.guestProgress || 0;
+    }
+    console.log('📊 Прогресс:', { myProgress, partnerProgress });
 
-            if (data.status === 'completed') {
-                console.log('🏁 Тренировка завершена!');
-                showToast('🎉 Тренировка завершена!');
-                if (sessionListener) {
-                    sessionListener();
-                    sessionListener = null;
-                }
-                setTimeout(() => {
-                    window.navigateTo('workouts');
-                }, 2000);
+    // Если оба готовы и тренировка ещё не запущена
+    if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
+        console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
+        console.log('   status:', data.status);
+        console.log('   hostReady:', data.hostReady);
+        console.log('   guestReady:', data.guestReady);
+        console.log('   coopStarted:', coopStarted);
+        coopStarted = true;
+        startCoopTraining(data);
+        return;
+    } else {
+        console.log('⏳ Условие НЕ выполнено:');
+        console.log('   status === "active":', data.status === 'active');
+        console.log('   hostReady:', data.hostReady);
+        console.log('   guestReady:', data.guestReady);
+        console.log('   !coopStarted:', !coopStarted);
+    }
+
+    // Если уже на странице тренировки, обновляем UI
+    const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
+    console.log('📱 Страница тренировки активна?', isTrainingSessionActive);
+    
+    if (isTrainingSessionActive) {
+        console.log('🔄 Обновляем UI тренировки');
+        updateCoopUI();
+        return;
+    }
+
+    const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
+    console.log('📱 Страница ожидания активна?', isWaitingActive);
+    
+    if (isWaitingActive) {
+        console.log('📱 Мы на странице ожидания');
+        if (data.guestReady && data.hostReady) {
+            console.log('🎯 Оба готовы!');
+            if (!coopStarted) {
+                console.log('🚀 Запускаем тренировку из страницы ожидания');
+                coopStarted = true;
+                startCoopTraining(data);
             }
-        });
-    console.log('✅ listenSession завершена');
+        } else if (data.guestReady) {
+            console.log('👤 Друг присоединился!');
+            showToast('👤 Друг присоединился! Начинаем...');
+        }
+    }
+
+    if (data.status === 'completed') {
+        console.log('🏁 Тренировка завершена!');
+        showToast('🎉 Тренировка завершена!');
+        if (sessionListener) {
+            sessionListener();
+            sessionListener = null;
+        }
+        setTimeout(() => {
+            window.navigateTo('workouts');
+        }, 2000);
+    }
 }
 
 function startCoopTraining(data) {
@@ -1164,35 +1292,56 @@ window.selectFriendForCoop = function(friendId) {
 };
 
 async function sendCoopInvite(friendId, friendName) {
+    console.log('🔵 sendCoopInvite вызвана');
+    console.log('📄 friendId:', friendId);
+    console.log('📄 friendName:', friendName);
+    
     const workoutData = window._currentWorkoutForInvite;
+    console.log('📄 workoutData:', workoutData);
+    
     if (!workoutData || !workoutData.exercises || workoutData.exercises.length === 0) {
+        console.log('❌ Нет данных тренировки');
         showToast('❌ Сначала выберите тренировку');
         return;
     }
+    
     try {
         const user = await getFirebaseUser();
         if (!user) {
+            console.log('❌ Пользователь не авторизован');
             showToast('❌ Вы не авторизованы');
             return;
         }
+        console.log('✅ Пользователь авторизован:', user.uid);
+        
         // Проверка, не занят ли друг
+        console.log('🔍 Проверяем, не занят ли друг...');
         const busyCheck = await firebase.firestore()
             .collection('trainingSessions')
             .where('guestId', '==', friendId)
             .where('status', 'in', ['waiting', 'active'])
             .get();
+        
         if (!busyCheck.empty) {
+            console.log('⚠️ Друг уже участвует в тренировке');
             showToast('⚠️ Друг уже участвует в тренировке');
             return;
         }
+        console.log('✅ Друг свободен');
+        
         // Создаём сессию
+        console.log('📝 Создаём сессию...');
         const sessionRef = await firebase.firestore().collection('trainingSessions').add({
             hostId: user.uid,
             guestId: friendId,
             hostName: user.displayName || 'Пользователь',
             guestName: friendName,
             workoutTitle: workoutData.title,
-            exercises: workoutData.exercises.map(ex => ({ ...ex, hostCompleted: false, guestCompleted: false })),
+            exercises: workoutData.exercises.map(ex => ({ 
+                ...ex, 
+                hostCompleted: false, 
+                guestCompleted: false 
+            })),
             status: 'waiting',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             hostReady: false,
@@ -1201,6 +1350,15 @@ async function sendCoopInvite(friendId, friendName) {
             guestProgress: 0,
             totalExercises: workoutData.exercises.length
         });
+        
+        console.log('✅ Сессия создана, sessionId:', sessionRef.id);
+        console.log('📄 Данные сессии:', {
+            hostId: user.uid,
+            guestId: friendId,
+            workoutTitle: workoutData.title,
+            exercisesCount: workoutData.exercises.length
+        });
+        
         currentSessionId = sessionRef.id;
         isHost = true;
         sessionData = {
@@ -1212,15 +1370,9 @@ async function sendCoopInvite(friendId, friendName) {
             totalExercises: workoutData.exercises.length
         };
         coopExercises = workoutData.exercises;
-        // После создания сессии:
-console.log('✅ Сессия создана, sessionId:', sessionRef.id);
-console.log('📄 Данные сессии:', {
-    hostId: user.uid,
-    guestId: friendId,
-    workoutTitle: workoutData.title,
-    exercisesCount: workoutData.exercises.length
-});
+        
         // Отправляем уведомление другу
+        console.log('📨 Отправляем уведомление другу...');
         await firebase.firestore().collection('notifications').add({
             to: friendId,
             from: user.uid,
@@ -1232,12 +1384,23 @@ console.log('📄 Данные сессии:', {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             read: false
         });
+        console.log('✅ Уведомление отправлено');
+        
         showToast(`✅ Приглашение отправлено ${friendName}`);
-        // Переходим на страницу ожидания (без имени друга, оно теперь не нужно)
+        
+        // Переходим на страницу ожидания
+        console.log('📍 Переходим на страницу ожидания');
         window.navigateTo('training-waiting');
-        listenSession(currentSessionId);
+        
+        // Даем время на сохранение в Firestore
+        setTimeout(() => {
+            console.log('👂 Подписываемся на изменения сессии (с задержкой 500ms)');
+            listenSession(currentSessionId);
+        }, 500);
+        
+        console.log('✅ sendCoopInvite завершена');
     } catch (error) {
-        console.error('Ошибка отправки приглашения:', error);
+        console.error('❌ Ошибка в sendCoopInvite:', error);
         showToast('❌ Не удалось отправить приглашение');
     }
 }
