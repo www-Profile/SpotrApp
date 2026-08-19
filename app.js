@@ -757,6 +757,7 @@ function listenForInvites() {
                             '🏋️',
                             `${data.fromName} приглашает вас на "${data.workoutTitle}"!`,
                             function() {
+                                console.log('🔵 actionCallback вызван!');
                                 acceptInvite(data.sessionId, change.doc.id);
                             }
                         );
@@ -910,7 +911,7 @@ function listenSession(sessionId) {
                 .doc(sessionId)
                 .onSnapshot((snapshot) => {
                     console.log('📡 onSnapshot сработал');
-                    handleSessionSnapshot(snapshot);
+                    handleSessionSnapshot(doc);
                 }, (error) => {
                     console.error('❌ Ошибка в onSnapshot:', error);
                 });
@@ -922,100 +923,6 @@ function listenSession(sessionId) {
     console.log('✅ listenSession завершена');
 }
 
-// Выносим обработку в отдельную функцию
-function handleSessionSnapshot(doc) {
-    console.log('📡 handleSessionSnapshot вызвана');
-    
-    if (!doc.exists) {
-        console.log('❌ Документ не существует');
-        if (sessionListener) {
-            sessionListener();
-            sessionListener = null;
-        }
-        window.navigateTo('workouts');
-        return;
-    }
-    
-    const data = doc.data();
-    console.log('📄 Данные из onSnapshot:', {
-        status: data.status,
-        hostReady: data.hostReady,
-        guestReady: data.guestReady,
-        hostProgress: data.hostProgress,
-        guestProgress: data.guestProgress,
-        hostName: data.hostName,
-        guestName: data.guestName
-    });
-    
-    if (isHost) {
-        partnerProgress = data.guestProgress || 0;
-        myProgress = data.hostProgress || 0;
-    } else {
-        partnerProgress = data.hostProgress || 0;
-        myProgress = data.guestProgress || 0;
-    }
-    console.log('📊 Прогресс:', { myProgress, partnerProgress });
-
-    // Если оба готовы и тренировка ещё не запущена
-    if (data.status === 'active' && data.hostReady && data.guestReady && !coopStarted) {
-        console.log('🎯 УСЛОВИЕ ВЫПОЛНЕНО! Запускаем тренировку');
-        console.log('   status:', data.status);
-        console.log('   hostReady:', data.hostReady);
-        console.log('   guestReady:', data.guestReady);
-        console.log('   coopStarted:', coopStarted);
-        coopStarted = true;
-        startCoopTraining(data);
-        return;
-    } else {
-        console.log('⏳ Условие НЕ выполнено:');
-        console.log('   status === "active":', data.status === 'active');
-        console.log('   hostReady:', data.hostReady);
-        console.log('   guestReady:', data.guestReady);
-        console.log('   !coopStarted:', !coopStarted);
-    }
-
-    // Если уже на странице тренировки, обновляем UI
-    const isTrainingSessionActive = document.getElementById('page-training-session').classList.contains('page-active');
-    console.log('📱 Страница тренировки активна?', isTrainingSessionActive);
-    
-    if (isTrainingSessionActive) {
-        console.log('🔄 Обновляем UI тренировки');
-        updateCoopUI();
-        return;
-    }
-
-    const isWaitingActive = document.getElementById('page-training-waiting').classList.contains('page-active');
-    console.log('📱 Страница ожидания активна?', isWaitingActive);
-    
-    if (isWaitingActive) {
-        console.log('📱 Мы на странице ожидания');
-        if (data.guestReady && data.hostReady) {
-            console.log('🎯 Оба готовы!');
-            if (!coopStarted) {
-                console.log('🚀 Запускаем тренировку из страницы ожидания');
-                coopStarted = true;
-                startCoopTraining(data);
-            }
-        } else if (data.guestReady) {
-            console.log('👤 Друг присоединился!');
-            showToast('👤 Друг присоединился! Начинаем...');
-        }
-    }
-
-    if (data.status === 'completed') {
-        console.log('🏁 Тренировка завершена!');
-        showToast('🎉 Тренировка завершена!');
-        if (sessionListener) {
-            sessionListener();
-            sessionListener = null;
-        }
-        setTimeout(() => {
-            window.navigateTo('workouts');
-        }, 2000);
-    }
-}
-
-// Выносим обработку в отдельную функцию
 function handleSessionSnapshot(doc) {
     console.log('📡 handleSessionSnapshot вызвана');
     
@@ -1554,10 +1461,6 @@ const notificationOkBtn = document.getElementById('notificationOkBtn');
 
 notificationContainer.style.display = 'block';
 
-notificationOkBtn.addEventListener('click', function() {
-    hideNotification();
-});
-
 function showNotification(icon, text, actionCallback) {
     const notificationId = text + icon;
     const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
@@ -1597,20 +1500,47 @@ function showFriendRequestNotification(icon, text, requestId) {
 }
 
 function processNotificationQueue() {
-    if (notificationQueue.length === 0 || isNotificationShowing) return;
+    console.log('🔵 processNotificationQueue вызвана');
+    console.log('📊 Очередь:', notificationQueue.length);
+    console.log('📊 isNotificationShowing:', isNotificationShowing);
+    
+    if (notificationQueue.length === 0 || isNotificationShowing) {
+        console.log('⏭️ Очередь пуста или уведомление уже показывается');
+        return;
+    }
     
     isNotificationShowing = true;
     const notification = notificationQueue.shift();
+    console.log('📄 Уведомление:', notification);
     
     notificationIcon.textContent = notification.icon;
     notificationText.textContent = notification.text;
     
+    // Проверяем, что кнопка существует
+    const okBtn = document.getElementById('notificationOkBtn');
+    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
+    
     // Если есть actionCallback — меняем текст кнопки на "Принять"
     if (notification.actionCallback) {
-        notificationOkBtn.textContent = 'Принять';
-        notificationOkBtn.onclick = function() {
+        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
+        okBtn.textContent = 'Принять';
+        okBtn.onclick = function(e) {
+            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
+            console.log('🔵 event:', e);
+            console.log('🔵 actionCallback:', notification.actionCallback);
+            
             // Вызываем actionCallback
-            if (notification.actionCallback) notification.actionCallback();
+            if (notification.actionCallback) {
+                console.log('🔵 Вызываем actionCallback');
+                try {
+                    notification.actionCallback();
+                    console.log('✅ actionCallback выполнен');
+                } catch (error) {
+                    console.error('❌ Ошибка в actionCallback:', error);
+                }
+            } else {
+                console.log('⚠️ actionCallback не определён');
+            }
             hideNotification();
             
             if (notification.isFriendRequest && notification.requestId) {
@@ -1627,8 +1557,10 @@ function processNotificationQueue() {
             }
         };
     } else {
-        notificationOkBtn.textContent = 'ОК';
-        notificationOkBtn.onclick = function() {
+        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
+        okBtn.textContent = 'ОК';
+        okBtn.onclick = function() {
+            console.log('🔵 Кнопка "ОК" нажата');
             hideNotification();
             
             if (notification.isFriendRequest && notification.requestId) {
@@ -1646,6 +1578,9 @@ function processNotificationQueue() {
         };
     }
     
+    console.log('🔍 Кнопка после установки onclick:', okBtn);
+    console.log('🔍 onclick:', okBtn.onclick);
+    
     notificationCard.classList.remove('show');
     notificationCard.style.transform = 'translateY(-120px)';
     notificationCard.style.opacity = '0';
@@ -1654,16 +1589,19 @@ function processNotificationQueue() {
         notificationCard.classList.add('show');
         notificationCard.style.transform = '';
         notificationCard.style.opacity = '';
+        console.log('✅ Уведомление показано');
     }, 100);
 }
 
 function hideNotification() {
+    console.log('🔵 hideNotification вызвана');
     notificationCard.classList.remove('show');
     isNotificationShowing = false;
     notificationOkBtn.onclick = null;
     
     setTimeout(() => {
         if (notificationQueue.length > 0) {
+            console.log('🔄 Показываем следующее уведомление');
             processNotificationQueue();
         }
     }, 400);
