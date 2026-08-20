@@ -22,7 +22,7 @@
     <div id="page-workouts" class="page">
         <main class="dashboard-container">
             <header class="dashboard-header">
-                <h1 class="dashboard-title">ТРЕНИРОВКИ!</h1>
+                <h1 class="dashboard-title">ТРЕНИРОВКИ</h1>
             </header>
 
             <div class="tabs">
@@ -324,11 +324,11 @@
             </div>
             
             <!-- КОНТЕЙНЕР ДЛЯ ВСЕХ УЧАСТНИКОВ -->
-            <div id="coopAllParticipants" style="width:100%; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;">
+            <div id="coopAllParticipants" style="width:100%; display:flex; flex-direction:column; gap:0.5rem;">
                 <!-- Сюда будут рендериться все участники -->
             </div>
 
-            <button class="btn btn-primary finish-btn" id="coopFinishDoneBtn">Закончить</button>
+            <button class="btn btn-primary finish-btn" id="coopFinishDoneBtn" style="margin-top: 1rem;">Закончить</button>
         </div>
     </main>
 </div>
@@ -505,7 +505,7 @@
     <main class="training-session-container" style="justify-content: center;">
         <div style="text-align: center; padding: 2rem;">
             <i class="fa-solid fa-user-group" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
-            <h2 style="color: var(--dark); margin-bottom: 2rem;">Ожидание друга...</h2>
+            <h2 style="color: var(--dark); margin-bottom: 2rem;">Ожидание участников...</h2>
             <button class="btn btn-primary" onclick="cancelInvite()">
                 Отменить приглашение
             </button>
@@ -517,8 +517,8 @@
 <div id="page-coop-waiting" class="page">
     <main class="finish-container">
         <div class="finish-content">
-        <h2 class="finish-title">Ждем участников</h2>
-            <div class="finish-trophy-SEC">
+        <h2 class="finish-title">Ожидание участников</h2>
+            <div class="finish-trophy">
                 <i class="fa-solid fa-user-group"></i>
             </div>
             <!-- Моя статистика -->

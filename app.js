@@ -1358,7 +1358,7 @@ function renderFinishPageData(data) {
         if (finishContent) {
             container = document.createElement('div');
             container.id = 'coopAllParticipants';
-            container.style.cssText = 'width:100%; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;';
+            container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
             // Вставляем после моей статистики
             const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
             if (myStatsBlock) {
@@ -1389,10 +1389,10 @@ function renderFinishPageData(data) {
         
         html += `
             <div style="width:100%;">
-<div class="item-title" style="color: ${accentColor}; margin-left: 1rem; margin-bottom: 0.5rem;">
+<div class="item-title" style="color:var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
     <i class="${icon}"></i> ${isMe ? 'Вы' : name}
 </div>
-                <div class="finish-stats" style="margin-bottom: 0.5rem;">
+                <div class="finish-stats" style="margin-bottom: 0rem;">
                     <div class="finish-stat-item">
                         <span class="finish-stat-label">Упражнений</span>
                         <span class="finish-stat-value">${progress}/${total}</span>
@@ -1938,7 +1938,7 @@ function renderCoopFriendsStatus() {
                 <span style="font-weight:500; color:var(--dark);">
                     👤 ${name}
                 </span>
-                <span style="font-weight:600; color:var(--light);">
+                <span style="font-weight:600; color:var(--slate);">
                     ${statusText}
                 </span>
             </div>
@@ -3387,6 +3387,12 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
     coopExercises = [];
     coopStarted = false;
     finishPageShown = false;
+    
+    // ★★★ УДАЛЯЕМ КОНТЕЙНЕР С УЧАСТНИКАМИ ★★★
+    const participantsContainer = document.getElementById('participantsContainer');
+    if (participantsContainer) {
+        participantsContainer.remove();
+    }
     // ===== КОНЕЦ СБРОСА =====
 
     if (!exercises || exercises.length === 0) {

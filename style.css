@@ -680,18 +680,12 @@ body {
     z-index: 2000;
 }
 
-@media (max-width: 480px) {
-    .modal-overlay {
-        align-items: center;
-    }
-}
-
 .modal-content {
     background: var(--white);
     border-radius: 16px;
     padding: 1rem;
     max-width: 500px;
-    width: 100%;
+    width: 95%;
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-height: 90vh;
@@ -2107,23 +2101,12 @@ font-style: italic;
 
 .finish-trophy {
     font-size: 5rem;
-    color: var(--gold);
-    margin-bottom: 1rem;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
     margin-top: 2rem;
 }
 
 .finish-trophy i {
-    display: block;
-}
-
-.finish-trophy-SEC {
-    font-size: 5rem;
-    color: var(--accent);
-    margin-bottom: 1rem;
-    margin-top: 2rem;
-}
-
-.finish-trophy-SEC i {
     display: block;
 }
 
