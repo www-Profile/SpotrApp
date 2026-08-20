@@ -1056,8 +1056,14 @@ function handleSessionSnapshot(doc) {
         coopExercises = data.exercises;
     }
     
-    // ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
-    updateCoopUI();
+// ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
+updateCoopUI();
+
+// ★★★ ЕСЛИ МЫ НА СТРАНИЦЕ ОЖИДАНИЯ — ОБНОВЛЯЕМ СТАТУСЫ ДРУЗЕЙ ★★★
+const isWaitingPageActive = document.getElementById('page-coop-waiting')?.classList.contains('page-active');
+if (isWaitingPageActive) {
+    renderCoopFriendsStatus();
+}
     
     // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ УЧАСТНИКИ ЗАВЕРШИЛИ ★★★
     const participants = sessionData.participants || [];
@@ -1272,72 +1278,34 @@ function updateCoopUI() {
 
 function showCoopFinishPage() {
     console.log('🔥🔥🔥 [showCoopFinishPage] НАЧАЛО');
-    console.log('📊 [showCoopFinishPage] ПРОВЕРКА ПЕРЕМЕННЫХ:');
-    console.log('  - finishPageShown:', finishPageShown);
-    console.log('  - sessionData существует?', !!sessionData);
-    console.log('  - currentSessionId:', currentSessionId);
-    console.log('  - isHost:', isHost);
     
-    if (finishPageShown) {
-        console.log('⚠️ [showCoopFinishPage] Страница уже показана, пропускаем');
-        return;
-    }
-    finishPageShown = true;
-    console.log('📌 [showCoopFinishPage] finishPageShown = true');
-
-    console.log('📊 [showCoopFinishPage] sessionData:', JSON.stringify(sessionData, null, 2));
-
-    // Принудительно переключаем страницу
-    console.log('🔄 [showCoopFinishPage] Переключаем страницу на coop-finish');
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('page-active');
-        p.style.display = 'none';
-    });
+    // ★★★ УБИРАЕМ ПРОВЕРКУ finishPageShown ★★★
+    // if (finishPageShown) return;
     
-    const target = document.getElementById('page-coop-finish');
-    if (target) {
-        target.classList.add('page-active');
-        target.style.display = 'block';
-        console.log('✅ [showCoopFinishPage] Страница финиша показана');
-    } else {
-        console.error('❌ [showCoopFinishPage] Элемент page-coop-finish не найден!');
-    }
-    document.getElementById('bottomNav').style.display = 'none';
-    console.log('  - bottomNav скрыт');
-
-    // Используем локальные данные
+    // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ ★★★
     if (sessionData) {
         console.log('📊 [showCoopFinishPage] Вызываем renderFinishPageData с sessionData');
-        console.log('  - sessionData.participants:', sessionData.participants);
-        console.log('  - sessionData.participantProgress:', sessionData.participantProgress);
-        console.log('  - sessionData.participantFinished:', sessionData.participantFinished);
-        console.log('  - sessionData.participantFinishedSeconds:', sessionData.participantFinishedSeconds);
-        console.log('  - sessionData.participantXp:', sessionData.participantXp);
         renderFinishPageData(sessionData);
     } else {
-        console.warn('⚠️ [showCoopFinishPage] sessionData пуст, пробуем загрузить из Firestore');
-        if (currentSessionId) {
-            console.log('🔄 [showCoopFinishPage] Загружаем данные из Firestore для sessionId:', currentSessionId);
-            firebase.firestore()
-                .collection('trainingSessions')
-                .doc(currentSessionId)
-                .get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        console.log('✅ [showCoopFinishPage] Данные из Firestore загружены:', data);
-                        renderFinishPageData(data);
-                    } else {
-                        console.error('❌ [showCoopFinishPage] Документ сессии не найден в Firestore');
-                    }
-                })
-                .catch((error) => {
-                    console.error('❌ [showCoopFinishPage] Ошибка загрузки из Firestore:', error);
-                });
-        } else {
-            console.error('❌ [showCoopFinishPage] Нет currentSessionId для загрузки данных');
-        }
+        console.warn('⚠️ [showCoopFinishPage] sessionData пуст');
     }
+    
+    // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ, ЕСЛИ ОНА ЕЩЁ НЕ ПОКАЗАНА ★★★
+    if (!finishPageShown) {
+        finishPageShown = true;
+        document.querySelectorAll('.page').forEach(p => {
+            p.classList.remove('page-active');
+            p.style.display = 'none';
+        });
+        
+        const target = document.getElementById('page-coop-finish');
+        if (target) {
+            target.classList.add('page-active');
+            target.style.display = 'block';
+        }
+        document.getElementById('bottomNav').style.display = 'none';
+    }
+    
     console.log('✅ [showCoopFinishPage] ЗАВЕРШЕНА');
 }
 
@@ -1921,16 +1889,11 @@ finishTrainingSession = async function() {
     console.log('  - allFinished:', allFinished);
 
     if (!allFinished) {
-        console.log('⏳ [finishTrainingSession] Не все завершили, ждём...');
-        showToast('👀 Ожидаем завершения других участников...');
+        console.log('⏳ [finishTrainingSession] Не все завершили, показываем страницу ожидания...');
+        // ★★★ ВМЕСТО showToast ПОКАЗЫВАЕМ СТРАНИЦУ ОЖИДАНИЯ ★★★
         stopSessionTimer();
-        const mainBtn = document.getElementById('sessionMainBtn');
-        if (mainBtn) {
-            mainBtn.textContent = 'Ожидание';
-            mainBtn.disabled = true;
-            console.log('  - Кнопка изменена на "Ожидание"');
-        }
-        console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА (ожидание)');
+        showCoopWaitingPage();
+        console.log('✅ [finishTrainingSession] Страница ожидания показана');
         return;
     }
 
@@ -1942,6 +1905,103 @@ finishTrainingSession = async function() {
     showCoopFinishPage();
     console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА');
 };
+
+// =================== СТРАНИЦА ОЖИДАНИЯ ОСТАЛЬНЫХ ===================
+
+function showCoopWaitingPage() {
+    console.log('🔥🔥🔥 [showCoopWaitingPage] НАЧАЛО');
+    
+    // Обновляем мою статистику
+    const total = coopExercises.length || 0;
+    const myExercises = sessionCompleted.size;
+    const myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+    const myTime = sessionSeconds;
+    
+    console.log('📊 [showCoopWaitingPage] Мои данные:');
+    console.log('  - total:', total);
+    console.log('  - myExercises:', myExercises);
+    console.log('  - myXpValue:', myXpValue);
+    console.log('  - myTime:', myTime);
+    
+    document.getElementById('coopMyExercises').textContent = `${myExercises}/${total}`;
+    document.getElementById('coopMyTime').textContent = formatTime(myTime);
+    document.getElementById('coopMyXp').textContent = `+${Math.round(myXpValue)}`;
+    
+    // Рендерим статусы друзей
+    renderCoopFriendsStatus();
+    
+    // Переключаем на страницу ожидания
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
+    });
+    
+    const target = document.getElementById('page-coop-waiting');
+    if (target) {
+        target.classList.add('page-active');
+        target.style.display = 'block';
+        console.log('✅ [showCoopWaitingPage] Страница ожидания показана');
+    }
+    document.getElementById('bottomNav').style.display = 'none';
+    
+    console.log('✅ [showCoopWaitingPage] ЗАВЕРШЕНА');
+}
+
+function renderCoopFriendsStatus() {
+    console.log('🔥 [renderCoopFriendsStatus] НАЧАЛО');
+    
+    const container = document.getElementById('coopFriendsStatus');
+    if (!container) {
+        console.error('❌ [renderCoopFriendsStatus] Контейнер coopFriendsStatus не найден');
+        return;
+    }
+    
+    const participants = sessionData?.participants || [];
+    const participantFinished = sessionData?.participantFinished || {};
+    const participantProgress = sessionData?.participantProgress || {};
+    const total = coopExercises.length || 0;
+    
+    console.log('📊 [renderCoopFriendsStatus] Участников:', participants.length);
+    console.log('📊 [renderCoopFriendsStatus] participantFinished:', participantFinished);
+    console.log('📊 [renderCoopFriendsStatus] participantProgress:', participantProgress);
+    
+    const user = firebase.auth().currentUser;
+    const currentUserId = user ? user.uid : null;
+    
+    // Фильтруем только ДРУЗЕЙ (не текущего пользователя)
+    const friends = participants.filter(p => p.id !== currentUserId);
+    
+    if (friends.length === 0) {
+        container.innerHTML = `<div style="text-align:center;color:var(--slate);padding:1rem;">Нет других участников</div>`;
+        console.log('⚠️ [renderCoopFriendsStatus] Нет друзей для отображения');
+        return;
+    }
+    
+    console.log('📊 [renderCoopFriendsStatus] Друзей для отображения:', friends.length);
+    
+    let html = '';
+    friends.forEach(p => {
+        const isFinished = participantFinished[p.id] === true;
+        const progress = participantProgress[p.id] || 0;
+        const statusText = isFinished ? '✅ финиш' : `${progress}/${total}`;
+        const statusColor = isFinished ? 'var(--success)' : 'var(--accent)';
+        const name = p.name || 'Пользователь';
+        
+        html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 1rem; background:var(--light); border-radius:10px; border:1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+                <span style="font-weight:500; color:var(--dark);">
+                    👤 ${name}
+                </span>
+                <span style="font-weight:600; color:var(--slate);">
+                    ${statusText}
+                </span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    console.log('✅ [renderCoopFriendsStatus] Статусы друзей отрендерены');
+}
 
 document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async function() {
     console.log('🔥🔥🔥 [coopFinishDoneBtn] НАЖАТА КНОПКА');
@@ -1958,7 +2018,6 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
 
     const btn = this;
     btn.disabled = true;
-    btn.textContent = 'Сохранение...';
     console.log('📝 [coopFinishDoneBtn] Кнопка заблокирована');
 
     try {
