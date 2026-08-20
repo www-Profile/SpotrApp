@@ -1005,6 +1005,7 @@ function handleSessionSnapshot(doc) {
     
     const data = doc.data();
     
+    // ★★★ ПРОВЕРКА ИСТЕКШЕЙ СЕССИИ ★★★
     if (isSessionExpired(data.createdAt)) {
         deleteSessionIfExpired(currentSessionId, data);
         const isOnTrainingPage = document.getElementById('page-training-session').classList.contains('page-active');
@@ -1018,7 +1019,17 @@ function handleSessionSnapshot(doc) {
         return;
     }
     
-    // Обновляем sessionData
+    // ★★★ ПРОВЕРЯЕМ СТАТУС СЕССИИ ★★★
+    // Если сессия уже помечена как завершённая — показываем финиш
+    if (data.status === 'completed' && !finishPageShown) {
+        console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
+        finishPageShown = true;
+        stopSessionTimer();
+        showCoopFinishPage();
+        return;
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В ЛОКАЛЬНЫХ ДАННЫХ ★★★
     if (!sessionData) {
         sessionData = {
             hostId: data.hostId,
@@ -1045,35 +1056,30 @@ function handleSessionSnapshot(doc) {
         coopExercises = data.exercises;
     }
     
+    // ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
     updateCoopUI();
     
-    const participants = data.participants || [];
-    const participantReady = data.participantReady || {};
-    const allReady = participants.every(p => participantReady[p.id] === true);
+    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ УЧАСТНИКИ ЗАВЕРШИЛИ ★★★
+    const participants = sessionData.participants || [];
+    const participantFinished = sessionData.participantFinished || {};
     
-    if (data.status === 'waiting' && allReady && !coopStarted) {
-        firebase.firestore()
-            .collection('trainingSessions')
-            .doc(currentSessionId)
-            .update({
-                status: 'active',
-                startedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        coopStarted = true;
-        finishPageShown = false;
-        startCoopTraining(data);
-        return;
+    // ★★★ ВАЖНО: ИСПОЛЬЗУЕМ participants ДЛЯ ПРОВЕРКИ ★★★
+    let allFinished = false;
+    if (participants.length > 0) {
+        allFinished = participants.every(p => participantFinished[p.id] === true);
+        console.log('📊 [handleSessionSnapshot] Проверка завершения:');
+        console.log('  - Участников:', participants.length);
+        participants.forEach(p => {
+            console.log('  - ' + p.name + ' (' + p.id + '): finished=' + participantFinished[p.id]);
+        });
+        console.log('  - allFinished:', allFinished);
+    } else {
+        console.warn('⚠️ [handleSessionSnapshot] Нет участников в sessionData.participants');
     }
     
-    if (data.status === 'active' && !coopStarted) {
-        coopStarted = true;
-        finishPageShown = false;
-        startCoopTraining(data);
-        return;
-    }
-    
-    const allFinished = participants.every(p => data.participantFinished[p.id] === true);
+    // ★★★ ЕСЛИ ВСЕ ЗАВЕРШИЛИ — ПОКАЗЫВАЕМ ФИНИШ ★★★
     if (allFinished && !finishPageShown) {
+        console.log('🎉 [handleSessionSnapshot] ВСЕ УЧАСТНИКИ ЗАВЕРШИЛИ!');
         finishPageShown = true;
         stopSessionTimer();
         
@@ -1089,6 +1095,34 @@ function handleSessionSnapshot(doc) {
         }
         document.getElementById('bottomNav').style.display = 'none';
         showCoopFinishPage();
+        return;
+    }
+    
+    // ★★★ ПРОВЕРЯЕМ, НЕ ЗАПУЩЕНА ЛИ ТРЕНИРОВКА ★★★
+    const participantReady = data.participantReady || {};
+    const allReady = participants.every(p => participantReady[p.id] === true);
+    
+    if (data.status === 'waiting' && allReady && !coopStarted) {
+        console.log('🚀 Все готовы, запускаем тренировку');
+        firebase.firestore()
+            .collection('trainingSessions')
+            .doc(currentSessionId)
+            .update({
+                status: 'active',
+                startedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        coopStarted = true;
+        finishPageShown = false;
+        startCoopTraining(data);
+        return;
+    }
+    
+    if (data.status === 'active' && !coopStarted) {
+        console.log('🚀 Тренировка активна, запускаем');
+        coopStarted = true;
+        finishPageShown = false;
+        startCoopTraining(data);
+        return;
     }
 }
 
@@ -1237,31 +1271,90 @@ function updateCoopUI() {
 }
 
 function showCoopFinishPage() {
-    if (finishPageShown) return;
+    console.log('🔥🔥🔥 [showCoopFinishPage] НАЧАЛО');
+    console.log('📊 [showCoopFinishPage] ПРОВЕРКА ПЕРЕМЕННЫХ:');
+    console.log('  - finishPageShown:', finishPageShown);
+    console.log('  - sessionData существует?', !!sessionData);
+    console.log('  - currentSessionId:', currentSessionId);
+    console.log('  - isHost:', isHost);
+    
+    if (finishPageShown) {
+        console.log('⚠️ [showCoopFinishPage] Страница уже показана, пропускаем');
+        return;
+    }
     finishPageShown = true;
+    console.log('📌 [showCoopFinishPage] finishPageShown = true');
 
-    // Используем локальные данные, они уже актуальны
+    console.log('📊 [showCoopFinishPage] sessionData:', JSON.stringify(sessionData, null, 2));
+
+    // Принудительно переключаем страницу
+    console.log('🔄 [showCoopFinishPage] Переключаем страницу на coop-finish');
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
+    });
+    
+    const target = document.getElementById('page-coop-finish');
+    if (target) {
+        target.classList.add('page-active');
+        target.style.display = 'block';
+        console.log('✅ [showCoopFinishPage] Страница финиша показана');
+    } else {
+        console.error('❌ [showCoopFinishPage] Элемент page-coop-finish не найден!');
+    }
+    document.getElementById('bottomNav').style.display = 'none';
+    console.log('  - bottomNav скрыт');
+
+    // Используем локальные данные
     if (sessionData) {
+        console.log('📊 [showCoopFinishPage] Вызываем renderFinishPageData с sessionData');
+        console.log('  - sessionData.participants:', sessionData.participants);
+        console.log('  - sessionData.participantProgress:', sessionData.participantProgress);
+        console.log('  - sessionData.participantFinished:', sessionData.participantFinished);
+        console.log('  - sessionData.participantFinishedSeconds:', sessionData.participantFinishedSeconds);
+        console.log('  - sessionData.participantXp:', sessionData.participantXp);
         renderFinishPageData(sessionData);
     } else {
-        // fallback – если вдруг данные не загрузились (маловероятно)
-        console.warn('sessionData пуст, пробуем загрузить из Firestore');
+        console.warn('⚠️ [showCoopFinishPage] sessionData пуст, пробуем загрузить из Firestore');
         if (currentSessionId) {
+            console.log('🔄 [showCoopFinishPage] Загружаем данные из Firestore для sessionId:', currentSessionId);
             firebase.firestore()
                 .collection('trainingSessions')
                 .doc(currentSessionId)
                 .get()
                 .then((doc) => {
                     if (doc.exists) {
-                        renderFinishPageData(doc.data());
+                        const data = doc.data();
+                        console.log('✅ [showCoopFinishPage] Данные из Firestore загружены:', data);
+                        renderFinishPageData(data);
+                    } else {
+                        console.error('❌ [showCoopFinishPage] Документ сессии не найден в Firestore');
                     }
                 })
-                .catch(() => {});
+                .catch((error) => {
+                    console.error('❌ [showCoopFinishPage] Ошибка загрузки из Firestore:', error);
+                });
+        } else {
+            console.error('❌ [showCoopFinishPage] Нет currentSessionId для загрузки данных');
         }
     }
+    console.log('✅ [showCoopFinishPage] ЗАВЕРШЕНА');
 }
 
 function renderFinishPageData(data) {
+    console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
+    console.log('📊 [renderFinishPageData] Полученные данные:', JSON.stringify(data, null, 2));
+
+    // Если data пустая - пробуем использовать sessionData
+    if (!data || Object.keys(data).length === 0) {
+        console.warn('⚠️ [renderFinishPageData] data пустая, используем sessionData');
+        data = sessionData;
+        if (!data) {
+            console.error('❌ [renderFinishPageData] Нет данных для отображения!');
+            return;
+        }
+    }
+
     const total = data?.totalExercises || 0;
     const participants = data?.participants || [];
     const participantProgress = data?.participantProgress || {};
@@ -1272,12 +1365,22 @@ function renderFinishPageData(data) {
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
 
+    console.log('📊 [renderFinishPageData] РАСПАРСЕННЫЕ ДАННЫЕ:');
+    console.log('  - total:', total);
+    console.log('  - participants:', JSON.stringify(participants));
+    console.log('  - participantProgress:', JSON.stringify(participantProgress));
+    console.log('  - participantFinished:', JSON.stringify(participantFinished));
+    console.log('  - participantFinishedSeconds:', JSON.stringify(participantFinishedSeconds));
+    console.log('  - participantXp:', JSON.stringify(participantXp));
+    console.log('👤 [renderFinishPageData] Текущий пользователь:', currentUserId);
+
     // Сортируем: сначала текущий пользователь
     const sortedParticipants = [...participants].sort((a, b) => {
         if (a.id === currentUserId) return -1;
         if (b.id === currentUserId) return 1;
         return 0;
     });
+    console.log('📊 [renderFinishPageData] Отсортированные участники:', sortedParticipants.map(p => p.name));
 
     // Обновляем свою статистику
     const myData = sortedParticipants.find(p => p.id === currentUserId);
@@ -1285,9 +1388,37 @@ function renderFinishPageData(data) {
         const myProgress = participantProgress[currentUserId] || 0;
         const myTime = participantFinishedSeconds[currentUserId] || 0;
         const myXp = participantXp[currentUserId] || 0;
-        document.getElementById('coopMyExercises').textContent = `${myProgress}/${total}`;
-        document.getElementById('coopMyTime').textContent = formatTime(myTime);
-        document.getElementById('coopMyXp').textContent = `+${Math.round(myXp)}`;
+        
+        console.log('📊 [renderFinishPageData] МОИ ДАННЫЕ:');
+        console.log('  - myProgress:', myProgress);
+        console.log('  - myTime:', myTime);
+        console.log('  - myXp:', myXp);
+        
+        const myExercisesEl = document.getElementById('coopMyExercises');
+        const myTimeEl = document.getElementById('coopMyTime');
+        const myXpEl = document.getElementById('coopMyXp');
+        
+        console.log('  - Элемент coopMyExercises найден?', !!myExercisesEl);
+        console.log('  - Элемент coopMyTime найден?', !!myTimeEl);
+        console.log('  - Элемент coopMyXp найден?', !!myXpEl);
+        
+        if (myExercisesEl) {
+            const text = `${myProgress}/${total}`;
+            myExercisesEl.textContent = text;
+            console.log('  - coopMyExercises установлен:', text);
+        }
+        if (myTimeEl) {
+            const text = formatTime(myTime);
+            myTimeEl.textContent = text;
+            console.log('  - coopMyTime установлен:', text);
+        }
+        if (myXpEl) {
+            const text = `+${Math.round(myXp)}`;
+            myXpEl.textContent = text;
+            console.log('  - coopMyXp установлен:', text);
+        }
+    } else {
+        console.warn('⚠️ [renderFinishPageData] Не найдены данные для текущего пользователя');
     }
 
     // Первый партнёр (кто не текущий пользователь)
@@ -1297,15 +1428,52 @@ function renderFinishPageData(data) {
         const partnerProgress = participantProgress[partner.id] || 0;
         const partnerTime = participantFinishedSeconds[partner.id] || 0;
         const partnerXp = participantXp[partner.id] || 0;
-        document.getElementById('coopPartnerName').textContent = partnerName;
-        document.getElementById('coopPartnerExercises').textContent = `${partnerProgress}/${total}`;
-        document.getElementById('coopPartnerTime').textContent = formatTime(partnerTime);
-        document.getElementById('coopPartnerXp').textContent = `+${Math.round(partnerXp)}`;
+        
+        console.log('📊 [renderFinishPageData] ДАННЫЕ ПАРТНЁРА:');
+        console.log('  - partnerName:', partnerName);
+        console.log('  - partnerProgress:', partnerProgress);
+        console.log('  - partnerTime:', partnerTime);
+        console.log('  - partnerXp:', partnerXp);
+        
+        const nameEl = document.getElementById('coopPartnerName');
+        const exercisesEl = document.getElementById('coopPartnerExercises');
+        const timeEl = document.getElementById('coopPartnerTime');
+        const xpEl = document.getElementById('coopPartnerXp');
+        
+        console.log('  - coopPartnerName найден?', !!nameEl);
+        console.log('  - coopPartnerExercises найден?', !!exercisesEl);
+        console.log('  - coopPartnerTime найден?', !!timeEl);
+        console.log('  - coopPartnerXp найден?', !!xpEl);
+        
+        if (nameEl) {
+            nameEl.textContent = partnerName;
+            console.log('  - coopPartnerName установлен:', partnerName);
+        }
+        if (exercisesEl) {
+            const text = `${partnerProgress}/${total}`;
+            exercisesEl.textContent = text;
+            console.log('  - coopPartnerExercises установлен:', text);
+        }
+        if (timeEl) {
+            const text = formatTime(partnerTime);
+            timeEl.textContent = text;
+            console.log('  - coopPartnerTime установлен:', text);
+        }
+        if (xpEl) {
+            const text = `+${Math.round(partnerXp)}`;
+            xpEl.textContent = text;
+            console.log('  - coopPartnerXp установлен:', text);
+        }
+    } else {
+        console.warn('⚠️ [renderFinishPageData] Не найден партнёр');
     }
 
     // Остальные участники (если их больше 2)
     const otherParticipants = sortedParticipants.filter(p => p.id !== currentUserId && p.id !== (partner ? partner.id : null));
     const otherContainer = document.getElementById('coopOtherParticipants');
+    console.log('📊 [renderFinishPageData] ДРУГИЕ УЧАСТНИКИ:', otherParticipants.length);
+    console.log('  - coopOtherParticipants найден?', !!otherContainer);
+    
     if (otherContainer) {
         if (otherParticipants.length > 0) {
             let html = `<div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
@@ -1320,12 +1488,17 @@ function renderFinishPageData(data) {
                             <span style="font-weight:500;">${name}</span>
                             <span>${prog}/${total} · ${formatTime(time)} · +${Math.round(xp)} XP</span>
                         </div>`;
+                console.log('  - Другой участник ' + name + ': ' + prog + '/' + total + ', time=' + time + ', xp=' + xp);
             });
             otherContainer.innerHTML = html;
+            console.log('  - otherContainer заполнен');
         } else {
             otherContainer.innerHTML = '';
+            console.log('  - otherContainer очищен (нет других участников)');
         }
     }
+    
+    console.log('✅ [renderFinishPageData] ЗАВЕРШЕНА');
 }
 
 // Вспомогательная функция для форматирования времени
@@ -1662,42 +1835,112 @@ async function sendCoopInvite(friendId, friendName) {
 const originalFinish = finishTrainingSession;
 finishTrainingSession = async function() {
     console.log('🔥🔥🔥 [finishTrainingSession] НАЧАЛО');
+    
+    // ЛОГ: проверяем все ключевые переменные
+    console.log('📊 [finishTrainingSession] ПРОВЕРКА ПЕРЕМЕННЫХ:');
+    console.log('  - currentSessionId:', currentSessionId);
+    console.log('  - sessionData существует?', !!sessionData);
+    console.log('  - sessionExercises.length:', sessionExercises.length);
+    console.log('  - sessionCompleted.size:', sessionCompleted.size);
+    console.log('  - sessionSeconds:', sessionSeconds);
+    console.log('  - isHost:', isHost);
+    console.log('  - sessionWorkoutTitle:', sessionWorkoutTitle);
+    console.log('  - sessionCategory:', sessionCategory);
 
     // Если нет совместной сессии — обрабатываем как обычную тренировку
     if (!currentSessionId || !sessionData) {
+        console.log('📌 [finishTrainingSession] Обычная тренировка (нет совместной сессии)');
+        console.log('  - Причина: currentSessionId =', currentSessionId, ', sessionData =', sessionData);
         stopSessionTimer();
         const total = sessionExercises.length;
         const completed = sessionCompleted.size;
         const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
         const xpEarned = calculateWorkoutXp(completedExercises);
+        console.log('📊 [finishTrainingSession] Обычная тренировка: total=' + total + ', completed=' + completed + ', xp=' + xpEarned);
         showFinishPage(total, completed, sessionSeconds, xpEarned);
+        console.log('✅ [finishTrainingSession] Обычная тренировка завершена');
         return;
     }
 
     // Совместная тренировка
+    console.log('📌 [finishTrainingSession] СОВМЕСТНАЯ тренировка');
+    
     const completedCount = sessionCompleted.size;
     const total = sessionData.totalExercises || coopExercises.length || 0;
+    
+    console.log('📊 [finishTrainingSession] ДАННЫЕ СОВМЕСТНОЙ ТРЕНИРОВКИ:');
+    console.log('  - completedCount (sessionCompleted.size):', completedCount);
+    console.log('  - total (sessionData.totalExercises || coopExercises.length):', total);
+    console.log('  - sessionData.totalExercises:', sessionData.totalExercises);
+    console.log('  - coopExercises.length:', coopExercises.length);
+    console.log('  - sessionData.participants:', JSON.stringify(sessionData.participants));
+    console.log('  - sessionData.participantProgress:', JSON.stringify(sessionData.participantProgress));
+    console.log('  - sessionData.participantFinished:', JSON.stringify(sessionData.participantFinished));
 
+    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС ★★★
+    console.log('🔄 [finishTrainingSession] Вызов updateCoopProgress(' + completedCount + ', true)');
     await updateCoopProgress(completedCount, true);
+    console.log('✅ [finishTrainingSession] updateCoopProgress выполнен');
 
+    // ★★★ ПРИНУДИТЕЛЬНО ОБНОВЛЯЕМ ЛОКАЛЬНЫЕ ДАННЫЕ ★★★
+    const user = firebase.auth().currentUser;
+    console.log('👤 [finishTrainingSession] Текущий пользователь:', user ? user.uid : 'null');
+    
+    if (user) {
+        const userId = user.uid;
+        console.log('🔄 [finishTrainingSession] Обновляем локальный sessionData для пользователя:', userId);
+        if (sessionData) {
+            console.log('  - Было participantProgress[' + userId + ']:', sessionData.participantProgress[userId]);
+            console.log('  - Было participantFinished[' + userId + ']:', sessionData.participantFinished[userId]);
+            console.log('  - Было participantFinishedSeconds[' + userId + ']:', sessionData.participantFinishedSeconds[userId]);
+            
+            sessionData.participantProgress[userId] = completedCount;
+            sessionData.participantFinished[userId] = true;
+            sessionData.participantFinishedSeconds[userId] = sessionSeconds;
+            const completedExercises = coopExercises.filter((_, index) => index < completedCount);
+            sessionData.participantXp[userId] = calculateWorkoutXp(completedExercises);
+            
+            console.log('  - Стало participantProgress[' + userId + ']:', sessionData.participantProgress[userId]);
+            console.log('  - Стало participantFinished[' + userId + ']:', sessionData.participantFinished[userId]);
+            console.log('  - Стало participantFinishedSeconds[' + userId + ']:', sessionData.participantFinishedSeconds[userId]);
+            console.log('  - Стало participantXp[' + userId + ']:', sessionData.participantXp[userId]);
+        }
+    }
+
+    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАВЕРШИЛИ ★★★
     const participants = sessionData.participants || [];
     const participantFinished = sessionData.participantFinished || {};
+    
+    console.log('📊 [finishTrainingSession] ПРОВЕРКА ЗАВЕРШЕНИЯ:');
+    console.log('  - Всего участников:', participants.length);
+    participants.forEach(p => {
+        console.log('  - Участник ' + p.name + ' (' + p.id + '): finished=' + participantFinished[p.id]);
+    });
+    
     const allFinished = participants.every(p => participantFinished[p.id] === true);
+    console.log('  - allFinished:', allFinished);
 
     if (!allFinished) {
+        console.log('⏳ [finishTrainingSession] Не все завершили, ждём...');
         showToast('👀 Ожидаем завершения других участников...');
         stopSessionTimer();
         const mainBtn = document.getElementById('sessionMainBtn');
         if (mainBtn) {
             mainBtn.textContent = 'Ожидание';
             mainBtn.disabled = true;
+            console.log('  - Кнопка изменена на "Ожидание"');
         }
+        console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА (ожидание)');
         return;
     }
 
-    console.log('🎉 Все участники завершили! Показываем финиш.');
+    console.log('🎉 [finishTrainingSession] Все участники завершили!');
+    console.log('📊 [finishTrainingSession] sessionData перед финишем:', JSON.stringify(sessionData, null, 2));
+    console.log('🔄 [finishTrainingSession] Вызов stopSessionTimer()');
     stopSessionTimer();
+    console.log('🔄 [finishTrainingSession] Вызов showCoopFinishPage()');
     showCoopFinishPage();
+    console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА');
 };
 
 document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async function() {
