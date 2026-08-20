@@ -22,7 +22,7 @@
     <div id="page-workouts" class="page">
         <main class="dashboard-container">
             <header class="dashboard-header">
-                <h1 class="dashboard-title">ТРЕНИРОВКИ"</h1>
+                <h1 class="dashboard-title">ТРЕНИРОВКИ</h1>
             </header>
 
             <div class="tabs">
@@ -553,6 +553,50 @@
     </main>
 </div>
 
+<!-- СТРАНИЦА: ОЖИДАНИЕ ОСТАЛЬНЫХ (ПОСЛЕ ЗАВЕРШЕНИЯ ТРЕНИРОВКИ) -->
+<div id="page-coop-waiting" class="page">
+    <main class="finish-container">
+        <div class="finish-content">
+            <i class="fa-solid fa-user-group" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem; margin-top: 1rem;"></i>
+            <h2 style="color: var(--dark); margin-bottom: 1.5rem;">Ожидание остальных...</h2>
+            
+            <!-- Моя статистика -->
+            <div style="width:100%; margin-bottom: 1.5rem;">
+                <div class="item-title" style="color: var(--accent); margin-left: 1rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-user"></i> Вы
+                </div>
+                <div class="finish-stats" style="margin-bottom: 0.5rem;">
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">Упражнений</span>
+                        <span class="finish-stat-value" id="coopMyExercises">0/0</span>
+                    </div>
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">Время</span>
+                        <span class="finish-stat-value" id="coopMyTime">00:00</span>
+                    </div>
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">XP</span>
+                        <span class="finish-stat-value" id="coopMyXp">+0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- СПИСОК ДРУЗЕЙ С ИХ СТАТУСОМ -->
+            <div style="width:100%;">
+                <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-users"></i> Друзья
+                </div>
+                <div id="coopFriendsStatus" style="display:flex;flex-direction:column;gap:0.5rem;width:100%;">
+                    <!-- Сюда будет рендериться:
+                         Дима - тренируется 🔄
+                         Саша - закончила ✅
+                    -->
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
     <!-- ===== СТРАНИЦА: СТАТИСТИКА ===== -->
     <div id="page-stats" class="page">
         <main class="dashboard-container">
@@ -903,10 +947,10 @@
                         <i class="fa-solid fa-chart-bar"></i>
                         <span>Анализируй результаты</span>
                     </div>
-                    <div class="feature">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Создавай тренировки</span>
-                    </div>
+<div class="feature">
+    <i class="fa-solid fa-dumbbell"></i>
+    <span>Создавай тренировки</span>
+</div>
                     <div class="feature">
                         <i class="fa-solid fa-user-group"></i>
                         <span>Соревнуйся с друзьями</span>
@@ -929,10 +973,10 @@
                         <i class="fa-solid fa-chart-bar"></i>
                         <span>Анализируй результаты</span>
                     </div>
-                    <div class="feature">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Создавай тренировки</span>
-                    </div>
+<div class="feature">
+    <i class="fa-solid fa-dumbbell"></i>
+    <span>Создавай тренировки</span>
+</div>
                     <div class="feature">
                         <i class="fa-solid fa-user-group"></i>
                         <span>Соревнуйся с друзьями</span>
