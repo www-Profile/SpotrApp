@@ -195,7 +195,7 @@
                         <div id="myWorkoutsList" class="item-grid"></div>
                     </div>
                 </div>
-                <div class="custom-workout">
+                <div class="custom-workout" >
                     <button class="btn btn-primary" onclick="createNewWorkout()">
                         <i class="fa-solid fa-plus"></i> Создать тренировку
                     </button>
@@ -211,8 +211,8 @@
                         <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
                     </button>
                     <div style="display: flex; gap: 0.5rem; width: 100%;">
-                        <button id="saveWorkoutsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
                         <button id="cancelWorkoutsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
+                        <button id="saveWorkoutsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
                     </div>
                 </div>
             </div>
@@ -231,9 +231,9 @@
         <!-- ДВЕ КНОПКИ В ОДНОЙ СТРОКЕ -->
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
             <button class="btn btn-secondary" style="flex: 1;" id="coopInviteBtn">
-                <i class="fa-solid fa-users"></i> Совместная
+                <i class="fa-solid fa-user-group"></i> Совместная
             </button>
-            <button class="btn btn-primary" style="flex: 1;" id="actionButton">Начать тренировку</button>
+            <button class="btn btn-primary" style="flex: 1;" id="actionButton">СТАРТ</button>
         </div>
         
         <button class="btn btn-primary btn-center" id="editWorkoutBtn" style="margin-top:0.5rem;">
@@ -403,13 +403,13 @@
         </header>
         
         <div class="form-group" style="text-align:left; margin-bottom:0.5rem;">
-            <label class="section-title">Название тренировки</label>
+            <h3 class="section-title">Название тренировки</h3>
             <input type="text" id="editWorkoutName" class="form-input" maxlength="50" />
         </div>
         
         <div class="edit-header-block" id="iconPickerBlock" style="display:none;">
             <div class="form-group" style="text-align:left; margin-bottom:0;">
-                <label class="section-title">Выбрать значок</label>
+                <h3 class="section-title">Выбрать значок</h3>
                 <div class="icon-picker" id="createExerciseIconPicker">
                     <div class="icon-option icon-option-active" data-icon="bodybuilding">
                         <img src="images/bodybuilding.png">
@@ -459,20 +459,20 @@
         </button>
         
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-            <button class="btn btn-primary" style="flex:1;" id="saveEditBtn">Сохранить</button>
             <button class="btn btn-secondary" style="flex:1;" id="cancelEditBtn">Отмена</button>
+            <button class="btn btn-primary" style="flex:1;" id="saveEditBtn">Сохранить</button>
         </div>
     </main>
 </div>
 
     <!-- ===== МОДАЛКА: ДОБАВИТЬ УПРАЖНЕНИЕ ===== -->
     <div id="addExerciseModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content" style="max-width:340px;">
-            <div class="modal-title" style="margin-bottom: 0.8rem;">Добавить упражнение</div>
-            <div style="display:flex; gap:0.5rem; flex-direction:column;">
-                <button class="btn btn-primary" onclick="openExerciseList()">Из списка</button>
-                <button class="btn btn-secondary" onclick="closeModal('addExerciseModal'); setTimeout(openCreateExerciseModal, 100);">Создать своё</button>
-            </div>
+        <div class="modal-content">
+            <div class="modal-title">Добавить упражнение</div>
+<div style="display:flex; gap:0.5rem;">
+    <button class="btn btn-secondary" onclick="closeModal('addExerciseModal'); setTimeout(openCreateExerciseModal, 100);" style="flex:1;">Создать</button>
+        <button class="btn btn-primary" onclick="openExerciseList()" style="flex:1;">Список</button>
+</div>
         </div>
     </div>
 
@@ -531,6 +531,9 @@
             </div>
             <h2 class="list-title">Каталог упражнений</h2>
             <div id="exerciseListContainer" class="item-grid"></div>
+            <div id="exerciseListBackBtn" style="margin-top: 1rem;">
+    <button class="btn btn-primary" onclick="goBackToEditWorkout()">Вернуться к тренировке</button>
+</div>
         </main>
     </div>
 
@@ -538,7 +541,7 @@
 <div id="page-training-waiting" class="page">
     <main class="training-session-container" style="justify-content: center;">
         <div style="text-align: center; padding: 2rem;">
-            <i class="fa-solid fa-users" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
+            <i class="fa-solid fa-user-group" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
             <h2 style="color: var(--dark); margin-bottom: 2rem;">Ожидание друга...</h2>
             <button class="btn btn-primary" onclick="cancelInvite()">
                 Отменить приглашение
@@ -569,7 +572,9 @@
                             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
                         <div class="section-body">
-                            <div id="worldLeaderboard" class="item-grid"></div>
+                            <div  class="scroll-wrapper">
+                                <div id="worldLeaderboard" class="item-grid"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -580,22 +585,9 @@
                             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
                         <div class="section-body">
-                            <div id="friendsLeaderboard" class="item-grid"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="worldStatsEditButtons" style="margin-top: 1rem; width: 100%;">
-                    <button id="editWorldStatsBtn" class="btn btn-primary btn-center">
-                        <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
-                    </button>
-                    <div id="worldStatsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
-                        <button id="resetWorldStatsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
-                        </button>
-                        <div style="display: flex; gap: 0.5rem; width: 100%;">
-                            <button id="saveWorldStatsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
-                            <button id="cancelWorldStatsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
+                            <div  class="scroll-wrapper">
+                                <div id="friendsLeaderboard" class="item-grid"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -675,28 +667,27 @@
                             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
                         <div class="section-body">
-                            <div class="history-scroll-wrapper" id="workoutHistoryWrapper">
+                            <div class="scroll-wrapper" id="workoutHistoryWrapper">
                                 <div id="workoutHistory" class="history-list"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div id="statsEditButtons" style="margin-top: 1rem; width: 100%;">
-                    <button id="editStatsBtn" class="btn btn-primary btn-center">
-                        <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
-                    </button>
-                    <div id="statsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
-                        <button id="resetStatsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
-                        </button>
-                        <div style="display: flex; gap: 0.5rem; width: 100%;">
-                            <button id="saveStatsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
-                            <button id="cancelStatsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
-                        </div>
-                    </div>
-                </div>
             </div>
+            <div id="statsEditButtons" style="margin-top: 0.5rem; width: 100%;">
+    <button id="editStatsBtn" class="btn btn-primary btn-center">
+        <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
+    </button>
+    <div id="statsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
+        <button id="resetStatsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
+        </button>
+        <div style="display: flex; gap: 0.5rem; width: 100%;">
+            <button id="cancelStatsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
+            <button id="saveStatsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
+        </div>
+    </div>
+</div>
         </main>
     </div>
 
@@ -743,7 +734,7 @@
 
                     <div id="profileEdit" style="display:none;">
                         <div class="form-group">
-                            <label class="section-title">Имя Фамилия</label>
+                            <label class="form-label">Имя Фамилия</label>
                             <input type="text" id="editName" class="form-input" maxlength="30" placeholder="Введите ваше имя"/>
                         </div>
 
@@ -758,106 +749,106 @@
                         </div>
 
                         <div class="form-actions">
-                            <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">Сохранить</button>
                             <button class="btn btn-secondary" id="cancelProfileEditBtn" style="flex:1;">Отмена</button>
+                            <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">Сохранить</button>
                         </div>
                     </div>
                 </div>
 
-<!-- Дополнительные настройки -->
-<div class="section-block" id="settings-block-main">
-    <div class="section-header">
-        <h2 class="section-title">Дополнительные настройки</h2>
-        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="section-body">
-        <div class="settings-block">
-            <div class="settings-item" onclick="handlePremiumClick()">
-                <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">PREMIUM</div>
-                    <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
+                <!-- Дополнительные настройки -->
+                <div class="section-block" id="settings-block-main">
+                    <div class="section-header">
+                        <h2 class="section-title">Дополнительные настройки</h2>
+                        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="section-body">
+                        <div class="settings-block">
+                            <div class="settings-item" onclick="handlePremiumClick()">
+                                <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">PREMIUM</div>
+                                    <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="openColorModal()">
+                                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Акцентный цвет</div>
+                                    <div class="settings-desc" id="colorStatus">Красный</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="startTutorial()">
+                                <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Обучение</div>
+                                    <div class="settings-desc">По использованию приложения</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="toggleEditPages()">
+                                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Редактирование страниц</div>
+                                    <div class="settings-desc" id="editPagesStatus">Включено</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="toggleEditWorkout()">
+                                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Редактирование тренировок</div>
+                                    <div class="settings-desc" id="editWorkoutStatus">Включено</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="settings-item" onclick="openColorModal()">
-                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Акцентный цвет</div>
-                    <div class="settings-desc" id="colorStatus">Красный</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="settings-item" onclick="startTutorial()">
-                <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Обучение</div>
-                    <div class="settings-desc">По использованию приложения</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="settings-item" onclick="toggleEditPages()">
-                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Редактирование страниц</div>
-                    <div class="settings-desc" id="editPagesStatus">Включено</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="settings-item" onclick="toggleEditWorkout()">
-                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Редактирование тренировок</div>
-                    <div class="settings-desc" id="editWorkoutStatus">Включено</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Невозвратные настройки -->
-<div class="section-block" id="dangerSettings">
-    <div class="section-header">
-        <h2 class="section-title">Невозвратные настройки</h2>
-        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="section-body">
-        <div class="settings-block">
-            <div class="settings-item" onclick="confirmResetProgress()">
-                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-arrow-rotate-left"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Сбросить прогресс</div>
-                    <div class="settings-desc">Удалить статистику и обнулить прогресс</div>
+                <!-- Невозвратные настройки -->
+                <div class="section-block" id="dangerSettings">
+                    <div class="section-header">
+                        <h2 class="section-title">Невозвратные настройки</h2>
+                        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="section-body">
+                        <div class="settings-block">
+                            <div class="settings-item" onclick="confirmResetProgress()">
+                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Сбросить прогресс</div>
+                                    <div class="settings-desc">Удалить статистику и обнулить прогресс</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="logout()">
+                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-sign-out-alt"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Выйти из аккаунта</div>
+                                    <div class="settings-desc">Выйти из текущего аккаунта</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            
+                            <div class="settings-item" onclick="confirmDeleteAccount()">
+                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-user-slash"></i></div>
+                                <div class="settings-info">
+                                    <div class="settings-title">Удалить аккаунт</div>
+                                    <div class="settings-desc">Удалить профиль и все данные</div>
+                                </div>
+                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            
-            <div class="settings-item" onclick="logout()">
-                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-sign-out-alt"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Выйти из аккаунта</div>
-                    <div class="settings-desc">Выйти из текущего аккаунта</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="settings-item" onclick="confirmDeleteAccount()">
-                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-user-slash"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Удалить аккаунт</div>
-                    <div class="settings-desc">Удалить профиль и все данные</div>
-                </div>
-                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
 
 <!-- Вкладка: Друзья -->
 <div id="profileTab-friends" class="profile-tab-content">
@@ -879,8 +870,8 @@
             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
         </div>
-        <div class="section-body">
-            <div id="friendsList" class="item-grid"></div>
+        <div class="scroll-wrapper">
+            <div id="friendsList" class="item-grid" style="gap: 0rem;"></div>
         </div>
     </div>
 
@@ -891,24 +882,8 @@
             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
         </div>
-        <div class="section-body">
+        <div class="scroll-wrapper">
             <div id="friendRequests" class="item-grid"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ⬇️ КНОПКИ РЕДАКТИРОВАНИЯ ВНЕ КОНТЕЙНЕРА ⬇️ -->
-<div id="friendsEditButtons" style="margin-top: 0.5rem; width: 100%;">
-    <button id="editFriendsBtn" class="btn btn-primary btn-center">
-        <i class="fa-regular fa-pen-to-square"></i> Редактировать страницу
-    </button>
-    <div id="friendsEditActions" style="display: none; flex-direction: column; width: 100%; margin-top: 0.5rem;">
-        <button id="resetFriendsBtn" class="btn btn-danger" style="margin-bottom: 0.5rem;">
-            <i class="fa-solid fa-arrow-rotate-left"></i> Сбросить страницу
-        </button>
-        <div style="display: flex; gap: 0.5rem; width: 100%;">
-            <button id="saveFriendsBtn" class="btn btn-primary" style="flex: 1;">Сохранить</button>
-            <button id="cancelFriendsBtn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
         </div>
     </div>
 </div>
@@ -1047,8 +1022,8 @@
                 </div>
             </div>
             <div style="display:flex; gap:0.8rem; margin-top:0.5rem;">
-                <button class="btn btn-primary" id="modalSaveBtn" style="flex:1;">Сохранить</button>
                 <button class="btn btn-secondary" id="modalCancelBtn" style="flex:1;">Отмена</button>
+                <button class="btn btn-primary" id="modalSaveBtn" style="flex:1;">Сохранить</button>
             </div>
         </div>
     </div>
@@ -1070,10 +1045,10 @@
             <div class="premium-price">299 ₽</div>
             <div class="modal-title" style="font-size:1.5rem; color: var(--accent);">PREMIUM</div>
             <ul class="premium-features">
-                <li>Особые тренировки</li>
-                <li>3 уровня сложности в каждой</li>
-                <li>Эксклюзивные упражнения</li>
-                <li>Поддержка разработчика</li>
+<li>PREMIUM тренировки!</li>
+<li>PREMIUM упражнения!</li>
+<li>Совместные тренировки до 3 друзей!</li>
+<li>Поддержка разработчика!</li>
             </ul>
             <p class="premium-sub">Разовый платёж · Доступ навсегда</p>
             <button class="btn btn-primary" style="margin-bottom: 0.5rem;" onclick="buyPremium()">
@@ -1088,15 +1063,15 @@
         <div class="modal-content premium">
             <div class="premium-icon"><i class="fa-solid fa-crown"></i></div>
             <div class="modal-title" style="font-size:1.5rem; color: var(--accent);">PREMIUM АКТИВИРОВАН</div>
-            <p class="item-desc" style="margin-bottom: 1rem;">У вас есть доступ ко всем особым тренировкам</p>
+            <p class="item-desc" style="margin-bottom: 1rem;">У вас есть доступ ко всем особым тренировкам.</p>
             <button class="btn btn-primary" onclick="closeModal('premiumActiveModal')">Отлично!</button>
         </div>
     </div>
 
     <!-- ===== МОДАЛКА: ВЫБОР ЦВЕТА ===== -->
     <div id="colorModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content" style="max-width:400px;">
-            <div class="modal-title" style="font-size:1.2rem; margin-bottom:1rem;">Выберите акцентный цвет</div>
+        <div class="modal-content" style="max-width:320px;">
+            <div class="modal-title">Выберите акцентный цвет</div>
             <div class="color-picker">
                 <button class="color-btn color-btn-active" data-color="red" style="background:#DC143C;"></button>
                 <button class="color-btn" data-color="orange" style="background:#FF6B35;"></button>
@@ -1177,8 +1152,8 @@
             </div>
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" id="createExerciseSaveBtn" style="flex:1;">Сохранить</button>
             <button class="btn btn-secondary" id="createExerciseCancelBtn" style="flex:1;">Отмена</button>
+            <button class="btn btn-primary" id="createExerciseSaveBtn" style="flex:1;">Сохранить</button>
         </div>
     </div>
 </div>
