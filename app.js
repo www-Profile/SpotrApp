@@ -1099,27 +1099,51 @@ function startCoopTraining(data) {
     coopStarted = true;
     coopExercises = data.exercises || [];
     sessionData = data;
-    
+
     sessionData.participants = data.participants || [];
     sessionData.participantProgress = data.participantProgress || {};
     sessionData.participantFinished = data.participantFinished || {};
     sessionData.participantFinishedSeconds = data.participantFinishedSeconds || {};
     sessionData.participantXp = data.participantXp || {};
-    
+
     const title = data.workoutTitle || 'Совместная тренировка';
     const category = 'Совместная';
-    
+
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
     const myProgress = currentUserId ? (data.participantProgress[currentUserId] || 0) : 0;
-    
+
+    // Подготавливаем упражнения с учётом уже выполненных (если участник присоединился позже)
     const exercises = coopExercises.map((ex, index) => ({
         ...ex,
         completed: index < myProgress
     }));
-    
-    startTrainingSession(exercises, title, category, 'bodybuilding');
+
+    // ---- ИНИЦИАЛИЗАЦИЯ СЕССИИ ТРЕНИРОВКИ (без вызова startTrainingSession) ----
+    sessionExercises = exercises.map(ex => ({
+        ...ex,
+        icon: ex.icon || getExerciseIcon(ex.name)
+    }));
+    sessionCurrentIndex = myProgress; // стартуем с последнего выполненного
+    sessionCompleted = new Set();
+    // Отмечаем уже выполненные упражнения
+    for (let i = 0; i < myProgress; i++) {
+        sessionCompleted.add(i);
+    }
+    sessionSeconds = 0;
     sessionWorkoutTitle = title + ' (совместно)';
+    sessionCategory = category;
+    sessionWorkoutIcon = 'bodybuilding';
+
+    closeModal('sessionExitModal');
+    window.navigateTo('training-session');
+
+    renderSessionExercise();
+    renderSessionProgress();
+    updateSessionButtons();
+    startSessionTimer();
+
+    // Обновляем UI участников
     setTimeout(updateCoopUI, 500);
 }
 
