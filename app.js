@@ -906,12 +906,10 @@ async function acceptInvite(sessionId, notificationId) {
             showToast('❌ Вы не авторизованы');
             return;
         }
-        
         const doc = await firebase.firestore()
             .collection('trainingSessions')
             .doc(sessionId)
             .get();
-            
         if (!doc.exists) {
             if (notificationId) {
                 await firebase.firestore()
@@ -952,30 +950,33 @@ async function acceptInvite(sessionId, notificationId) {
                 .update({ read: true });
         }
         
-        // Добавляем пользователя в участники, если его нет
+        // ★★★ ОБНОВЛЯЕМ ИМЯ УЧАСТНИКА ★★★
         const participants = data.participants || [];
-        const isParticipant = participants.some(p => p.id === user.uid);
-        if (!isParticipant) {
-            participants.push({ id: user.uid, name: user.displayName || 'Пользователь' });
-            await firebase.firestore()
-                .collection('trainingSessions')
-                .doc(sessionId)
-                .update({
-                    participants: participants,
-                    [`participantProgress.${user.uid}`]: 0,
-                    [`participantFinished.${user.uid}`]: false,
-                    [`participantFinishedSeconds.${user.uid}`]: null,
-                    [`participantXp.${user.uid}`]: 0,
-                    [`participantReady.${user.uid}`]: true
-                });
+        const existingIndex = participants.findIndex(p => p.id === user.uid);
+        const userName = user.displayName || 'Пользователь';
+        
+        let updateData = {};
+        if (existingIndex !== -1) {
+            // Обновляем имя, если оно изменилось
+            if (participants[existingIndex].name !== userName) {
+                participants[existingIndex].name = userName;
+                updateData.participants = participants;
+            }
         } else {
-            await firebase.firestore()
-                .collection('trainingSessions')
-                .doc(sessionId)
-                .update({
-                    [`participantReady.${user.uid}`]: true
-                });
+            // Добавляем нового участника
+            participants.push({ id: user.uid, name: userName });
+            updateData.participants = participants;
+            updateData[`participantProgress.${user.uid}`] = 0;
+            updateData[`participantFinished.${user.uid}`] = false;
+            updateData[`participantFinishedSeconds.${user.uid}`] = null;
+            updateData[`participantXp.${user.uid}`] = 0;
         }
+        updateData[`participantReady.${user.uid}`] = true;
+        
+        await firebase.firestore()
+            .collection('trainingSessions')
+            .doc(sessionId)
+            .update(updateData);
         
         currentSessionId = sessionId;
         isHost = false;
@@ -1322,7 +1323,7 @@ function showCoopFinishPage() {
     // Заполняем первого партнёра (для совместимости с версткой)
     if (otherParticipants.length > 0) {
         const first = otherParticipants[0];
-        document.getElementById('coopPartnerName').textContent = first.name;
+        document.getElementById('coopPartnerName').textContent = first.name || 'Партнёр';
         document.getElementById('coopPartnerExercises').textContent = `${participantProgress[first.id] || 0}/${total}`;
         document.getElementById('coopPartnerTime').textContent = formatTime(participantFinishedSeconds[first.id] || 0);
         document.getElementById('coopPartnerXp').textContent = `+${Math.round(participantXp[first.id] || 0)}`;
@@ -1340,8 +1341,9 @@ function showCoopFinishPage() {
             const progress = participantProgress[p.id] || 0;
             const isFin = participantFinished[p.id] || false;
             const time = isFin ? formatTime(participantFinishedSeconds[p.id] || 0) : null;
-            return `<div style="display:flex; justify-content:space-between; padding:0.3rem 0;">
-                <span>👤 ${p.name}</span>
+            const name = p.name || 'Участник';
+            return `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom: 1px solid #E2E8F0;">
+                <span>👤 ${name}</span>
                 <span>${progress}/${total} ${time ? '· '+time : ''}</span>
             </div>`;
         }).join('');
@@ -1356,8 +1358,9 @@ function showCoopFinishPage() {
                 const progress = participantProgress[p.id] || 0;
                 const isFin = participantFinished[p.id] || false;
                 const time = isFin ? formatTime(participantFinishedSeconds[p.id] || 0) : null;
+                const name = p.name || 'Участник';
                 return `<div style="display:flex; justify-content:space-between; padding:0.3rem 0.2rem; background:var(--light); border-radius:8px; margin-bottom:0.2rem;">
-                    <span>👤 ${p.name}</span>
+                    <span>👤 ${name}</span>
                     <span>${progress}/${total} ${time ? '· '+time : ''}</span>
                 </div>`;
             }).join('');
@@ -1365,15 +1368,29 @@ function showCoopFinishPage() {
         }
     }
     
-    const coopFinishPage = document.getElementById('page-coop-finish');
-    if (coopFinishPage && coopFinishPage.classList.contains('page-active')) {
-        return;
+    // ★★★ ФОРСИРУЕМ ПЕРЕХОД НА СТРАНИЦУ ФИНИША ★★★
+    console.log('📍 [showCoopFinishPage] Форсируем переход на coop-finish');
+    
+    // Скрываем все страницы
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
+    });
+    
+    // Показываем страницу финиша
+    const target = document.getElementById('page-coop-finish');
+    if (target) {
+        target.classList.add('page-active');
+        target.style.display = 'block';
+        console.log('✅ Страница coop-finish показана');
+    } else {
+        console.error('❌ Страница coop-finish не найдена!');
     }
     
-    setTimeout(() => {
-        window.navigateTo('coop-finish');
-        document.getElementById('bottomNav').style.display = 'none';
-    }, 500);
+    // Скрываем нижнюю навигацию
+    document.getElementById('bottomNav').style.display = 'none';
+    
+    console.log('✅ [showCoopFinishPage] ЗАВЕРШЕНА');
 }
 
 // Вспомогательная функция для форматирования времени
@@ -1578,13 +1595,11 @@ window.selectFriendForCoop = function(friendId) {
 
 async function sendCoopInvite(friendId, friendName) {
     console.log('🔥🔥🔥 [sendCoopInvite] НАЧАЛО');
-    
     const workoutData = window._currentWorkoutForInvite;
     if (!workoutData || !workoutData.exercises || workoutData.exercises.length === 0) {
         showToast('❌ Сначала выберите тренировку');
         return;
     }
-    
     try {
         const user = await getFirebaseUser();
         if (!user) {
@@ -1592,17 +1607,39 @@ async function sendCoopInvite(friendId, friendName) {
             return;
         }
         
-        // Все выбранные друзья
         const selectedFriends = window._selectedFriends || [];
         console.log('🔥 Выбрано друзей:', selectedFriends.length);
         
-        // Формируем массив участников: хост + все друзья
+        // ★★★ ПРОВЕРКА КОЛИЧЕСТВА ДРУЗЕЙ ★★★
+        const maxFriends = hasPremium() ? 3 : 1;
+        if (selectedFriends.length > maxFriends) {
+            if (!hasPremium()) {
+                // Без Premium можно только 1 друга
+                showToast('⚠️ Без Premium можно пригласить только 1 друга');
+                openModal('premiumModal');
+                return;
+            } else {
+                // С Premium максимум 3 друга
+                showToast(`⚠️ Можно пригласить не более ${maxFriends} друзей`);
+                return;
+            }
+        }
+        
+        // ★★★ ПОЛУЧАЕМ ИМЕНА ВСЕХ ДРУЗЕЙ ★★★
+        const friendsWithNames = [];
+        for (const id of selectedFriends) {
+            const result = await getUserProfile(id);
+            const name = result.success ? result.data.displayName : 'Пользователь';
+            friendsWithNames.push({ id, name });
+        }
+        
+        // Формируем участников: хост + все друзья с реальными именами
         const allParticipants = [
             { id: user.uid, name: user.displayName || 'Пользователь' },
-            ...selectedFriends.map(id => ({ id, name: 'Участник' }))
+            ...friendsWithNames
         ];
         
-        // Создаём сессию с картами для каждого участника
+        // Создаём сессию с правильными именами
         const sessionRef = await firebase.firestore().collection('trainingSessions').add({
             hostId: user.uid,
             workoutTitle: workoutData.title,
@@ -1616,8 +1653,8 @@ async function sendCoopInvite(friendId, friendName) {
             participantFinishedSeconds: allParticipants.reduce((acc, p) => { acc[p.id] = null; return acc; }, {}),
             participantXp: allParticipants.reduce((acc, p) => { acc[p.id] = 0; return acc; }, {}),
             participantReady: allParticipants.reduce((acc, p) => { acc[p.id] = false; return acc; }, {}),
-            closedFinish: {}, // для отслеживания закрытия финиша
-            // старые поля оставлены для совместимости (не используются)
+            closedFinish: {},
+            // старые поля для совместимости
             hostReady: false,
             guestReady: false,
             hostProgress: 0,
@@ -1846,12 +1883,7 @@ if (currentSessionId) {
         isHost = false;
         sessionData = null;
         coopExercises = [];
-        partnerProgress = 0;
-        myProgress = 0;
         coopStarted = false;
-        partnerFinishedNotified = false;
-        partnerFinishedSeconds = null;
-        myFinishedSeconds = null;
         finishPageShown = false;
         console.log('✅ [coopFinishDoneBtn] Все флаги сброшены');
 
@@ -2207,7 +2239,7 @@ function clearSeenNotifications() {
 // ===================ДЕФОЛТНЫЕ ЛЕЙАУТЫ ===================
 function getDefaultStatsLayout() {
     return {
-        statsSummary: ['workouts', 'minutes', 'exercises'],
+        statsSummary: ['minutes', 'workouts', 'exercises'],
         statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело']
@@ -7156,7 +7188,7 @@ window.statsEditor = new PageEditor({
         { id: 'worldStatsBlocksContainer', dataAttr: 'blockId', handle: '.section-drag' }
     ],
     defaultLayout: {
-        statsSummary: ['workouts', 'minutes', 'exercises'],
+        statsSummary: ['minutes', 'workouts', 'exercises'],
         statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
