@@ -22,7 +22,7 @@
     <div id="page-workouts" class="page">
         <main class="dashboard-container">
             <header class="dashboard-header">
-                <h1 class="dashboard-title">ТРЕНИРОВКИ</h1>
+                <h1 class="dashboard-title">ТРЕНИРОВКИ!</h1>
             </header>
 
             <div class="tabs">
@@ -314,7 +314,7 @@
         </main>
     </div>
 
- <!-- ===== СТРАНИЦА: ФИНИШ СОВМЕСТНОЙ ТРЕНИРОВКИ ===== -->
+<!-- ===== СТРАНИЦА: ФИНИШ СОВМЕСТНОЙ ТРЕНИРОВКИ ===== -->
 <div id="page-coop-finish" class="page">
     <main class="finish-container">
         <div class="finish-content">
@@ -323,50 +323,10 @@
                 <i class="fa-solid fa-trophy"></i>
             </div>
             
-            <!-- Моя статистика -->
-            <div style="width:100%; margin-bottom: 0.5rem;">
-                <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-user"></i> Вы
-                </div>
-                <div class="finish-stats" style="margin-bottom: 0.5rem;">
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">Упражнений</span>
-                        <span class="finish-stat-value" id="coopMyExercises">0/0</span>
-                    </div>
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">Время</span>
-                        <span class="finish-stat-value" id="coopMyTime">00:00</span>
-                    </div>
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">XP</span>
-                        <span class="finish-stat-value" id="coopMyXp">+0</span>
-                    </div>
-                </div>
+            <!-- КОНТЕЙНЕР ДЛЯ ВСЕХ УЧАСТНИКОВ -->
+            <div id="coopAllParticipants" style="width:100%; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;">
+                <!-- Сюда будут рендериться все участники -->
             </div>
-
-            <!-- Статистика партнёра (первого) -->
-            <div style="width:100%; margin-bottom: 0.5rem;">
-                <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-user-group"></i> <span id="coopPartnerName">Партнёр</span>
-                </div>
-                <div class="finish-stats" style="margin-bottom: 0.5rem;">
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">Упражнений</span>
-                        <span class="finish-stat-value" id="coopPartnerExercises">0/0</span>
-                    </div>
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">Время</span>
-                        <span class="finish-stat-value" id="coopPartnerTime">00:00</span>
-                    </div>
-                    <div class="finish-stat-item">
-                        <span class="finish-stat-label">XP</span>
-                        <span class="finish-stat-value" id="coopPartnerXp">+0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Другие участники (если есть) -->
-            <div id="coopOtherParticipants" style="width:100%; margin-top:0.5rem;"></div>
 
             <button class="btn btn-primary finish-btn" id="coopFinishDoneBtn">Закончить</button>
         </div>
@@ -557,11 +517,12 @@
 <div id="page-coop-waiting" class="page">
     <main class="finish-container">
         <div class="finish-content">
-            <i class="fa-solid fa-user-group" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem; margin-top: 1rem;"></i>
-            <h2 style="color: var(--dark); margin-bottom: 1.5rem;">Ожидание остальных...</h2>
-            
+        <h2 class="finish-title">Ждем участников</h2>
+            <div class="finish-trophy-SEC">
+                <i class="fa-solid fa-user-group"></i>
+            </div>
             <!-- Моя статистика -->
-            <div style="width:100%; margin-bottom: 1.5rem;">
+            <div style="width:100%; margin-bottom: 0.5rem;">
                 <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
                     <i class="fa-solid fa-user"></i> Вы
                 </div>

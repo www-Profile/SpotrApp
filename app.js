@@ -1342,7 +1342,7 @@ function renderFinishPageData(data) {
     console.log('  - participantXp:', JSON.stringify(participantXp));
     console.log('👤 [renderFinishPageData] Текущий пользователь:', currentUserId);
 
-    // Сортируем: сначала текущий пользователь
+    // ★★★ СОРТИРУЕМ: СНАЧАЛА ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ, ПОТОМ ВСЕ ОСТАЛЬНЫЕ ★★★
     const sortedParticipants = [...participants].sort((a, b) => {
         if (a.id === currentUserId) return -1;
         if (b.id === currentUserId) return 1;
@@ -1350,122 +1350,69 @@ function renderFinishPageData(data) {
     });
     console.log('📊 [renderFinishPageData] Отсортированные участники:', sortedParticipants.map(p => p.name));
 
-    // Обновляем свою статистику
-    const myData = sortedParticipants.find(p => p.id === currentUserId);
-    if (myData) {
-        const myProgress = participantProgress[currentUserId] || 0;
-        const myTime = participantFinishedSeconds[currentUserId] || 0;
-        const myXp = participantXp[currentUserId] || 0;
-        
-        console.log('📊 [renderFinishPageData] МОИ ДАННЫЕ:');
-        console.log('  - myProgress:', myProgress);
-        console.log('  - myTime:', myTime);
-        console.log('  - myXp:', myXp);
-        
-        const myExercisesEl = document.getElementById('coopMyExercises');
-        const myTimeEl = document.getElementById('coopMyTime');
-        const myXpEl = document.getElementById('coopMyXp');
-        
-        console.log('  - Элемент coopMyExercises найден?', !!myExercisesEl);
-        console.log('  - Элемент coopMyTime найден?', !!myTimeEl);
-        console.log('  - Элемент coopMyXp найден?', !!myXpEl);
-        
-        if (myExercisesEl) {
-            const text = `${myProgress}/${total}`;
-            myExercisesEl.textContent = text;
-            console.log('  - coopMyExercises установлен:', text);
-        }
-        if (myTimeEl) {
-            const text = formatTime(myTime);
-            myTimeEl.textContent = text;
-            console.log('  - coopMyTime установлен:', text);
-        }
-        if (myXpEl) {
-            const text = `+${Math.round(myXp)}`;
-            myXpEl.textContent = text;
-            console.log('  - coopMyXp установлен:', text);
-        }
-    } else {
-        console.warn('⚠️ [renderFinishPageData] Не найдены данные для текущего пользователя');
-    }
-
-    // Первый партнёр (кто не текущий пользователь)
-    const partner = sortedParticipants.find(p => p.id !== currentUserId);
-    if (partner) {
-        const partnerName = partner.name || 'Партнёр';
-        const partnerProgress = participantProgress[partner.id] || 0;
-        const partnerTime = participantFinishedSeconds[partner.id] || 0;
-        const partnerXp = participantXp[partner.id] || 0;
-        
-        console.log('📊 [renderFinishPageData] ДАННЫЕ ПАРТНЁРА:');
-        console.log('  - partnerName:', partnerName);
-        console.log('  - partnerProgress:', partnerProgress);
-        console.log('  - partnerTime:', partnerTime);
-        console.log('  - partnerXp:', partnerXp);
-        
-        const nameEl = document.getElementById('coopPartnerName');
-        const exercisesEl = document.getElementById('coopPartnerExercises');
-        const timeEl = document.getElementById('coopPartnerTime');
-        const xpEl = document.getElementById('coopPartnerXp');
-        
-        console.log('  - coopPartnerName найден?', !!nameEl);
-        console.log('  - coopPartnerExercises найден?', !!exercisesEl);
-        console.log('  - coopPartnerTime найден?', !!timeEl);
-        console.log('  - coopPartnerXp найден?', !!xpEl);
-        
-        if (nameEl) {
-            nameEl.textContent = partnerName;
-            console.log('  - coopPartnerName установлен:', partnerName);
-        }
-        if (exercisesEl) {
-            const text = `${partnerProgress}/${total}`;
-            exercisesEl.textContent = text;
-            console.log('  - coopPartnerExercises установлен:', text);
-        }
-        if (timeEl) {
-            const text = formatTime(partnerTime);
-            timeEl.textContent = text;
-            console.log('  - coopPartnerTime установлен:', text);
-        }
-        if (xpEl) {
-            const text = `+${Math.round(partnerXp)}`;
-            xpEl.textContent = text;
-            console.log('  - coopPartnerXp установлен:', text);
-        }
-    } else {
-        console.warn('⚠️ [renderFinishPageData] Не найден партнёр');
-    }
-
-    // Остальные участники (если их больше 2)
-    const otherParticipants = sortedParticipants.filter(p => p.id !== currentUserId && p.id !== (partner ? partner.id : null));
-    const otherContainer = document.getElementById('coopOtherParticipants');
-    console.log('📊 [renderFinishPageData] ДРУГИЕ УЧАСТНИКИ:', otherParticipants.length);
-    console.log('  - coopOtherParticipants найден?', !!otherContainer);
-    
-    if (otherContainer) {
-        if (otherParticipants.length > 0) {
-            let html = `<div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-users"></i> Другие участники
-                        </div>`;
-            otherParticipants.forEach(p => {
-                const prog = participantProgress[p.id] || 0;
-                const time = participantFinishedSeconds[p.id] || 0;
-                const xp = participantXp[p.id] || 0;
-                const name = p.name || 'Пользователь';
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.3rem 0.8rem; background:var(--light); border-radius:8px; margin-bottom:0.3rem;">
-                            <span style="font-weight:500;">${name}</span>
-                            <span>${prog}/${total} · ${formatTime(time)} · +${Math.round(xp)} XP</span>
-                        </div>`;
-                console.log('  - Другой участник ' + name + ': ' + prog + '/' + total + ', time=' + time + ', xp=' + xp);
-            });
-            otherContainer.innerHTML = html;
-            console.log('  - otherContainer заполнен');
+    // ★★★ НАХОДИМ КОНТЕЙНЕР ДЛЯ ВСЕХ УЧАСТНИКОВ ★★★
+    let container = document.getElementById('coopAllParticipants');
+    if (!container) {
+        // Если контейнера нет — создаём его
+        const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
+        if (finishContent) {
+            container = document.createElement('div');
+            container.id = 'coopAllParticipants';
+            container.style.cssText = 'width:100%; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;';
+            // Вставляем после моей статистики
+            const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
+            if (myStatsBlock) {
+                myStatsBlock.after(container);
+            } else {
+                finishContent.appendChild(container);
+            }
+            console.log('✅ [renderFinishPageData] Создан контейнер coopAllParticipants');
         } else {
-            otherContainer.innerHTML = '';
-            console.log('  - otherContainer очищен (нет других участников)');
+            console.error('❌ [renderFinishPageData] Не найден контейнер для вставки');
+            return;
         }
     }
-    
+
+    // ★★★ РЕНДЕРИМ ВСЕХ УЧАСТНИКОВ ★★★
+    let html = '';
+    sortedParticipants.forEach((p, index) => {
+        const isMe = p.id === currentUserId;
+        const progress = participantProgress[p.id] || 0;
+        const time = participantFinishedSeconds[p.id] || 0;
+        const xp = participantXp[p.id] || 0;
+        const name = p.name || 'Пользователь';
+        const isFinished = participantFinished[p.id] || false;
+        
+        // Определяем цвет для статуса (если нужно)
+        const accentColor = isMe ? 'var(--accent)' : 'var(--slate)';
+        const icon = isMe ? 'fa-solid fa-user' : 'fa-solid fa-user';
+        
+        html += `
+            <div style="width:100%;">
+<div class="item-title" style="color: ${accentColor}; margin-left: 1rem; margin-bottom: 0.5rem;">
+    <i class="${icon}"></i> ${isMe ? 'Вы' : name}
+</div>
+                <div class="finish-stats" style="margin-bottom: 0.5rem;">
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">Упражнений</span>
+                        <span class="finish-stat-value">${progress}/${total}</span>
+                    </div>
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">Время</span>
+                        <span class="finish-stat-value">${formatTime(time)}</span>
+                    </div>
+                    <div class="finish-stat-item">
+                        <span class="finish-stat-label">XP</span>
+                        <span class="finish-stat-value">+${Math.round(xp)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        console.log('📊 [renderFinishPageData] Участник ' + name + ': ' + progress + '/' + total + ', time=' + time + ', xp=' + xp);
+    });
+
+    container.innerHTML = html;
+    console.log('✅ [renderFinishPageData] Все участники отрендерены');
     console.log('✅ [renderFinishPageData] ЗАВЕРШЕНА');
 }
 
@@ -1983,16 +1930,15 @@ function renderCoopFriendsStatus() {
     friends.forEach(p => {
         const isFinished = participantFinished[p.id] === true;
         const progress = participantProgress[p.id] || 0;
-        const statusText = isFinished ? '✅ финиш' : `${progress}/${total}`;
-        const statusColor = isFinished ? 'var(--success)' : 'var(--accent)';
+        const statusText = `${progress}/${total}`;
         const name = p.name || 'Пользователь';
         
         html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 1rem; background:var(--light); border-radius:10px; border:1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; background:var(--white); border-radius:10px; border:1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
                 <span style="font-weight:500; color:var(--dark);">
                     👤 ${name}
                 </span>
-                <span style="font-weight:600; color:var(--slate);">
+                <span style="font-weight:600; color:var(--light);">
                     ${statusText}
                 </span>
             </div>

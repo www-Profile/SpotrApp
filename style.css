@@ -2095,22 +2095,35 @@ font-style: italic;
 }
 
 .finish-title {
-    font-size: clamp(0.85rem, 5vw, 1.8rem);
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--dark);
     text-align: center;
     letter-spacing: 0.3px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .finish-trophy {
-    font-size: 6rem;
+    font-size: 5rem;
     color: var(--gold);
-    margin-bottom: 3rem;
-    margin-top: 3rem;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
 }
 
 .finish-trophy i {
+    display: block;
+}
+
+.finish-trophy-SEC {
+    font-size: 5rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+}
+
+.finish-trophy-SEC i {
     display: block;
 }
 
