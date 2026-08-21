@@ -1119,9 +1119,13 @@ function startCoopTraining(data) {
     finishPageShown = false;
     coopStarted = true;
     
-// ★★★ ВСЕ ИСПОЛЬЗУЮТ ОДИНАКОВЫЕ УПРАЖНЕНИЯ ★★★
-coopExercises = data.exercises || [];
-console.log('📊 Используем базовые упражнения для всех');
+    // ★★★ ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ★★★
+    const user = firebase.auth().currentUser;
+    const currentUserId = user ? user.uid : null;
+    
+    // ★★★ ВСЕ ИСПОЛЬЗУЮТ ОДИНАКОВЫЕ УПРАЖНЕНИЯ ★★★
+    coopExercises = data.exercises || [];
+    console.log('📊 Используем базовые упражнения для всех');
     
     sessionData = data;
     sessionData.participants = data.participants || [];
