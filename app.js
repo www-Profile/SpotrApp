@@ -970,6 +970,7 @@ function listenSession(sessionId) {
 }
 
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
+// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
 function handleSessionSnapshot(doc) {
     if (!doc.exists) {
         if (sessionListener) {
@@ -1064,23 +1065,28 @@ if (isWaitingPageActive) {
         console.warn('⚠️ [handleSessionSnapshot] Нет участников в sessionData.participants');
     }
     
-    // ★★★ ЕСЛИ ВСЕ ЗАВЕРШИЛИ — ПОКАЗЫВАЕМ ФИНИШ ★★★
-    if (allFinished && !finishPageShown) {
+    // ★★★ ЕСЛИ ВСЕ ЗАВЕРШИЛИ — ПОКАЗЫВАЕМ/ОБНОВЛЯЕМ ФИНИШ ★★★
+    if (allFinished) {
         console.log('🎉 [handleSessionSnapshot] ВСЕ УЧАСТНИКИ ЗАВЕРШИЛИ!');
-        finishPageShown = true;
         stopSessionTimer();
         
-        document.querySelectorAll('.page').forEach(p => {
-            p.classList.remove('page-active');
-            p.style.display = 'none';
-        });
-        
-        const target = document.getElementById('page-coop-finish');
-        if (target) {
-            target.classList.add('page-active');
-            target.style.display = 'block';
+        // ★★★ ЕСЛИ СТРАНИЦА ФИНИША ЕЩЁ НЕ ПОКАЗАНА — ПОКАЗЫВАЕМ ★★★
+        if (!finishPageShown) {
+            finishPageShown = true;
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('page-active');
+                p.style.display = 'none';
+            });
+            
+            const target = document.getElementById('page-coop-finish');
+            if (target) {
+                target.classList.add('page-active');
+                target.style.display = 'block';
+            }
+            document.getElementById('bottomNav').style.display = 'none';
         }
-        document.getElementById('bottomNav').style.display = 'none';
+        
+        // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ НА СТРАНИЦЕ ФИНИША ★★★
         showCoopFinishPage();
         return;
     }
