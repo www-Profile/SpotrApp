@@ -1119,26 +1119,9 @@ function startCoopTraining(data) {
     finishPageShown = false;
     coopStarted = true;
     
-    // ★★★ ЗАГРУЖАЕМ УПРАЖНЕНИЯ ДЛЯ КАЖДОГО УЧАСТНИКА ★★★
-    const user = firebase.auth().currentUser;
-    const currentUserId = user ? user.uid : null;
-    
-    // Базовые упражнения (от хоста)
-    let baseExercises = data.exercises || [];
-    
-    // Проверяем, есть ли у этого участника свои изменения
-    const guestExercises = data.guestExercises || {};
-    const userExercises = guestExercises[currentUserId];
-    
-    if (userExercises && userExercises.length > 0) {
-        // У участника есть свои изменения — используем их
-        coopExercises = userExercises;
-        console.log('📊 Используем упражнения гостя');
-    } else {
-        // Иначе используем базовые
-        coopExercises = baseExercises;
-        console.log('📊 Используем базовые упражнения');
-    }
+// ★★★ ВСЕ ИСПОЛЬЗУЮТ ОДИНАКОВЫЕ УПРАЖНЕНИЯ ★★★
+coopExercises = data.exercises || [];
+console.log('📊 Используем базовые упражнения для всех');
     
     sessionData = data;
     sessionData.participants = data.participants || [];
@@ -3357,7 +3340,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
                 resolvedCategory = resolveWorkoutCategory(currentCategory, parent, isPremiumWorkout);
             }
 
-            startTrainingSession(sessionExercises, workoutTitle, resolvedCategory, finalWorkoutIcon, workoutId);
+            startTrainingSession(sessionExercises, workoutTitle, resolvedCategory, finalWorkoutIcon);
         };
     }
 
@@ -3424,7 +3407,7 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
     sessionCurrentIndex = 0;
     sessionCompleted = new Set();
     sessionSeconds = 0;
-    sessionWorkoutTitle = title;
+    sessionWorkoutTitle = title; // ← УЖЕ ЕСТЬ
     sessionCategory = category || 'Без категории';
     sessionWorkoutIcon = workoutIcon || 'bodybuilding';
     
@@ -3466,7 +3449,8 @@ function renderSessionExercise() {
     const editBtn = document.getElementById('sessionEditBtn');
     if (editBtn) {
         editBtn.onclick = function() {
-            openExerciseModal(sessionCurrentIndex, true); // ← true = из сессии
+            // ★★★ ВСЕГДА ПЕРЕДАЁМ fromSession = true ★★★
+            openExerciseModal(sessionCurrentIndex, true);
         };
     }
 }
@@ -4187,7 +4171,6 @@ window.removeEditExercise = function(index) {
 // Добавь глобальную переменную в начало файла (после других глобальных переменных)
 let _isFromSession = false;
 let _currentTrainingIndex = null;
-let sessionWorkoutId = null; // Добавь в начало файла с другими глобальными переменными
 
 // ===================МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ УПРАЖНЕНИЯ ===================
 window.openExerciseModal = function(index, fromSession = false) {
@@ -4199,7 +4182,7 @@ window.openExerciseModal = function(index, fromSession = false) {
     
     let ex = null;
     
-    // ★★★ ЕСЛИ ИЗ СЕССИИ ★★★
+    // ★★★ ЕСЛИ ИЗ СЕССИИ (совместной ИЛИ обычной) ★★★
     if (fromSession && sessionExercises) {
         if (index !== undefined && index !== null && sessionExercises[index]) {
             ex = sessionExercises[index];
@@ -4217,6 +4200,11 @@ window.openExerciseModal = function(index, fromSession = false) {
             renderSessionProgress();
         }
     } 
+    // ★★★ ЕСЛИ ИЗ СЕССИИ НО БЕЗ ФЛАГА (должно быть покрыто выше) ★★★
+    else if (sessionExercises && sessionExercises[index]) {
+        ex = sessionExercises[index];
+        editingExerciseIndex = index;
+    }
     // ★★★ ИНАЧЕ ИЗ РЕДАКТИРОВАНИЯ ★★★
     else {
         if (index === undefined || index === null || index === editExercises.length) {
@@ -4249,7 +4237,7 @@ window.openExerciseModal = function(index, fromSession = false) {
     
     if (!ex) {
         ex = { name: 'Новое упражнение', sets: 3, reps: 12 };
-        if (fromSession && sessionExercises) {
+        if (sessionExercises && sessionExercises[editingExerciseIndex]) {
             sessionExercises[editingExerciseIndex] = ex;
         } else if (editExercises) {
             editExercises[editingExerciseIndex] = ex;
@@ -4306,21 +4294,80 @@ document.getElementById('modalSaveBtn')?.addEventListener('click', function() {
     
     const updatedExercise = { name: name, sets: parseInt(sets), reps: repsDisplay };
     
-    // ★★★ ЕСЛИ ИЗ СЕССИИ ★★★
-    if (_isFromSession && sessionExercises && sessionExercises[editingExerciseIndex]) {
+    // ★★★ ЕСЛИ ИЗ СЕССИИ (совместной ИЛИ обычной) ★★★
+    if (sessionExercises && sessionExercises[editingExerciseIndex]) {
         sessionExercises[editingExerciseIndex] = updatedExercise;
         renderSessionExercise();
         
-        // ★★★ ПРОВЕРЯЕМ: ХОСТ ИЛИ ГОСТЬ? ★★★
-        if (isHost) {
-            // ХОСТ — СОХРАНЯЕМ НАВСЕГДА
-            saveExerciseChangesToOriginal(updatedExercise, editingExerciseIndex);
-            showToast('✅ Упражнение обновлено и сохранено в тренировке');
+        // ★★★ ПРОВЕРЯЕМ: это совместная тренировка? ★★★
+        const isCoop = currentSessionId && sessionData ? true : false;
+        
+        if (isCoop) {
+            // Совместная — только для этой сессии
+            showToast('✅ Упражнение обновлено (только для этой тренировки)');
         } else {
-            // ГОСТЬ — СОХРАНЯЕМ ТОЛЬКО В СЕССИИ
-            // Обновляем данные в Firestore для этого гостя
-            updateGuestExerciseInSession(editingExerciseIndex, updatedExercise);
-            showToast('✅ Упражнение обновлено для этой тренировки (только для вас)');
+            // Обычная — сохраняем в исходные данные
+            const workoutTitle = sessionWorkoutTitle || '';
+            const cleanTitle = workoutTitle.replace(' (совместно)', '');
+            
+            let saved = false;
+            
+            // 1. Проверяем личные тренировки (myCustomWorkouts)
+            const allWorkouts = getMyWorkouts();
+            for (const workout of allWorkouts) {
+                if (workout.title === cleanTitle) {
+                    if (workout.exercises && workout.exercises[editingExerciseIndex]) {
+                        workout.exercises[editingExerciseIndex] = updatedExercise;
+                        saveMyWorkouts(allWorkouts);
+                        saved = true;
+                        showToast('✅ Упражнение сохранено в личной тренировке');
+                        break;
+                    }
+                }
+            }
+            
+            // 2. Если не нашли в личных — ищем в готовых
+            if (!saved) {
+                for (const parent in exercisesData) {
+                    if (typeof exercisesData[parent] === 'object') {
+                        for (const category in exercisesData[parent]) {
+                            if (typeof exercisesData[parent][category] === 'object') {
+                                for (const level in exercisesData[parent][category]) {
+                                    if (level === '_premium') continue;
+                                    const levelData = exercisesData[parent][category][level];
+                                    let exercisesArray = null;
+                                    let titleFromData = '';
+                                    
+                                    if (Array.isArray(levelData)) {
+                                        exercisesArray = levelData;
+                                        titleFromData = category + ' ' + level;
+                                    } else if (levelData && typeof levelData === 'object' && levelData._exercises) {
+                                        exercisesArray = levelData._exercises;
+                                        titleFromData = levelData._title || category + ' ' + level;
+                                    }
+                                    
+                                    if (exercisesArray && exercisesArray[editingExerciseIndex]) {
+                                        if (titleFromData === cleanTitle || category === cleanTitle) {
+                                            exercisesArray[editingExerciseIndex] = updatedExercise;
+                                            saveExercisesData();
+                                            saved = true;
+                                            showToast('✅ Упражнение сохранено в готовой тренировке');
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (saved) break;
+                            }
+                            if (saved) break;
+                        }
+                        if (saved) break;
+                    }
+                }
+            }
+            
+            if (!saved) {
+                showToast('⚠️ Упражнение обновлено только для этой тренировки (не найдена исходная)');
+            }
         }
     } 
     // ★★★ ЕСЛИ ИЗ РЕДАКТИРОВАНИЯ ★★★
@@ -4363,105 +4410,6 @@ document.getElementById('modalSaveBtn')?.addEventListener('click', function() {
     _isFromSession = false;
     _currentTrainingIndex = null;
 });
-
-async function updateGuestExerciseInSession(index, updatedExercise) {
-    if (!currentSessionId) return;
-    
-    try {
-        const user = firebase.auth().currentUser;
-        if (!user) return;
-        
-        // Получаем текущие данные сессии
-        const doc = await firebase.firestore()
-            .collection('trainingSessions')
-            .doc(currentSessionId)
-            .get();
-        
-        if (!doc.exists) return;
-        const data = doc.data();
-        
-        // Получаем текущие упражнения гостя (хранятся в guestExercises)
-        const guestExercises = data.guestExercises || {};
-        const userExercises = guestExercises[user.uid] || [];
-        
-        // Обновляем конкретное упражнение
-        userExercises[index] = updatedExercise;
-        guestExercises[user.uid] = userExercises;
-        
-        // Сохраняем обратно в Firestore
-        await firebase.firestore()
-            .collection('trainingSessions')
-            .doc(currentSessionId)
-            .update({
-                guestExercises: guestExercises
-            });
-        
-        console.log('✅ Упражнение гостя обновлено в Firestore');
-    } catch (error) {
-        console.error('❌ Ошибка обновления упражнения гостя:', error);
-    }
-}
-
-function saveExerciseChangesToOriginal(updatedExercise, index) {
-    // Определяем, откуда была запущена тренировка
-    const workoutTitle = sessionWorkoutTitle || '';
-    const isCustom = workoutTitle.includes('(совместно)') ? false : true;
-    
-    // 1. Проверяем личные тренировки (myCustomWorkouts)
-    const allWorkouts = getMyWorkouts();
-    for (const workout of allWorkouts) {
-        if (workout.title === workoutTitle || workout._id === sessionWorkoutId) {
-            if (workout.exercises && workout.exercises[index]) {
-                workout.exercises[index] = updatedExercise;
-                saveMyWorkouts(allWorkouts);
-                console.log('✅ Сохранено в myCustomWorkouts:', workout.title);
-                return true;
-            }
-        }
-    }
-    
-    // 2. Проверяем готовые тренировки (exercisesData)
-    for (const parent in exercisesData) {
-        if (typeof exercisesData[parent] === 'object') {
-            for (const category in exercisesData[parent]) {
-                if (typeof exercisesData[parent][category] === 'object') {
-                    for (const level in exercisesData[parent][category]) {
-                        if (level === '_premium') continue;
-                        const levelData = exercisesData[parent][category][level];
-                        let exercisesArray = null;
-                        
-                        if (Array.isArray(levelData)) {
-                            exercisesArray = levelData;
-                        } else if (levelData && typeof levelData === 'object' && levelData._exercises) {
-                            exercisesArray = levelData._exercises;
-                        }
-                        
-                        if (exercisesArray && exercisesArray[index]) {
-                            // Проверяем, совпадает ли название тренировки
-                            const titleFromData = levelData._title || category + ' ' + level;
-                            if (titleFromData === workoutTitle || category === workoutTitle) {
-                                exercisesArray[index] = updatedExercise;
-                                saveExercisesData();
-                                console.log('✅ Сохранено в exercisesData:', category, level);
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // 3. Если не нашли — сохраняем в localStorage как временные данные
-    const tempKey = 'temp_session_changes_' + Date.now();
-    const changes = JSON.parse(localStorage.getItem('temp_session_changes') || '{}');
-    changes[workoutTitle] = changes[workoutTitle] || {};
-    changes[workoutTitle][index] = updatedExercise;
-    localStorage.setItem('temp_session_changes', JSON.stringify(changes));
-    console.log('⚠️ Сохранено в temp_session_changes:', workoutTitle);
-    
-    return false;
-}
 
 document.getElementById('modalCancelBtn')?.addEventListener('click', function() {
     if (window._editOriginalData && editingExerciseIndex !== null && editExercises[editingExerciseIndex]) {
