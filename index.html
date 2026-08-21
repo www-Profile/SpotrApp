@@ -226,7 +226,7 @@
             <h1 class="dashboard-title" id="workoutDetailTitle">ТРЕНИРОВКА</h1>
         </header>
         <h3 class="section-title">Упражнения</h3>
-        <div id="exercisesContainer" class="item-grid"></div>
+        <div id="exercisesContainer" class="item-grid" style="border-radius: 16px;"></div>
         
         <!-- ДВЕ КНОПКИ В ОДНОЙ СТРОКЕ -->
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
@@ -253,39 +253,44 @@
         </main>
     </div>
 
-    <!-- ===== СТРАНИЦА: ТРЕНИРОВКА СЕССИЯ ===== -->
-    <div id="page-training-session" class="page">
-        <main class="training-session-container">
-            <header class="session-header"></header>
-            <div class="session-top">
-                <div class="session-progress-row">
-                    <div class="session-progress" id="sessionProgress"></div>
-                </div>
-                <div class="session-bg">
-                    <span class="session-bg-text">фото будет добавлено позже</span>
-                    <button class="session-close-btn" id="sessionCloseBtn">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                    <div class="session-timer" id="sessionTimer">00:00</div>
-                </div>
+<!-- ===== СТРАНИЦА: ТРЕНИРОВКА СЕССИЯ ===== -->
+<div id="page-training-session" class="page">
+    <main class="training-session-container">
+        <header class="session-header"></header>
+        <div class="session-top">
+            <div class="session-progress-row">
+                <div class="session-progress" id="sessionProgress"></div>
             </div>
-            <div class="session-bottom">
-                <div class="session-exercise-info">
-                    <h2 id="sessionExerciseName">Жим лёжа</h2>
+            <div class="session-bg">
+                <span class="session-bg-text">фото будет добавлено позже</span>
+                <button class="session-close-btn" id="sessionCloseBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="session-timer" id="sessionTimer">00:00</div>
+            </div>
+        </div>
+        <div class="session-bottom">
+            <div class="session-exercise-info">
+                <h2 id="sessionExerciseName">Жим лёжа</h2>
+                <div class="session-exercise-details-row">
                     <p id="sessionExerciseDetails">3 × 12</p>
-                </div>
-                <div class="session-controls">
-                    <button class="session-btn session-btn-prev" id="sessionPrevBtn">
-                        <i class="fa-solid fa-angle-left"></i>
-                    </button>
-                    <button class="session-btn session-btn-main" id="sessionMainBtn">ГОТОВО</button>
-                    <button class="session-btn session-btn-next" id="sessionNextBtn">
-                        <i class="fa-solid fa-angle-right"></i>
+                    <button class="session-edit-btn" id="sessionEditBtn">
+                        <i class="fa-regular fa-pen-to-square"></i>
                     </button>
                 </div>
             </div>
-        </main>
-    </div>
+            <div class="session-controls">
+                <button class="session-btn session-btn-prev" id="sessionPrevBtn">
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
+                <button class="session-btn session-btn-main" id="sessionMainBtn">ГОТОВО</button>
+                <button class="session-btn session-btn-next" id="sessionNextBtn">
+                    <i class="fa-solid fa-angle-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
 
     <!-- ===== СТРАНИЦА: ФИНИШ ===== -->
     <div id="page-finish" class="page">
@@ -878,7 +883,7 @@
             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
         </div>
-        <div class="scroll-wrapper">
+        <div class="scroll-wrapper" style="border-radius: 16px;">
             <div id="friendsList" class="item-grid" style="gap: 0rem;"></div>
         </div>
     </div>
@@ -890,7 +895,7 @@
             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
         </div>
-        <div class="scroll-wrapper">
+        <div class="scroll-wrapper" style="border-radius: 16px;">
             <div id="friendRequests" class="item-grid"></div>
         </div>
     </div>

@@ -874,7 +874,7 @@ body {
 }
 
 /* ===================ИСТОРИЯ ТРЕНИРОВОК ==================== */
-.scroll-wrapper {
+.scroll-wrapper {  
     max-height: 380px;
     overflow-y: auto;
     scroll-behavior: smooth;
@@ -2010,11 +2010,32 @@ font-style: italic;
     word-break: break-word;
 }
 
-.session-exercise-info p {
-    font-size: 1.5rem;
+
+.session-exercise-details-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.session-exercise-details-row p {
+    margin: 0;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--dark);
-    margin: 0;
+}
+
+.session-edit-btn {
+    border: none;
+    background: var(--white);
+    color: var(--accent);
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
 }
 
 .session-controls {
@@ -2361,11 +2382,10 @@ font-style: italic;
     padding: 1rem;
     max-width: 500px;
     width: 90%;
-    border-radius: 20px;
+    border-radius: 16px;
     text-align: center;
     z-index: 10001;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
-    box-shadow: inset 0 0 0 2px var(--accent);
+    box-shadow: inset 0 0 0 3px var(--accent), 0 0 15px var(--accent);
     opacity: 0;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                 opacity 0.4s ease;
@@ -2412,14 +2432,15 @@ font-style: italic;
     display: flex;
     gap: 0.5rem;
     justify-content: center;
+    width: 100%;
 }
 
 .tutorial-buttons .btn {
     padding: 0.6rem 2rem;
     font-size: 0.9rem;
-    width: auto;
+    width: 100%;
     min-width: 140px;
-    display: inline-block;
+    display: block;
     border-radius: 12px;
 }
 
@@ -2428,7 +2449,6 @@ font-style: italic;
     z-index: 10000 !important;
     overflow: visible !important;
     border: 3px solid transparent !important;
-    border-radius: 16px !important;
     box-shadow: 0 0 0 0 rgba(220, 20, 60, 0) !important;
     background: var(--white) !important;
     color: var(--accent) !important;
@@ -2467,6 +2487,18 @@ font-style: italic;
     color: var(--accent) !important;
 }
 
+/* ★★★ ВСЕ РОДИТЕЛИ — НЕ ОБРЕЗАТЬ ★★★ */
+.tutorial-parent-visible,
+.tutorial-parent-visible .section-body,
+.tutorial-parent-visible .section-block,
+.tutorial-parent-visible .scroll-wrapper,
+.tutorial-parent-visible .dashboard-container,
+.tutorial-parent-visible .profile-container,
+.tutorial-parent-visible .item-grid,
+.tutorial-parent-visible .tab-content,
+.tutorial-parent-visible .tab-content-active {
+    overflow: visible !important;
+}
 /* ===================ПРЕМИУМ ==================== */
 .premium-modal .modal-content {
     max-width: 400px;
