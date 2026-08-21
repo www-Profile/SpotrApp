@@ -1492,7 +1492,7 @@ function showFriendSelectModal(friends) {
         <div class="modal-content" style="max-width: 400px;">
             <div class="scroll-wrapper">
                 <div class="modal-title">Выберите друга</div>
-                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;">
+                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
                     ${friends.map(f => {
                         const level = getCurrentLevel(f.totalXp || 0).id;
                         const xp = (f.totalXp || 0).toFixed(1);
