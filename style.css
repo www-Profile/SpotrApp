@@ -1,5 +1,5 @@
 /* ===================RESET И ОСНОВНЫЕ СТИЛИ ==================== */
-* {
+* { 
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -33,16 +33,16 @@ body {
 }
 
 /* ===================ТЕМЫ ==================== */
-.theme-red { --accent: #DC143C; --accent-dark: #B01030; --accent-light: #FFE8EC; }
-.theme-orange { --accent: #FF6B35; --accent-dark: #E55A2B; --accent-light: #FFF0E8; }
-.theme-yellow { --accent: #F7C948; --accent-dark: #D4A832; --accent-light: #FFF8E0; }
-.theme-green { --accent: #2ECC71; --accent-dark: #27AE60; --accent-light: #EAFAF1; }
-.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #14632E; --accent-light: #E8F5ED; }
-.theme-blue { --accent: #3498DB; --accent-dark: #2980B9; --accent-light: #EBF5FB; }
-.theme-darkblue { --accent: #1a237e; --accent-dark: #0d1445; --accent-light: #e8eaf6; }
-.theme-purple { --accent: #9B59B6; --accent-dark: #8E44AD; --accent-light: #F4ECF7; }
-.theme-pink { --accent: #E91E8C; --accent-dark: #C2185B; --accent-light: #FCE4EC; }
-.theme-gray { --accent: #607D8B; --accent-dark: #455A64; --accent-light: #ECEFF1; }
+.theme-red { --accent: #DC143C; --accent-dark: #8B0A20; --accent-light: #FFD6DE; }
+.theme-orange { --accent: #FF6B35; --accent-dark: #CC4A1A; --accent-light: #FFE0D0; }
+.theme-yellow { --accent: #F7C948; --accent-dark: #C99B1A; --accent-light: #FFEDB3; }
+.theme-green { --accent: #2ECC71; --accent-dark: #1A8C4A; --accent-light: #D4F5E0; }
+.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #0D4A20; --accent-light: #C8EAD5; }
+.theme-blue { --accent: #3498DB; --accent-dark: #1A6FA0; --accent-light: #D4EAF7; }
+.theme-darkblue { --accent: #1a237e; --accent-dark: #0A0F3D; --accent-light: #D6D9F0; }
+.theme-purple { --accent: #9B59B6; --accent-dark: #6C3483; --accent-light: #EAD4F0; }
+.theme-pink { --accent: #E91E8C; --accent-dark: #B01060; --accent-light: #FAD4E8; }
+.theme-gray { --accent: #607D8B; --accent-dark: #3A4A54; --accent-light: #D8E0E5; }
 
 /* ===================СТРАНИЦЫ ==================== */
 .page { display: none; }
@@ -196,7 +196,7 @@ body {
 .item-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 0.5rem;
 }
 
 .item-card {
@@ -933,7 +933,7 @@ body {
     gap: 0.5rem;
 }
 
-/* ===================КАЛЕНДАРЬ ==================== */
+/* =================== КАЛЕНДАРЬ ==================== */
 .calendar-container {
     background: var(--white);
     border-radius: 16px;
@@ -989,6 +989,7 @@ body {
     grid-column: 1 / -1;
 }
 
+/* ★★★ ОБЫЧНЫЙ ДЕНЬ ★★★ */
 .calendar-day {
     text-align: center;
     font-size: 0.9rem;
@@ -997,23 +998,99 @@ body {
     padding: 0.5rem 0;
     border-radius: 8px;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .calendar-day:active {
     opacity: 0.6;
 }
 
-.calendar-day-has-workout {
+/* ★★★ 1 ТРЕНИРОВКА — СВЕТЛЫЙ АКЦЕНТНЫЙ ФОН ★★★ */
+.calendar-day-has-workout-1 {
+    background: var(--accent-light);
+    color: var(--dark);
+    border-radius: 8px;
+}
+
+/* ★★★ 2+ ТРЕНИРОВКИ — АКЦЕНТНЫЙ ФОН ★★★ */
+.calendar-day-has-workout-2 {
     background: var(--accent);
     color: var(--white);
+    border-radius: 8px;
 }
 
+/* ★★★ СЕГОДНЯШНИЙ ДЕНЬ — ОБВОДКА ★★★ */
 .calendar-day-today {
-    box-shadow: inset 0 0 0 2px var(--accent);
+    box-shadow: inset 0 0 0 2px var(--accent-dark);
+    border-radius: 8px;
 }
 
+/* ★★★ СЕГОДНЯ + 1 ТРЕНИРОВКА ★★★ */
+.calendar-day-today.calendar-day-has-workout-1 {
+    box-shadow: inset 0 0 0 2px var(--accent-dark);
+}
+
+/* ★★★ СЕГОДНЯ + 2+ ТРЕНИРОВКИ ★★★ */
+.calendar-day-today.calendar-day-has-workout-2 {
+    box-shadow: inset 0 0 0 2px var(--accent-dark);
+}
+
+/* ★★★ ПУСТЫЕ ЯЧЕЙКИ ★★★ */
 .calendar-empty {
     visibility: hidden;
+}
+
+/* =================== ЛЕГЕНДА КАЛЕНДАРЯ ==================== */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.8rem;
+    padding: 0.5rem;
+    background: var(--light);
+    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.5rem;
+    color: var(--slate);
+}
+
+.legend-box {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.sleh {
+    align-items: center;
+    font-size: 0.5rem;
+    color: var(--slate);
+}
+
+/* ★★★ 1 ТРЕНИРОВКА — СВЕТЛЫЙ ФОН ★★★ */
+.legend-box-light {
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+}
+
+/* ★★★ 2+ ТРЕНИРОВКИ — НАСЫЩЕННЫЙ ФОН ★★★ */
+.legend-box-full {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+/* ★★★ СЕГОДНЯ — ОБВОДКА ★★★ */
+.legend-box-today {
+    background: var(--light);
+    border: 2px solid var(--accent-dark);
 }
 
 /* ===================ПРОФИЛЬ ==================== */
@@ -1178,10 +1255,12 @@ body {
 .settings-item {
     display: flex;
     align-items: center;
-    padding: 0.8rem 1.2rem;
+    padding: 0.8rem 0rem;
     gap: 1rem;
     cursor: pointer;
     border-bottom: 1px solid #E2E8F0 !important;
+    margin: 0 1.2rem; /* ★★★ ДОБАВЛЯЕМ ОТСТУПЫ СЛЕВА И СПРАВА ★★★ */
+    width: auto; /* Убираем ширину 100% */
 }
 
 .settings-item:last-child {
@@ -1816,6 +1895,7 @@ font-style: italic;
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2; /* ★★★ ДОБАВЛЕН МЕЖСТРОЧНЫЙ ИНТЕРВАЛ ★★★ */
 }
 
 /* ===================РЕДАКТИРОВАНИЕ СТРАНИЦ ==================== */
@@ -2892,4 +2972,143 @@ textarea.error {
     font-size: 1rem;
     font-weight: 600;
     color: var(--dark);
+}
+
+/* =================== ПРАВИЛА (ГАЛОЧКИ) =================== */
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: var(--light);
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--dark);
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    user-select: none;
+}
+
+/* ★★★ КАСТОМНЫЙ СТИЛЬ ДЛЯ ЧЕКБОКСА ★★★ */
+.rule-checkbox {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid var(--slate);
+    border-radius: 6px;
+    background: var(--white);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+/* Активный (отмеченный) чекбокс */
+.rule-checkbox:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ★★★ БЕЛАЯ ГАЛОЧКА ★★★ */
+.rule-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* =================== ВЫБОР ТЕМЫ (МОДАЛКА) ==================== */
+
+/* ★★★ ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВАРИАНТОВ ТЕМ ★★★ */
+.theme-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ★★★ КАРТОЧКА ВАРИАНТА ТЕМЫ ★★★ */
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem 0.5rem 0.5rem;
+    background: var(--light);
+    border-radius: 12px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+/* ★★★ АКТИВНЫЙ ВАРИАНТ ТЕМЫ (ВЫБРАННЫЙ) ★★★ */
+.theme-option-active {
+    border-color: var(--accent);
+}
+
+/* ★★★ ИКОНКА ВАРИАНТА ТЕМЫ ★★★ */
+.theme-option-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.theme-option-icon i {
+    font-size: 1.5rem;
+}
+
+/* ★★★ ИКОНКА СОЛНЦА ★★★ */
+.theme-option-icon .fa-sun {
+    color: var(--gold);
+}
+
+/* ★★★ ИКОНКА ЛУНЫ ★★★ */
+.theme-option-icon .fa-moon {
+    color: #1a237e;
+}
+
+/* ★★★ ИНФОРМАЦИЯ О ТЕМЕ ★★★ */
+.theme-option-info {
+    flex: 1;
+    text-align: left;
+}
+
+/* ★★★ ГАЛОЧКА ВЫБОРА ★★★ */
+.theme-option-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.theme-option-check i {
+    font-size: 0.8rem;
+}
+
+/* ★★★ ПОКАЗЫВАЕМ ГАЛОЧКУ У АКТИВНОГО ВАРИАНТА ★★★ */
+.theme-option-active .theme-option-check {
+    display: flex !important;
 }

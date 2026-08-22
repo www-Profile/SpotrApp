@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
+<head> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -669,6 +669,27 @@
                                     <div class="calendar-weekday">Вс</div>
                                     <div id="calendarDays"></div>
                                 </div>
+<!-- ===== ЛЕГЕНДА КАЛЕНДАРЯ ===== -->
+<div class="calendar-legend">
+    <div class="legend-item">
+        <span class="legend-box legend-box-full"></span>
+        <span>- 2 тренировки</span>
+    </div> 
+    <div class="sleh">
+        <span>|</span>
+    </div> 
+    <div class="legend-item">
+        <span class="legend-box legend-box-light"></span>
+        <span>- 1 тренировка</span>
+    </div>
+    <div class="sleh">
+        <span>|</span>
+    </div> 
+    <div class="legend-item">
+        <span class="legend-box legend-box-today"></span>
+        <span>- сегодня</span>
+    </div>
+</div>
                             </div>
                         </div>
                     </div>
@@ -793,6 +814,17 @@
                                 </div>
                                 <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
                             </div>
+
+<div class="settings-item" onclick="toggleThemeModal()">
+    <div class="settings-icon" id="themeIcon">
+        <i class="fa-regular fa-sun"></i>
+    </div>
+    <div class="settings-info">
+        <div class="settings-title">Тема приложения</div>
+        <div class="settings-desc" id="themeStatus">Светлая</div>
+    </div>
+    <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
                             
                             <div class="settings-item" onclick="startTutorial()">
                                 <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
@@ -884,7 +916,7 @@
             <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
         </div>
         <div class="scroll-wrapper" style="border-radius: 16px;">
-            <div id="friendsList" class="item-grid" style="gap: 0rem;"></div>
+            <div id="friendsList" class="item-grid"></div>
         </div>
     </div>
 
@@ -1013,6 +1045,48 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+<!-- ===== МОДАЛКА: ВЫБОР ТЕМЫ ===== -->
+<div id="themeModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-title">Тема приложения</div>
+        <p class="modal-text" style="margin-bottom: 1rem;">
+            Выберите оформление приложения.
+        </p>
+        
+        <div class="theme-options-container">
+            <!-- Светлая тема -->
+            <div class="theme-option theme-option-active" data-theme="light" onclick="selectTheme('light')">
+                <div class="theme-option-icon">
+                    <i class="fa-regular fa-sun"></i>
+                </div>
+                <div class="theme-option-info">
+                    <div class="settings-title">Светлая</div>
+                    <div class="settings-desc">Светлый фон, тёмный текст</div>
+                </div>
+                <div class="theme-option-check">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+            
+            <!-- Тёмная тема -->
+            <div class="theme-option" data-theme="dark" onclick="selectTheme('dark')">
+                <div class="theme-option-icon">
+                    <i class="fa-regular fa-moon"></i>
+                </div>
+                <div class="theme-option-info">
+                    <div class="settings-title">Тёмная</div>
+                    <div class="settings-desc">Тёмный фон, светлый текст</div>
+                </div>
+                <div class="theme-option-check">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="applyTheme()">Готово</button>
+    </div>
+</div>
 
     <!-- ===== МОДАЛКА: РЕДАКТИРОВАНИЕ УПРАЖНЕНИЯ ===== -->
     <div id="exerciseModal" class="modal-overlay" style="display:none;">
@@ -1261,6 +1335,40 @@
         </div>
     </div>
 </div>
+
+    <!-- ===== МОДАЛКА: ПРАВИЛА ===== -->
+    <div id="rulesModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="max-width: 420px; width: 95%;">
+            <div class="modal-title">Правила</div>
+            <p class="modal-text">
+                Эти правила нужны для точной работы приложения.
+            </p>
+
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <p class="item-title" style="margin-left: 0.5rem;">Я обещаю:</p>
+                <div class="rules-list">
+                    <label class="rule-item">
+                        <input type="checkbox" class="rule-checkbox" data-rule="1">
+                        <span>буду честно писать сколько упражнений выполнил</span>
+                    </label>
+                    <label class="rule-item">
+                        <input type="checkbox" class="rule-checkbox" data-rule="2">
+                        <span>если не выполнил упражнение — буду его пропускать</span>
+                    </label>
+                    <label class="rule-item">
+                        <input type="checkbox" class="rule-checkbox" data-rule="3">
+                        <span>буду честно ставить количество подходов и повторений</span>
+                    </label>
+                    <label class="rule-item">
+                        <input type="checkbox" class="rule-checkbox" data-rule="4">
+                        <span>буду честно ставить время</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="rulesAcceptBtn">Принять</button>
+        </div>
+    </div>
 
     <!-- ===== УВЕДОМЛЕНИЯ ===== -->
     <div id="notificationContainer">

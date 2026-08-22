@@ -1,5 +1,5 @@
 // ===================ОСНОВНЫЕ ДАННЫЕ ===================
-const exercisesData = {
+const exercisesData = { 
     // ===================СИЛОВЫЕ ===================
     'Силовые': {
         'Руки': {
@@ -2238,7 +2238,9 @@ const notificationOkBtn = document.getElementById('notificationOkBtn');
 
 notificationContainer.style.display = 'block';
 
-function showNotification(icon, text, actionCallback) {
+// =================== СИСТЕМА УВЕДОМЛЕНИЙ ===================
+
+function showNotification(icon, text, actionCallback, autoClose = true, okAction = null) {
     // ★★★ РАСПОЗНАЁМ ПРИГЛАШЕНИЕ ★★★
     const isInvite = text.includes('приглашает') || text.includes('пригласил');
     
@@ -2250,7 +2252,9 @@ function showNotification(icon, text, actionCallback) {
             text, 
             actionCallback, 
             id: uniqueId, 
-            isInvite: true 
+            isInvite: true,
+            autoClose: false, // Приглашения не закрываются автоматически
+            okAction: null
         });
         if (!isNotificationShowing) {
             processNotificationQueue();
@@ -2266,10 +2270,250 @@ function showNotification(icon, text, actionCallback) {
         return;
     }
     
-    notificationQueue.push({ icon, text, actionCallback, id: notificationId });
+    notificationQueue.push({ 
+        icon, 
+        text, 
+        actionCallback, 
+        id: notificationId,
+        autoClose: autoClose,
+        okAction: okAction
+    });
     if (!isNotificationShowing) {
         processNotificationQueue();
     }
+}
+
+function processNotificationQueue() {
+    console.log('🔵 processNotificationQueue вызвана');
+    console.log('📊 Очередь:', notificationQueue.length);
+    console.log('📊 isNotificationShowing:', isNotificationShowing);
+    
+    if (notificationQueue.length === 0 || isNotificationShowing) {
+        console.log('⏭️ Очередь пуста или уведомление уже показывается');
+        return;
+    }
+    
+    isNotificationShowing = true;
+    const notification = notificationQueue.shift();
+    console.log('📄 Уведомление:', notification);
+    
+    notificationIcon.textContent = notification.icon;
+    notificationText.textContent = notification.text;
+    
+    const okBtn = document.getElementById('notificationOkBtn');
+    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
+    
+    if (notification.actionCallback) {
+        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
+        okBtn.textContent = 'Принять';
+        okBtn.onclick = function(e) {
+            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
+            if (notification.actionCallback) {
+                console.log('🔵 Вызываем actionCallback');
+                try {
+                    notification.actionCallback();
+                    console.log('✅ actionCallback выполнен');
+                } catch (error) {
+                    console.error('❌ Ошибка в actionCallback:', error);
+                }
+            }
+            hideNotification();
+            
+            if (!notification.isInvite && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    } else {
+        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
+        okBtn.textContent = 'ОК';
+        okBtn.onclick = function() {
+            console.log('🔵 Кнопка "ОК" нажата');
+            
+            // ★★★ ВЫЗЫВАЕМ okAction ЕСЛИ ЕСТЬ ★★★
+            if (notification.okAction) {
+                try {
+                    notification.okAction();
+                    console.log('✅ okAction выполнен');
+                } catch (error) {
+                    console.error('❌ Ошибка в okAction:', error);
+                }
+            }
+            
+            hideNotification();
+            
+            if (notification.isFriendRequest && notification.requestId) {
+                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+                if (!shownRequests.includes(notification.requestId)) {
+                    shownRequests.push(notification.requestId);
+                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                }
+                shownThisSession.delete(notification.requestId);
+            }
+            
+            if (!notification.isInvite && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    }
+    
+    notificationCard.classList.remove('show');
+    notificationCard.style.transform = 'translateY(-120px)';
+    notificationCard.style.opacity = '0';
+    
+    setTimeout(() => {
+        notificationCard.classList.add('show');
+        notificationCard.style.transform = '';
+        notificationCard.style.opacity = '';
+        console.log('✅ Уведомление показано');
+        
+        // ★★★ АВТОМАТИЧЕСКОЕ ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕКУНД ★★★
+        if (notification.autoClose !== false) {
+            console.log('⏰ Уведомление закроется через 10 секунд');
+            setTimeout(() => {
+                if (isNotificationShowing) {
+                    console.log('⏰ Авто-закрытие уведомления');
+                    hideNotification();
+                    
+                    if (!notification.isInvite && notification.id) {
+                        markNotificationSeen(notification.id);
+                    }
+                }
+            }, 10000);
+        }
+    }, 100);
+}
+
+function hideNotification() {
+    console.log('🔵 hideNotification вызвана');
+    notificationCard.classList.remove('show');
+    isNotificationShowing = false;
+    notificationOkBtn.onclick = null;
+    
+    setTimeout(() => {
+        if (notificationQueue.length > 0) {
+            console.log('🔄 Показываем следующее уведомление');
+            processNotificationQueue();
+        }
+    }, 400);
+}
+
+function markNotificationSeen(id) {
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    if (!seen.includes(id)) {
+        seen.push(id);
+        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(seen));
+    }
+}
+
+function isNotificationSeen(id) {
+    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
+    return seen.includes(id);
+}
+
+function clearSeenNotifications() {
+    localStorage.removeItem(NOTIFICATIONS_KEY);
+    localStorage.removeItem('shownFriendRequests');
+    console.log('✅ История уведомлений очищена');
+}
+
+function processNotificationQueue() {
+    console.log('🔵 processNotificationQueue вызвана');
+    console.log('📊 Очередь:', notificationQueue.length);
+    console.log('📊 isNotificationShowing:', isNotificationShowing);
+    
+    if (notificationQueue.length === 0 || isNotificationShowing) {
+        console.log('⏭️ Очередь пуста или уведомление уже показывается');
+        return;
+    }
+    
+    isNotificationShowing = true;
+    const notification = notificationQueue.shift();
+    console.log('📄 Уведомление:', notification);
+    
+    notificationIcon.textContent = notification.icon;
+    notificationText.textContent = notification.text;
+    
+    const okBtn = document.getElementById('notificationOkBtn');
+    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
+    
+    if (notification.actionCallback) {
+        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
+        okBtn.textContent = 'Принять';
+        okBtn.onclick = function(e) {
+            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
+            if (notification.actionCallback) {
+                console.log('🔵 Вызываем actionCallback');
+                try {
+                    notification.actionCallback();
+                    console.log('✅ actionCallback выполнен');
+                } catch (error) {
+                    console.error('❌ Ошибка в actionCallback:', error);
+                }
+            }
+            hideNotification();
+            
+            if (!notification.isInvite && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    } else {
+        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
+        okBtn.textContent = 'ОК';
+        okBtn.onclick = function() {
+            console.log('🔵 Кнопка "ОК" нажата');
+            
+            // ★★★ ВЫЗЫВАЕМ ДЕЙСТВИЕ ДЛЯ ОК ★★★
+            if (notification.okAction) {
+                try {
+                    notification.okAction();
+                    console.log('✅ okAction выполнен');
+                } catch (error) {
+                    console.error('❌ Ошибка в okAction:', error);
+                }
+            }
+            
+            hideNotification();
+            
+            if (notification.isFriendRequest && notification.requestId) {
+                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+                if (!shownRequests.includes(notification.requestId)) {
+                    shownRequests.push(notification.requestId);
+                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                }
+                shownThisSession.delete(notification.requestId);
+            }
+            
+            if (!notification.isInvite && notification.id) {
+                markNotificationSeen(notification.id);
+            }
+        };
+    }
+    
+    notificationCard.classList.remove('show');
+    notificationCard.style.transform = 'translateY(-120px)';
+    notificationCard.style.opacity = '0';
+    
+    setTimeout(() => {
+        notificationCard.classList.add('show');
+        notificationCard.style.transform = '';
+        notificationCard.style.opacity = '';
+        console.log('✅ Уведомление показано');
+        
+        // ★★★ АВТОМАТИЧЕСКОЕ ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕКУНД ★★★
+        if (notification.autoClose !== false) { // По умолчанию true
+            console.log('⏰ Уведомление закроется через 10 секунд');
+            setTimeout(() => {
+                if (isNotificationShowing) {
+                    console.log('⏰ Авто-закрытие уведомления');
+                    hideNotification();
+                    
+                    if (!notification.isInvite && notification.id) {
+                        markNotificationSeen(notification.id);
+                    }
+                }
+            }, 10000);
+        }
+    }, 100);
 }
 
 function showFriendRequestNotification(icon, text, requestId) {
@@ -2284,10 +2528,17 @@ function showFriendRequestNotification(icon, text, requestId) {
     notificationQueue.push({ 
         icon, 
         text, 
-        actionCallback: null, 
+        actionCallback: null,
+        okAction: function() {
+            // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
+            TabManager.profile('friends');
+            window.navigateTo('profile');
+            setTimeout(() => renderFriendsInProfile(), 300);
+        },
         id: null, 
         isFriendRequest: true,
-        requestId: requestId 
+        requestId: requestId,
+        autoClose: true // ★★★ АВТО-ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕК ★★★
     });
     
     if (!isNotificationShowing) {
@@ -4762,37 +5013,64 @@ async function renderCalendar(month, year) {
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const monthYearEl = document.getElementById('currentMonthYear');
     if (monthYearEl) monthYearEl.textContent = `${monthNames[month]} ${year}`;
+    
     const firstDay = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const startDayOfWeek = firstDay.getDay() || 7;
     const container = document.getElementById('calendarDays');
     if (!container) return;
+    
     container.innerHTML = '';
+    
     for (let i = 1; i < startDayOfWeek; i++) {
         const empty = document.createElement('div');
         empty.classList.add('calendar-empty');
         container.appendChild(empty);
     }
+    
     const today = new Date();
     const user = await getFirebaseUser();
-    let workoutDays = [];
+    
+    // ★★★ ПОЛУЧАЕМ ДАТЫ ТРЕНИРОВОК ★★★
+    let workoutDates = [];
     if (user) {
         const result = await getUserWorkoutsFromFirestore(user.uid);
         if (result.success) {
-            workoutDays = result.data
+            workoutDates = result.data
                 .filter(w => !(w.title || '').includes('Зарядка'))
                 .map(w => new Date(w.date));
         }
     }
+    
+    // ★★★ ПОДСЧИТЫВАЕМ КОЛИЧЕСТВО ТРЕНИРОВОК ПО ДНЯМ ★★★
+    const workoutCount = {};
+    workoutDates.forEach(d => {
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        workoutCount[key] = (workoutCount[key] || 0) + 1;
+    });
+    
     for (let day = 1; day <= daysInMonth; day++) {
         const dayEl = document.createElement('div');
         dayEl.classList.add('calendar-day');
         dayEl.textContent = day;
-        const hasWorkout = workoutDays.some(d => d.getDate() === day && d.getMonth() === month && d.getFullYear() === year);
-        if (hasWorkout) dayEl.classList.add('calendar-day-has-workout');
-        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        
+        const key = `${year}-${month}-${day}`;
+        const count = workoutCount[key] || 0;
+        
+        // ★★★ ВЫДЕЛЯЕМ В ЗАВИСИМОСТИ ОТ КОЛИЧЕСТВА ТРЕНИРОВОК ★★★
+        if (count === 1) {
+            dayEl.classList.add('calendar-day-has-workout-1');
+        } else if (count >= 2) {
+            dayEl.classList.add('calendar-day-has-workout-2');
+        }
+        
+        // ★★★ ВЫДЕЛЯЕМ СЕГОДНЯШНИЙ ДЕНЬ ★★★
+        if (day === today.getDate() && 
+            month === today.getMonth() && 
+            year === today.getFullYear()) {
             dayEl.classList.add('calendar-day-today');
         }
+        
         container.appendChild(dayEl);
     }
 }
@@ -4848,8 +5126,12 @@ async function loadProfile() {
     if (currentLevel.id > prevLevel) {
         const id = 'new_level_' + currentLevel.id;
         if (!isNotificationSeen(id)) {
-            showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null);
-        }
+showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null, true, function() {
+    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ПРОФИЛЯ ★★★
+    TabManager.profile('my');
+    window.navigateTo('profile');
+    setTimeout(() => loadProfile(), 300);
+});        }
         localStorage.setItem('prevLevel', String(currentLevel.id));
     }
     
@@ -5371,11 +5653,6 @@ async function logout() {
 }
 
 function enterApp() {
-    if (!navigator.onLine) {
-        showOfflineModal();
-        return;
-    }
-
     // Закрываем страницу загрузки
     const loadingPage = document.getElementById('page-loading');
     if (loadingPage) {
@@ -5401,6 +5678,14 @@ function enterApp() {
     if (window._tutorialNeeded) {
         setTimeout(() => startTutorial(), 1000);
     }
+
+    if (!navigator.onLine) {
+        // ★★★ ЗАДЕРЖКА 1000мс (1 секунда) ★★★
+        setTimeout(() => {
+            showOfflineModal();
+        }, 1000);
+        return;
+    } 
 }
 
 // ===================ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
@@ -5724,8 +6009,12 @@ async function renderFriendsInProfile() {
             const fromUser = r.fromUser || {};
             const name = fromUser.displayName || 'Пользователь';
             // Уведомление покажется в ЛЮБОМ случае, даже если вкладка "Друзья" не активна
-            showFriendRequestNotification('📧', `У вас новая заявка в друзья от ${name}`, r.id);
-        });
+showNotification('📧', `У вас новая заявка в друзья от ${name}`, null, true, function() {
+    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
+    TabManager.profile('friends');
+    window.navigateTo('profile');
+    setTimeout(() => renderFriendsInProfile(), 300);
+});        });
         requestsHtml = requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
@@ -5753,8 +6042,12 @@ async function renderFriendsInProfile() {
         friends.data.forEach(f => {
             const friendId = f.id;
             if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
-                showNotification('👤', `У вас новый друг — ${f.displayName || 'Пользователь'}!`, null);
-                shownFriendNotifications.push(friendId);
+showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
+    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
+    TabManager.profile('friends');
+    window.navigateTo('profile');
+    setTimeout(() => renderFriendsInProfile(), 300);
+});                shownFriendNotifications.push(friendId);
                 localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
             }
         });
@@ -6293,16 +6586,30 @@ function checkRankNotification(currentRank, type) {
     const key = type === 'world' ? LAST_WORLD_RANK_KEY : LAST_FRIENDS_RANK_KEY;
     const lastRank = parseInt(localStorage.getItem(key) || '0');
     
+    // Проверяем, улучшился ли рейтинг
     if (currentRank < lastRank || lastRank === 0) {
         const rankText = currentRank <= 3 ? '🥇' : currentRank <= 10 ? '⭐' : '📈';
         const rankName = type === 'world' ? 'мировом' : 'дружеском';
         
         const id = `${type}_rank_${currentRank}_${Date.now()}`;
         if (!isNotificationSeen(id)) {
+            // ★★★ ДЛЯ ОБОИХ ТИПОВ ОТКРЫВАЕМ СТАТИСТИКУ ★★★
+            const okAction = function() {
+                // Переключаемся на вкладку "world" в статистике
+                switchStatsTab('world');
+                window.navigateTo('stats');
+                setTimeout(() => {
+                    loadWorldLeaderboard();
+                    loadFriendsLeaderboard();
+                }, 300);
+            };
+            
             showNotification(
                 rankText,
                 `В ${rankName} рейтинге вы на ${currentRank} месте!`,
-                null
+                null,
+                true,  // autoClose
+                okAction
             );
             markNotificationSeen(id);
         }
@@ -6651,7 +6958,7 @@ function createTutorialOverlay(step) {
     `;
     document.body.appendChild(tooltip);
 
-    const autoSteps = [1, 9, 10, 15, 16];
+    const autoSteps = [1, 9, 10, 14, 15];
     const isAuto = autoSteps.includes(step.id) && highlightElements.length > 0;
 
     if (isAuto) {
@@ -6738,6 +7045,9 @@ async function finishTutorial() {
     localStorage.setItem(EDIT_WORKOUT_KEY, String(_savedEditWorkoutState));
     updateEditPagesUI(_savedEditPagesState);
     updateEditWorkoutUI(_savedEditWorkoutState);
+
+    // ★★★ ПОКАЗЫВАЕМ ПРАВИЛА ПОСЛЕ ЗАВЕРШЕНИЯ ТУТОРИАЛА ★★★
+    setTimeout(showRulesModal, 600);
 }
 
 const tutorialSteps = [
@@ -6836,12 +7146,6 @@ const tutorialSteps = [
     },
     {
         id: 11,
-        page: 'workout-detail',
-        highlight: null,
-        text: 'Важно: честно отмечайте выполненные упражнения и регулируйте количество подходов и повторений под себя.\nОт этого зависит точность расчёта XP и ваша статистика!'
-    },
-    {
-        id: 12,
         page: 'workouts',
         highlight: ['#page-workouts .tab-btn[data-tab="my"]', '.custom-workout .btn-primary'],
         text: 'В разделе "Личных тренировок" вы можете создавать свои собственные тренировки и редактировать их.',
@@ -6851,31 +7155,31 @@ const tutorialSteps = [
         }
     },
     {
-        id: 13,
+        id: 12,
         page: 'profile',
         highlight: [ '.profile-tab-btn[data-tab="my"]', '.profile-tab-btn[data-tab="friends"]'],
         text: 'Страница Профиля делится на два раздела:\nМой и Друзья.'
     },
 {
-    id: 14,
+    id: 13,
     page: 'profile',
     highlight: ['.profile-card', '.level-block', '.profile-tab-btn[data-tab="my"]'],
     text: 'Это ваш профиль, в нем есть система уровней.\nТренируйтесь, получайте XP и повышайте свой уровень.\nСоревнуйтесь с друзьями и другими пользователями!'
 },
     {
-        id: 15,
+        id: 14,
         page: 'profile',
         highlight: '#settings-block-main .settings-block',
         text: 'В дополнительных настройках вы можете настроить приложение под себя.'
     },
     {
-        id: 16,
+        id: 15,
         page: 'profile',
         highlight: '#dangerSettings .settings-block',
         text: 'Здесь находятся важные настройки. Будьте внимательны - эти действия нельзя отменить.'
     },
     {
-        id: 17,
+        id: 16,
         page: 'profile',
         highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block', '.scroll-wrapper'],
         text: 'Здесь вы можете находить друзей, отправлять им заявки и добавлять их в друзья.',
@@ -6885,10 +7189,10 @@ const tutorialSteps = [
         }
     },
     {
-        id: 18,
+        id: 17,
         page: 'workouts',
         highlight: null,
-        text: 'И главное правило!\nОтмечайте только те упражнения, которые действительно выполнили, настраивайте подходы и повторения под себя.\nТренируйтесь с умом и достигайте целей!',
+        text: 'Тренируйтесь с умом и достигайте целей!',
         isLast: true,
         action: () => {
             activeWorkoutsTab = 'ready';
@@ -8058,4 +8362,164 @@ document.addEventListener('click', function(e) {
         setTimeout(refreshNotificationData, 1000);
         return;
     }
+});
+
+// =================== МОДАЛЬНОЕ ОКНО "ПРАВИЛА" ===================
+
+function showRulesModal() {
+    // Сбрасываем все чекбоксы при открытии
+    const checkboxes = document.querySelectorAll('#rulesModal .rule-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    
+    openModal('rulesModal');
+}
+
+function areAllRulesChecked() {
+    const checkboxes = document.querySelectorAll('#rulesModal .rule-checkbox');
+    let allChecked = true;
+    
+    checkboxes.forEach(cb => {
+        if (!cb.checked) {
+            allChecked = false;
+        }
+    });
+    
+    return allChecked;
+}
+
+function handleRulesAccept() {
+    if (areAllRulesChecked()) {
+        // Все правила приняты - закрываем окно
+        closeModal('rulesModal');
+        showToast('✅ Спасибо за честность! Приятных тренировок! 💪');
+        console.log('✅ Все правила приняты, модальное окно закрыто');
+    } else {
+        // Не все правила приняты - показываем тост
+        showToast('⚠️ Примите все правила, чтобы продолжить');
+        console.log('⚠️ Не все правила приняты');
+    }
+}
+
+// =================== ИНИЦИАЛИЗАЦИЯ ===================
+
+// Привязываем обработчик к кнопке "Принять"
+document.addEventListener('DOMContentLoaded', function() {
+    const acceptBtn = document.getElementById('rulesAcceptBtn');
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', handleRulesAccept);
+    }
+});
+
+// ★★★ ИСПРАВЛЕНО: переключение ТОЛЬКО по чекбоксу ★★★
+// Убираем обработчик клика по тексту, оставляем только нативный change для чекбоксов
+document.addEventListener('change', function(event) {
+    if (event.target.classList.contains('rule-checkbox')) {
+        // Чекбокс переключился автоматически
+        console.log(`✅ Правило ${event.target.dataset.rule}: ${event.target.checked}`);
+    }
+});
+
+// =================== УПРАВЛЕНИЕ ТЕМОЙ (СВЕТЛАЯ/ТЁМНАЯ) ===================
+
+// Ключ для localStorage
+const THEME_MODE_KEY = 'appThemeMode';
+
+// ★★★ ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ВРЕМЕННОГО ВЫБОРА ★★★
+let tempTheme = null;
+
+/**
+ * Получить текущую тему
+ */
+function getThemeMode() {
+    return localStorage.getItem(THEME_MODE_KEY) || 'light';
+}
+
+/**
+ * Обновить UI в зависимости от темы
+ */
+function updateThemeUI() {
+    const theme = getThemeMode();
+    const themeStatus = document.getElementById('themeStatus');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeIconElement = themeIcon?.querySelector('i');
+    
+    if (themeStatus) {
+        themeStatus.textContent = theme === 'light' ? 'Светлая' : 'Тёмная';
+    }
+    
+    if (themeIconElement) {
+        if (theme === 'light') {
+            themeIconElement.className = 'fa-regular fa-sun';
+        } else {
+            themeIconElement.className = 'fa-regular fa-moon';
+        }
+    }
+}
+
+/**
+ * Открыть модальное окно выбора темы
+ */
+function toggleThemeModal() {
+    const currentTheme = getThemeMode();
+    
+    // ★★★ СОХРАНЯЕМ ТЕКУЩУЮ ТЕМУ КАК ВРЕМЕННУЮ ★★★
+    tempTheme = currentTheme;
+    
+    // Убираем активный класс у всех вариантов
+    document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.remove('theme-option-active');
+    });
+    
+    // Добавляем активный класс выбранной теме
+    const selectedOption = document.querySelector(`.theme-option[data-theme="${currentTheme}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('theme-option-active');
+    }
+    
+    openModal('themeModal');
+}
+
+/**
+ * Выбрать тему (временно, без сохранения)
+ */
+function selectTheme(theme) {
+    // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
+    tempTheme = theme;
+    
+    // Обновляем выделение в модалке
+    document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.remove('theme-option-active');
+    });
+    
+    const selectedOption = document.querySelector(`.theme-option[data-theme="${theme}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('theme-option-active');
+    }
+}
+
+/**
+ * ★★★ ПРИМЕНИТЬ ТЕМУ (ПРИ НАЖАТИИ "ГОТОВО") ★★★
+ */
+function applyTheme() {
+    // Если есть временный выбор - сохраняем его
+    if (tempTheme) {
+        localStorage.setItem(THEME_MODE_KEY, tempTheme);
+        
+        // Обновляем UI в настройках
+        updateThemeUI();
+        
+        // ★★★ ПОКАЗЫВАЕМ ТОСТ ТОЛЬКО ЗДЕСЬ ★★★
+        showToast(`✅ Тема изменена на ${tempTheme === 'light' ? 'Светлую' : 'Тёмную'}`);
+        console.log(`✅ Применена тема: ${tempTheme === 'light' ? 'Светлая ☀️' : 'Тёмная 🌙'}`);
+    }
+    
+    // Закрываем модалку
+    closeModal('themeModal');
+}
+
+// =================== ИНИЦИАЛИЗАЦИЯ ===================
+
+// При загрузке страницы обновляем UI темы
+document.addEventListener('DOMContentLoaded', function() {
+    updateThemeUI();
 });
