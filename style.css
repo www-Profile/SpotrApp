@@ -39,17 +39,16 @@ body {
 }
 
 /* ===================ТЕМЫ ==================== */
-.theme-red { --accent: #DC143C; --accent-dark: #6B0820; --accent-light: #FFD6DE; }
-.theme-orange { --accent: #FF6B35; --accent-dark: #A83A12; --accent-light: #FFE0D0; }
-.theme-yellow { --accent: #F7C948; --accent-dark: #A67D14; --accent-light: #FFEDB3; }
-.theme-green { --accent: #2ECC71; --accent-dark: #11703A; --accent-light: #D4F5E0; }
-.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #0A3318; --accent-light: #C8EAD5; }
-.theme-blue { --accent: #3498DB; --accent-dark: #135A85; --accent-light: #D4EAF7; }
-.theme-darkblue { --accent: #1a237e; --accent-dark: #080C2E; --accent-light: #D6D9F0; }
-.theme-purple { --accent: #9B59B6; --accent-dark: #55296A; --accent-light: #EAD4F0; }
-.theme-pink { --accent: #E91E8C; --accent-dark: #8D0D48; --accent-light: #FAD4E8; }
-.theme-gray { --accent: #607D8B; --accent-dark: #2E3A40; --accent-light: #D8E0E5; }
-
+.theme-red { --accent: #DC143C; --accent-dark: #4A0616; --accent-light: #ffe5ea; }
+.theme-orange { --accent: #FF6B35; --accent-dark: #6B2A0D; --accent-light: #ffe3d0; }
+.theme-yellow { --accent: #F7C948; --accent-dark: #6A5510; --accent-light: #fff2c5; }
+.theme-green { --accent: #2ECC71; --accent-dark: #0B4A28; --accent-light: #ddffda; }
+.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #082A14; --accent-light: #b3dfc4; }
+.theme-blue { --accent: #3498DB; --accent-dark: #0E3D5A; --accent-light: #D4EAF7; }
+.theme-darkblue { --accent: #1a237e; --accent-dark: #0a1030; --accent-light: #D6D9F0; }
+.theme-purple { --accent: #9B59B6; --accent-dark: #3A1A4A; --accent-light: #EAD4F0; }
+.theme-pink { --accent: #E91E8C; --accent-dark: #5A0D30; --accent-light: #ffe3f2; }
+.theme-gray { --accent: #607D8B; --accent-dark: #0F172A; --accent-light: #e7e7e7; }
 /* ===================СТРАНИЦЫ ==================== */
 .page { 
     display: none; 
@@ -192,7 +191,7 @@ body {
     align-items: center;
     gap: 1rem;
     background: var(--white);
-    padding: 0.8rem;
+    padding: 0.5rem;
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     cursor: pointer;
@@ -1156,8 +1155,9 @@ body {
 .level-block {
     background: var(--light);
     border-radius: 10px;
-    padding: 0.8rem 1rem;
-    margin: 1rem 0 1.2rem;
+    padding: 0.5rem 1rem 1rem;
+    margin: 1rem 0;
+    cursor: pointer;
 }
 
 .level-header {
@@ -1332,10 +1332,9 @@ body {
     background: var(--white);
     padding: 0.8rem 0.8rem;
     border-radius: 16px;
-    margin-bottom: 0.8rem;
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    border: 2px solid transparent;
+    border-left: 4px solid var(--accent);
 }
 
 .friend-itemMOD {
@@ -1345,11 +1344,11 @@ body {
     background: var(--light);
     padding: 0.8rem 0.8rem;
     border-radius: 16px;
-    margin-bottom: 0.8rem;
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border: 2px solid transparent;
     border: 1px solid #E2E8F0;
+    margin-bottom: 0.5rem;
 }
 
 .friend-itemMOD.selected {
@@ -1374,7 +1373,6 @@ body {
     background: var(--light);
     padding: 0.8rem 0.8rem;
     border-radius: 16px;
-    margin-bottom: 0.5rem;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border: 1px solid #E2E8F0;
 }
@@ -1444,11 +1442,10 @@ body {
 .friend-request-item {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap:0.8rem;
     background: var(--white);
     padding: 0.8rem 0.8rem;
     border-radius: 16px;
-    margin-bottom: 0.8rem;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border-left: 4px solid var(--accent);
 }
@@ -1509,7 +1506,6 @@ body {
 
 .friend-request-item > div {
     display: flex;
-    gap: 0.3rem;
     flex-shrink: 0;
 }
 
@@ -1551,10 +1547,6 @@ body {
     justify-content: center;
     flex-shrink: 0;
     border-radius: 50%;
-}
-
-.friend-delete-btn:active {
-    opacity: 0.6;
 }
 
 /* ===== ПУСТЫЕ СОСТОЯНИЯ ===== */
@@ -1618,7 +1610,6 @@ body {
     color: var(--slate);
     font-size: 0.9rem;
     text-align: center;
-    margin-bottom: 0.8rem;
     word-break: break-all;
 }
 
@@ -1836,7 +1827,7 @@ font-style: italic;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.8rem;
-    margin: 2.5rem 0;
+    margin: 2rem 0 0 0;
 }
 
 .hero-buttons {
@@ -1844,7 +1835,7 @@ font-style: italic;
     flex-direction: column;
     gap: 0.8rem;
     align-items: center;
-    margin-top: 2rem;
+    margin-top: 1rem;
     width: 100%;
 }
 
@@ -1856,11 +1847,9 @@ font-style: italic;
 
 /* ===================FEATURE ==================== */
 .feature {
-    background: var(--white);
-    padding: 1rem 0.5rem;
+    background: none;
+    padding: 1rem;
     border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(220, 20, 60, 0.05);
     text-align: center;
     min-width: 0;
     overflow: hidden;
@@ -2623,7 +2612,7 @@ font-style: italic;
     }
 
     .item-card {
-        padding: 0.6rem 0.6rem;
+        padding: 0.5rem;
     }
 
     .item-icon {
@@ -3040,7 +3029,7 @@ textarea.error {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: var(--light);
+    background: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3082,7 +3071,18 @@ textarea.error {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: var(--bg-primary);
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.theme-option-iconSistem {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3106,12 +3106,18 @@ textarea.error {
     text-overflow: ellipsis;
 }
 
-/* ★★★ ИКОНКА СОЛНЦА ★★★ */
 .theme-option-iconDark i {
     font-size: 1.5rem;
 }
 .theme-option-iconDark .fa-moon {
     color: var(--gold);
+}
+
+.theme-option-iconSistem i {
+    font-size: 1.5rem;
+}
+.theme-option-iconSistem .fa-cloud-sun-rain {
+    color: var(--slate);
 }
 
 /* ★★★ ПОКАЗЫВАЕМ ГАЛОЧКУ У АКТИВНОГО ВАРИАНТА ★★★ */
@@ -3442,6 +3448,46 @@ body.theme-dark-mode .color-btn-active {
     border-color: var(--light);
 }
 
+body.theme-dark-mode .friend-result-item .friend-avatar {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .friend-result-item {
+    border: 1px solid var(--bg-primary);
+}
+
+body.theme-dark-mode .friend-result-item .friend-result-info strong {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .friend-result-item .friend-result-info span {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .friend-request-item .friend-avatar {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .friend-request-item .friend-result-info strong {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .friend-request-item .friend-result-info span {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode  .friend-avatar {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode  .friend-info strong {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode  .friend-info span {
+    color: var(--text-secondary);
+}
+
 /* ★★★ ИКОНКИ В КАРТОЧКАХ (ДЛЯ РЕЙТИНГА) ★★★ */
 body.theme-dark-mode .item-icon {
     background: var(--accent-dark) !important;
@@ -3517,7 +3563,7 @@ body.theme-dark-mode .settings-icon {
 }
 
 body.theme-dark-mode .settings-icon-danger {
-    background: #6B0820  !important;
+    background: #4A0616  !important;
     color: #EF4444 !important;
 }
 
@@ -3622,4 +3668,316 @@ body.theme-dark-mode ::-webkit-scrollbar-track {
 body.theme-dark-mode ::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 4px;
+}
+
+/* =================== СТРАНИЦЫ РЕГИСТРАЦИИ И ВХОДА В ТЁМНОЙ ТЕМЕ ==================== */
+
+/* Фон страниц */
+body.theme-dark-mode #page-register,
+body.theme-dark-mode #page-register-email,
+body.theme-dark-mode #page-register-password,
+body.theme-dark-mode #page-register-verify,
+body.theme-dark-mode #page-login,
+body.theme-dark-mode #page-login-password {
+    background: var(--bg-primary) !important;
+}
+
+/* Контейнер */
+body.theme-dark-mode .auth-container {
+    background: var(--bg-primary);
+}
+
+/* Карточка */
+body.theme-dark-mode .auth-card {
+    background: var(--bg-secondary);
+    box-shadow: 0 8px 40px var(--shadow-color);
+}
+
+/* Заголовки */
+body.theme-dark-mode .auth-title {
+    background: var(--accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.theme-dark-mode .auth-card-title {
+    color: var(--text-primary);
+}
+
+/* Поля ввода */
+body.theme-dark-mode .form-input {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+body.theme-dark-mode .form-input::placeholder {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .form-label {
+    color: var(--text-primary);
+}
+
+/* Ссылки */
+body.theme-dark-mode .auth-switch {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .auth-switch a {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .auth-switch a:hover {
+    color: var(--accent);
+}
+
+/* Текст подтверждения */
+body.theme-dark-mode #page-register-verify p {
+    color: var(--text-secondary) !important;
+}
+
+body.theme-dark-mode #page-register-verify .auth-card p:first-of-type {
+    color: var(--text-primary) !important;
+}
+
+/* Иконка письма */
+body.theme-dark-mode #page-register-verify div[style*="font-size: 3rem"] {
+    filter: brightness(0.9);
+}
+
+/* Ошибки */
+body.theme-dark-mode .form-input.error {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Кнопки */
+body.theme-dark-mode .btn-primary {
+    background: var(--accent);
+    color: var(--white);
+}
+
+body.theme-dark-mode .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+body.theme-dark-mode .btn-secondary:hover {
+    background: var(--accent-dark);
+    color: var(--white);
+}
+
+body.theme-dark-mode .btn-danger {
+    background: var(--danger);
+    color: var(--white);
+}
+
+/* Hero страница */
+body.theme-dark-mode .hero {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+body.theme-dark-mode .hero-title {
+    background: var(--accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.theme-dark-mode .feature {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .feature span {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .hero-buttons .btn {
+    background: var(--accent);
+    color: var(--white);
+}
+
+/* Страница загрузки */
+body.theme-dark-mode #page-loading .hero {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+body.theme-dark-mode #page-loading .hero-title {
+    background: var(--accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Тёмная тема */
+body.theme-dark-mode .achievement-icon.locked {
+    background: var(--bg-primary) !important;
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .achievement-icon.unlocked {
+    background: var(--gold) !important;
+    color: var(--dark) !important;
+    border-color: var(--gold);
+}
+
+/* Тёмная тема */
+body.theme-dark-mode .achievement-modal-item {
+    border-bottom-color: var(--border-color);
+}
+
+body.theme-dark-mode .achievement-modal-name {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .achievement-modal-desc {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .achievement-modal-progress-text.locked {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .achievement-modal-progress-text.unlocked {
+    color: var(--text-primary);
+}
+
+/* ★★★ ТАЙМЕР ОТДЫХА ★★★ */
+.session-rest-timer {
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    text-shadow: 0 4px 20px rgba(220, 20, 60, 0.15);
+    position: relative;
+    z-index: 2;
+}
+
+.session-rest-timer-small {
+    font-size: 1.2rem;
+}
+
+/* Анимация пульсации для таймера отдыха */
+@keyframes restPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+.session-rest-timer {
+    animation: restPulse 2s ease-in-out infinite;
+}
+
+/* =================== ДОСТИЖЕНИЯ ==================== */
+.achievements-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.8rem;
+    gap: 2rem;
+}
+
+.achievements-container.hidden {
+    display: none !important;
+}
+
+.achievement-icon {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.achievement-icon.unlocked {
+    color: var(--gold) !important;
+}
+
+.achievement-icon.locked {
+    color: #E2E8F0 !important;
+}
+
+/* =================== ДОСТИЖЕНИЯ В МОДАЛКЕ ==================== */
+.achievement-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.achievement-modal-item:last-child {
+    border-bottom: none;
+    padding: 0.5rem 0rem 0rem 0rem;
+}
+
+.achievement-modal-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.achievement-modal-icon.unlocked {
+    color: var(--accent);
+    background-color: none;
+}
+
+.achievement-modal-icon.locked {
+    color: var(--accent);
+    background-color: none;
+}
+
+.achievement-modal-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.achievement-modal-name {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.achievement-modal-desc {
+    font-size: 0.8rem;
+    color: var(--slate);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.achievement-modal-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.achievement-modal-progress-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.achievement-modal-progress-text.unlocked {
+    color: var(--slate);
+}
+
+.achievement-modal-progress-text.locked {
+    color: var(--slate);
 }

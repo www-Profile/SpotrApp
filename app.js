@@ -359,7 +359,36 @@ const exercisesData = {
                 { name: 'Поза верблюда', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
                 { name: 'Складка с захватом стоп', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' }
             ]
-        }
+        },
+        'Растяжка позвоночника': {
+        '1 LVL': [
+            { name: 'Вис на турнике (расслабленный)', category: 'Спина', reps: '15 сек', sets: '3', icon: 'stretching' },
+            { name: 'Наклоны вперёд сидя', category: 'Спина', reps: '20 сек', sets: '3', icon: 'stretching' },
+            { name: 'Кошка-корова', category: 'Спина', reps: '10', sets: '3', icon: 'stretching' },
+            { name: 'Растяжка спины на полу (скручивание)', category: 'Спина', reps: '20 сек', sets: '3', icon: 'stretching' },
+            { name: 'Поза ребёнка', category: 'Спина', reps: '20 сек', sets: '3', icon: 'stretching' },
+            { name: 'Наклоны в стороны стоя', category: 'Спина', reps: '15 сек', sets: '3', icon: 'stretching' }
+        ],
+        '2 LVL': [
+            { name: 'Вис на турнике с отягощением', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Глубокий наклон вперёд с захватом ног', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Кошка-корова с задержкой', category: 'Спина', reps: '15', sets: '4', icon: 'stretching' },
+            { name: 'Скручивание лёжа (позвоночник)', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Поза голубя', category: 'Ягодицы', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Наклоны в стороны с весом', category: 'Спина', reps: '20 сек', sets: '4', icon: 'stretching' },
+            { name: 'Растяжка спины на фитболе', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' }
+        ],
+        '3 LVL': [
+            { name: 'Вис на турнике с подтягиванием коленей', category: 'Спина', reps: '35 сек', sets: '4', icon: 'stretching' },
+            { name: 'Глубокий наклон с захватом стоп', category: 'Спина', reps: '35 сек', sets: '4', icon: 'stretching' },
+            { name: 'Поза верблюда', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Скручивание позвоночника сидя', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' },
+            { name: 'Поза лука', category: 'Спина', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Растяжка спины с резинкой', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' },
+            { name: 'Стойка на лопатках (плечи)', category: 'Плечи', reps: '25 сек', sets: '4', icon: 'stretching' },
+            { name: 'Мост (позвоночник)', category: 'Спина', reps: '30 сек', sets: '4', icon: 'stretching' }
+        ]
+    }
     },
     // ===================ОСОБЫЕ (PREMIUM) ===================
     'Особые': {
@@ -508,22 +537,23 @@ function getWorkoutIcon(workout) {
     
     // 2. Если есть категория - определяем по ней
     if (workout.category) {
-        const categoryToIcon = {
-            'Руки': 'bodybuilding',
-            'Плечи': 'shoulder',
-            'Пресс': 'press',
-            'Грудь': 'breast',
-            'Спина': 'back',
-            'Ноги': 'legs',
-            'Всё тело': 'WholeBody',
-            'Кардио': 'cardio',
-            'Гибкость': 'stretching',
-            'Зарядка': 'charging',
-            'Пилатес': 'Pilates',
-            'Кроссфит': 'crossfit',
-            'Мужская сила': 'men',
-            'Женское счастье': 'woman'
-        };
+const categoryToIcon = {
+    'Руки': 'bodybuilding',
+    'Плечи': 'shoulder',
+    'Пресс': 'press',
+    'Грудь': 'breast',
+    'Спина': 'back',
+    'Ноги': 'legs',
+    'Всё тело': 'WholeBody',
+    'Кардио': 'cardio',
+    'Гибкость': 'stretching',
+    'Зарядка': 'charging',
+    'Пилатес': 'Pilates',
+    'Кроссфит': 'crossfit',
+    'Мужская сила': 'men',
+    'Женское счастье': 'woman',
+    'Растяжка позвоночника': 'stretching' // ← ДОБАВИТЬ
+};
         if (categoryToIcon[workout.category]) {
             return categoryToIcon[workout.category];
         }
@@ -531,22 +561,23 @@ function getWorkoutIcon(workout) {
     
     // 3. По названию
     const title = workout.title || '';
-    const titleToIcon = {
-        'Руки': 'bodybuilding',
-        'Плечи': 'shoulder',
-        'Пресс': 'press',
-        'Грудь': 'breast',
-        'Спина': 'back',
-        'Ноги': 'legs',
-        'Всё тело': 'WholeBody',
-        'Кардио': 'cardio',
-        'Растяжка': 'stretching',
-        'Зарядка': 'charging',
-        'Пилатес': 'Pilates',
-        'Кроссфит': 'crossfit',
-        'Мужская сила': 'men',
-        'Женское счастье': 'woman'
-    };
+const titleToIcon = {
+    'Руки': 'bodybuilding',
+    'Плечи': 'shoulder',
+    'Пресс': 'press',
+    'Грудь': 'breast',
+    'Спина': 'back',
+    'Ноги': 'legs',
+    'Всё тело': 'WholeBody',
+    'Кардио': 'cardio',
+    'Растяжка': 'stretching',
+    'Зарядка': 'charging',
+    'Пилатес': 'Pilates',
+    'Кроссфит': 'crossfit',
+    'Мужская сила': 'men',
+    'Женское счастье': 'woman',
+    'Растяжка позвоночника': 'stretching' // ← ДОБАВИТЬ
+};
     for (const [key, icon] of Object.entries(titleToIcon)) {
         if (title.includes(key)) return icon;
     }
@@ -1414,25 +1445,17 @@ function formatTime(seconds) {
 // =================== ИСПРАВЛЕННЫЙ markCurrentComplete ===================
 const originalMarkComplete = markCurrentComplete;
 markCurrentComplete = function() {
-    console.log('🔥🔥🔥 [markCurrentComplete] НАЧАЛО');
-    console.log('🔥 [markCurrentComplete] currentSessionId:', currentSessionId);
-    console.log('🔥 [markCurrentComplete] sessionCurrentIndex:', sessionCurrentIndex);
-    console.log('🔥 [markCurrentComplete] sessionExercises.length:', sessionExercises.length);
-    console.log('🔥 [markCurrentComplete] sessionCompleted.size:', sessionCompleted.size);
-    console.log('🔥 [markCurrentComplete] isHost:', isHost);
-    
-    // Отмечаем текущее упражнение как выполненное
+    console.log('🔥 [markCurrentComplete] НАЧАЛО');
     const isLast = sessionCurrentIndex === sessionExercises.length - 1;
-    console.log('🔥 [markCurrentComplete] isLast:', isLast);
     sessionCompleted.add(sessionCurrentIndex);
-    console.log('🔥 [markCurrentComplete] sessionCompleted.size после добавления:', sessionCompleted.size);
-    
+    console.log('🔥 [markCurrentComplete] isLast:', isLast);
     if (isLast) {
         console.log('🏁 [markCurrentComplete] Это последнее упражнение, вызываем finishTrainingSession');
         finishTrainingSession();
     } else {
-        console.log('➡️ [markCurrentComplete] Не последнее, вызываем goToNextExercise');
-        goToNextExercise();
+        // Запускаем отдых вместо перехода к следующему упражнению
+        console.log('⏳ [markCurrentComplete] Запускаем отдых');
+        startRest();
     }
     console.log('✅ [markCurrentComplete] ЗАВЕРШЕНА');
 };
@@ -1733,6 +1756,15 @@ async function sendCoopInvite(friendId, friendName) {
 // =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ===================
 const originalFinish = finishTrainingSession;
 finishTrainingSession = async function() {
+    // ★★★ ИСПРАВЛЕННЫЙ БЛОК ОСТАНОВКИ ТАЙМЕРА ОТДЫХА ★★★
+    if (isResting) {
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+        }
+        isResting = false;   // сбрасываем флаг
+    }
+   
     console.log('🔥🔥🔥 [finishTrainingSession] НАЧАЛО');
     
     // ЛОГ: проверяем все ключевые переменные
@@ -1995,6 +2027,8 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
                     console.log('✅ [coopFinishDoneBtn] Профиль обновлён, XP добавлен');
                 }
                 showToast('💾 Тренировка сохранена');
+                // После сохранения или добавления в офлайн-очередь
+await updateAchievementsAfterWorkout();
             } else {
                 addPendingWorkout(workoutData);
                 showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
@@ -2474,7 +2508,7 @@ function getDefaultWorkoutsLayout() {
     return {
         workoutsBlocksContainer: ['strength', 'fitness', 'premium'],
         catalogGridStrength: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Всё тело'],
-        catalogGridFitness: ['Зарядка', 'Кардио', 'Пилатес', 'Растяжка'],
+        catalogGridFitness: ['Зарядка', 'Кардио', 'Пилатес', 'Растяжка', 'Растяжка позвоночника'],
         catalogGridPremium: ['Кроссфит', 'Мужская сила', 'Женское счастье'],
         myWorkoutsList: []
     };
@@ -2750,13 +2784,14 @@ function resolveWorkoutCategory(category, parentCategory, isPremium) {
         return category;
     }
 
-    if (parentCategory === 'Фитнес') {
-        if (category === 'Кардио') return 'Кардио';
-        if (category === 'Растяжка') return 'Гибкость';
-        if (category === 'Пилатес') return 'Всё тело';
-        if (category === 'Зарядка') return 'Зарядка';
-        return category;
-    }
+if (parentCategory === 'Фитнес') {
+    if (category === 'Кардио') return 'Кардио';
+    if (category === 'Растяжка') return 'Гибкость';
+    if (category === 'Растяжка позвоночника') return 'Гибкость'; // ← ДОБАВИТЬ
+    if (category === 'Пилатес') return 'Всё тело';
+    if (category === 'Зарядка') return 'Зарядка';
+    return category;
+}
 
     if (parentCategory === 'Силовые') {
         if (category === 'Всё тело') return 'Всё тело';
@@ -2885,11 +2920,52 @@ async function deleteWorkoutFromFirestore(workoutId) {
 }
 
 // ===================УПРАВЛЕНИЕ ЦВЕТОМ ===================
-function setTheme(color) {
-    document.body.className = 'theme-' + color;
-    localStorage.setItem('themeColor', color);
-    updateColorButtons(color);
-    updateColorStatus(color);
+let tempColor = null;
+
+function openColorModal() {
+    const currentColor = localStorage.getItem('themeColor') || 'red';
+    tempColor = currentColor;
+    
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('color-btn-active', btn.dataset.color === currentColor);
+    });
+    openModal('colorModal');
+}
+
+function selectColor(color) {
+    tempColor = color;
+    
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('color-btn-active', btn.dataset.color === color);
+    });
+}
+
+function applyColor() {
+    if (tempColor) {
+        const currentColor = localStorage.getItem('themeColor') || 'red';
+        
+        if (tempColor !== currentColor) {
+            // ★★★ ПРИМЕНЯЕМ ЦВЕТ ТОЛЬКО ЗДЕСЬ ★★★
+            const isDarkMode = document.body.classList.contains('theme-dark-mode');
+            document.body.className = 'theme-' + tempColor;
+            if (isDarkMode) {
+                document.body.classList.add('theme-dark-mode');
+            }
+            
+            localStorage.setItem('themeColor', tempColor);
+            updateColorButtons(tempColor);
+            updateColorStatus(tempColor);
+            
+            const colorNames = {
+                'red': 'Красный', 'orange': 'Оранжевый', 'yellow': 'Желтый',
+                'green': 'Зеленый', 'darkgreen': 'Темно-зеленый', 'blue': 'Голубой',
+                'darkblue': 'Синий', 'purple': 'Фиолетовый', 'pink': 'Розовый', 'gray': 'Серый'
+            };
+            showToast(`✅ Акцентный цвет изменён на ${colorNames[tempColor] || tempColor}`);
+        }
+    }
+    
+    closeModal('colorModal');
 }
 
 function updateColorButtons(color) {
@@ -2910,8 +2986,11 @@ function updateColorStatus(color) {
     }
 }
 
+// Инициализация при загрузке
 const savedColor = localStorage.getItem('themeColor') || 'red';
-setTheme(savedColor);
+document.body.className = 'theme-' + savedColor;
+updateColorButtons(savedColor);
+updateColorStatus(savedColor);
 
 // ===================НАВИГАЦИЯ ===================
 window.navigateTo = function(page, params) {
@@ -3115,7 +3194,8 @@ const CATEGORY_ICON_MAP = {
     'Пилатес': 'Pilates',
     'Кроссфит': 'crossfit',
     'Мужская сила': 'men',
-    'Женское счастье': 'woman'
+    'Женское счастье': 'woman',
+    'Растяжка позвоночника': 'stretching' // ← ДОБАВИТЬ
 };
 const icon = CATEGORY_ICON_MAP[category] || 'bodybuilding';
 
@@ -3284,22 +3364,23 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             displayTitle = category + ' ' + (level || '1 LVL');
         }
 
-        const CATEGORY_ICON_MAP = {
-            'Руки': 'bodybuilding',
-            'Плечи': 'shoulder',
-            'Пресс': 'press',
-            'Грудь': 'breast',
-            'Спина': 'back',
-            'Ноги': 'legs',
-            'Всё тело': 'WholeBody',
-            'Кардио': 'cardio',
-            'Растяжка': 'stretching',
-            'Зарядка': 'charging',
-            'Пилатес': 'Pilates',
-            'Кроссфит': 'crossfit',
-            'Мужская сила': 'men',
-            'Женское счастье': 'woman'
-        };
+const CATEGORY_ICON_MAP = {
+    'Руки': 'bodybuilding',
+    'Плечи': 'shoulder',
+    'Пресс': 'press',
+    'Грудь': 'breast',
+    'Спина': 'back',
+    'Ноги': 'legs',
+    'Всё тело': 'WholeBody',
+    'Кардио': 'cardio',
+    'Растяжка': 'stretching',
+    'Зарядка': 'charging',
+    'Пилатес': 'Pilates',
+    'Кроссфит': 'crossfit',
+    'Мужская сила': 'men',
+    'Женское счастье': 'woman',
+    'Растяжка позвоночника': 'stretching' // ← ДОБАВИТЬ
+};
         workoutIcon = CATEGORY_ICON_MAP[category] || 'bodybuilding';
     }
 
@@ -3430,6 +3511,105 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
     }
 }
 
+// ========== ДОБАВЛЯЕМ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+// (после объявления sessionWorkoutIcon)
+let isResting = false;
+let restTimerInterval = null;
+let restSeconds = 30;
+
+// ========== НОВЫЕ ФУНКЦИИ УПРАВЛЕНИЯ ОТДЫХОМ ==========
+
+// Запуск отдыха
+function startRest() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    isResting = true;
+    restSeconds = 30;
+    updateRestUI();
+    startRestTimer();
+}
+
+// Обновление интерфейса отдыха
+function updateRestUI() {
+    // Скрываем кнопку редактирования
+    document.getElementById('sessionEditBtn').style.display = 'none';
+    
+    // Меняем название упражнения на "Отдых"
+    document.getElementById('sessionExerciseName').textContent = 'Отдых';
+    // Очищаем детали (ниже будет большой таймер)
+    document.getElementById('sessionExerciseDetails').textContent = '';
+    
+    // Меняем текст главной кнопки
+    document.getElementById('sessionMainBtn').textContent = 'ПРОПУСТИТЬ';
+    
+    // Показываем большой таймер, скрываем фоновый текст
+    const bgText = document.querySelector('.session-bg-text');
+    const restTimer = document.getElementById('sessionRestTimer');
+    if (bgText) bgText.style.display = 'none';
+    if (restTimer) {
+        restTimer.style.display = 'block';
+        restTimer.textContent = formatTime(restSeconds);
+    }
+}
+
+// Запуск таймера отдыха
+function startRestTimer() {
+    restTimerInterval = setInterval(() => {
+        restSeconds--;
+        const restTimer = document.getElementById('sessionRestTimer');
+        if (restTimer) {
+            restTimer.textContent = formatTime(restSeconds);
+        }
+        if (restSeconds <= 0) {
+            finishRest();
+        }
+    }, 1000);
+}
+
+// Завершение отдыха (переход к следующему упражнению)
+function finishRest() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    isResting = false;
+    
+    // Восстанавливаем обычный вид
+    const bgText = document.querySelector('.session-bg-text');
+    const restTimer = document.getElementById('sessionRestTimer');
+    if (bgText) bgText.style.display = 'block';
+    if (restTimer) restTimer.style.display = 'none';
+    
+    // Переходим к следующему упражнению
+    sessionCurrentIndex++;
+    renderSessionExercise();
+    renderSessionProgress();
+    updateSessionButtons();
+    document.getElementById('sessionEditBtn').style.display = 'block';
+}
+
+function skipRest() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+    }
+    isResting = false;
+    
+    // Восстанавливаем обычный вид
+    const bgText = document.querySelector('.session-bg-text');
+    const restTimer = document.getElementById('sessionRestTimer');
+    if (bgText) bgText.style.display = 'block';
+    if (restTimer) restTimer.style.display = 'none';
+    
+    sessionCurrentIndex++;
+    renderSessionExercise();
+    renderSessionProgress();
+    updateSessionButtons();
+    document.getElementById('sessionEditBtn').style.display = 'block';
+}
+
 // ===================СТРАНИЦА ТРЕНИРОВКИ СЕССИЯ ===================
 let sessionExercises = [];
 let sessionCurrentIndex = 0;
@@ -3490,15 +3670,17 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
 }
 
 function renderSessionExercise() {
+    if (isResting) {
+        // Отдых уже отображается через updateRestUI, но на случай повторного вызова
+        updateRestUI();
+        return;
+    }
     const ex = sessionExercises[sessionCurrentIndex];
     if (!ex) return;
-
     document.getElementById('sessionExerciseName').textContent = ex.name;
-
     const repsStr = String(ex.reps || '');
     const isSeconds = repsStr.includes('сек') || repsStr.includes('с');
     const repsValue = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
-
     let details = '';
     if (isSeconds) {
         const mins = String(Math.floor(repsValue / 60)).padStart(2, '0');
@@ -3507,17 +3689,10 @@ function renderSessionExercise() {
     } else {
         details = `${ex.sets} × ${repsValue}`;
     }
-
     document.getElementById('sessionExerciseDetails').textContent = details;
-    
-    // ★★★ ОБНОВЛЯЕМ КНОПКУ РЕДАКТИРОВАНИЯ ★★★
-    const editBtn = document.getElementById('sessionEditBtn');
-    if (editBtn) {
-        editBtn.onclick = function() {
-            // ★★★ ВСЕГДА ПЕРЕДАЁМ fromSession = true ★★★
-            openExerciseModal(sessionCurrentIndex, true);
-        };
-    }
+    // Показываем кнопку редактирования (если не отдых)
+    document.getElementById('sessionEditBtn').style.display = 'block';
+    // Восстанавливаем текст главной кнопки (будет обновлён в updateSessionButtons)
 }
 
 function renderSessionProgress() {
@@ -3540,11 +3715,22 @@ function updateSessionButtons() {
     const total = sessionExercises.length;
     const isFirst = sessionCurrentIndex === 0;
     const isLast = sessionCurrentIndex === total - 1;
-
     const prevBtn = document.getElementById('sessionPrevBtn');
     const nextBtn = document.getElementById('sessionNextBtn');
     const mainBtn = document.getElementById('sessionMainBtn');
 
+    if (isResting) {
+        // Режим отдыха
+        prevBtn.style.visibility = 'visible';
+        prevBtn.style.pointerEvents = 'auto';
+        nextBtn.style.visibility = 'visible';
+        nextBtn.style.pointerEvents = 'auto';
+        mainBtn.textContent = 'ПРОПУСТИТЬ';
+        // Кнопка редактирования скрыта (уже скрыта в updateRestUI)
+        return;
+    }
+
+    // Обычный режим
     if (isFirst) {
         prevBtn.style.visibility = 'visible';
         prevBtn.style.pointerEvents = 'none';
@@ -3552,7 +3738,6 @@ function updateSessionButtons() {
         prevBtn.style.visibility = 'visible';
         prevBtn.style.pointerEvents = 'auto';
     }
-
     if (isLast) {
         nextBtn.style.visibility = 'visible';
         nextBtn.style.pointerEvents = 'auto';
@@ -3565,25 +3750,45 @@ function updateSessionButtons() {
 }
 
 function goToPrevExercise() {
+    console.log('🔥 [goToPrevExercise] НАЧАЛО');
+    // Если мы на отдыхе – отменяем отдых и переходим к предыдущему упражнению (i-1)
+    if (isResting) {
+        console.log('⏪ [goToPrevExercise] Отменяем отдых, переходим к предыдущему');
+        if (restTimerInterval) {
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+        }
+        isResting = false;
+        if (sessionCurrentIndex > 0) {
+            sessionCurrentIndex--;
+        }
+        renderSessionExercise();
+        renderSessionProgress();
+        updateSessionButtons();
+        document.getElementById('sessionEditBtn').style.display = 'block';
+        return;
+    }
+    // Обычная логика
     if (sessionCurrentIndex > 0) {
         sessionCurrentIndex--;
         renderSessionExercise();
         renderSessionProgress();
         updateSessionButtons();
     }
+    console.log('✅ [goToPrevExercise] ЗАВЕРШЕНА');
 }
 
 function goToNextExercise() {
-    console.log('🔥🔥🔥 [goToNextExercise] НАЧАЛО');
-    console.log('🔥 [goToNextExercise] sessionCurrentIndex:', sessionCurrentIndex);
-    console.log('🔥 [goToNextExercise] sessionExercises.length:', sessionExercises.length);
-    console.log('🔥 [goToNextExercise] sessionCompleted.has(sessionCurrentIndex):', sessionCompleted.has(sessionCurrentIndex));
-    
-    // ★★★ ПРОВЕРЯЕМ, ЕСТЬ ЛИ СЛЕДУЮЩЕЕ УПРАЖНЕНИЕ ★★★
+    console.log('🔥 [goToNextExercise] НАЧАЛО');
+    // Если мы на отдыхе – пропускаем его
+    if (isResting) {
+        console.log('⏭️ [goToNextExercise] Пропускаем отдых');
+        skipRest();
+        return;
+    }
+    // Обычная логика (как была)
     const hasNext = sessionCurrentIndex < sessionExercises.length - 1;
-    
     if (hasNext) {
-        // Есть следующее упражнение — обычная логика
         if (!sessionCompleted.has(sessionCurrentIndex)) {
             showConfirmModal(
                 'Упражнение не выполнено',
@@ -3611,11 +3816,9 @@ function goToNextExercise() {
             }
         }
     } else {
-        // ★★★ ЭТО ПОСЛЕДНЕЕ УПРАЖНЕНИЕ ★★★
+        // Последнее упражнение – завершаем (но сюда не попадём, т.к. там отдых не запускается)
         console.log('🏁 [goToNextExercise] Это последнее упражнение');
-        
         if (!sessionCompleted.has(sessionCurrentIndex)) {
-            // Последнее упражнение НЕ ВЫПОЛНЕНО — спрашиваем
             showConfirmModal(
                 'Упражнение не выполнено',
                 'Вы пропускаете последнее упражнение. Оно не засчитается в статистику. Завершить тренировку?',
@@ -3626,7 +3829,6 @@ function goToNextExercise() {
                 'Завершить'
             );
         } else {
-            // Последнее упражнение выполнено — завершаем
             console.log('✅ [goToNextExercise] Последнее упражнение выполнено, завершаем');
             finishTrainingSession();
         }
@@ -3671,6 +3873,16 @@ function stopSessionTimer() {
         clearInterval(sessionTimerInterval);
         sessionTimerInterval = null;
     }
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        isResting = false;
+        // Восстанавливаем вид
+        const bgText = document.querySelector('.session-bg-text');
+        const restTimer = document.getElementById('sessionRestTimer');
+        if (bgText) bgText.style.display = 'block';
+        if (restTimer) restTimer.style.display = 'none';
+    }
 }
 
 function updateSessionTimerDisplay() {
@@ -3682,7 +3894,13 @@ function updateSessionTimerDisplay() {
 // ===================КНОПКИ СЕССИИ ===================
 document.getElementById('sessionPrevBtn')?.addEventListener('click', goToPrevExercise);
 document.getElementById('sessionNextBtn')?.addEventListener('click', goToNextExercise);
-document.getElementById('sessionMainBtn')?.addEventListener('click', markCurrentComplete);
+document.getElementById('sessionMainBtn')?.addEventListener('click', function() {
+    if (isResting) {
+        skipRest();
+    } else {
+        markCurrentComplete();
+    }
+});
 
 // ===================КРЕСТИК СЕССИИ ===================
 document.getElementById('sessionCloseBtn')?.addEventListener('click', function() {
@@ -4052,22 +4270,23 @@ function loadEditPage(category, isCustom, id, level, exercises) {
     // ★★★ ВОССТАНАВЛИВАЕМ СОХРАНЁННЫЙ ЗНАЧОК ★★★
     if (isCustom || id === 'new') {
         // Определяем дефолтный значок для категории
-        const defaultIconMap = {
-            'Руки': 'bodybuilding',
-            'Плечи': 'shoulder',
-            'Пресс': 'press',
-            'Грудь': 'breast',
-            'Спина': 'back',
-            'Ноги': 'legs',
-            'Всё тело': 'WholeBody',
-            'Кардио': 'cardio',
-            'Растяжка': 'stretching',
-            'Зарядка': 'charging',
-            'Пилатес': 'Pilates',
-            'Кроссфит': 'crossfit',
-            'Мужская сила': 'men',
-            'Женское счастье': 'woman'
-        };
+const defaultIconMap = {
+    'Руки': 'bodybuilding',
+    'Плечи': 'shoulder',
+    'Пресс': 'press',
+    'Грудь': 'breast',
+    'Спина': 'back',
+    'Ноги': 'legs',
+    'Всё тело': 'WholeBody',
+    'Кардио': 'cardio',
+    'Растяжка': 'stretching',
+    'Зарядка': 'charging',
+    'Пилатес': 'Pilates',
+    'Кроссфит': 'crossfit',
+    'Мужская сила': 'men',
+    'Женское счастье': 'woman',
+    'Растяжка позвоночника': 'stretching' // ← ДОБАВИТЬ
+};
         
         // Определяем, какой значок устанавливать
         let iconToSet = savedIcon;
@@ -4952,6 +5171,23 @@ showNotification('🎉', `Поздравляем! Вы достигли ${curren
     localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
     initProfileBlocks();
     switchProfileTab(activeProfileTab);
+
+    // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ★★★
+    // Отображаем текущие достижения в интерфейсе
+    renderAchievements();
+    // ★★★ ЗАГРУЖАЕМ НАСТРОЙКУ ВИДИМОСТИ ДОСТИЖЕНИЙ ★★★
+loadAchievementsVisibility();
+    
+    // Проверяем достижения в фоне и обновляем, если что-то изменилось
+    try {
+        const results = await checkAllAchievements(user.uid);
+        if (results) {
+            // Если достижения обновились, перерисовываем иконки
+            renderAchievements();
+        }
+    } catch (error) {
+        console.warn('Ошибка проверки достижений:', error);
+    }
 }
 
 // ===================ПРОФИЛЬ - РЕДАКТИРОВАНИЕ ===================
@@ -5880,6 +6116,8 @@ async function acceptFriendRequest(requestId, fromUserId) {
             shownFriendNotifications.push(fromUserId);
             localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
         }
+
+        await updateAchievementsAfterWorkout();
         
         // ★★★ УВЕДОМЛЕНИЕ ДЛЯ ИНИЦИАТОРА ЗАЯВКИ (через Firestore) ★★★
         try {
@@ -6047,8 +6285,7 @@ async function renderFriendsInProfile() {
             });
         }
     }
-    
-    // Загружаем заявки
+
     // Загружаем заявки
     const requests = await getFriendRequests();
     if (requests.success && requests.data.length > 0) {
@@ -6088,18 +6325,20 @@ showNotification('📧', `У вас новая заявка в друзья от
         const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
         const prevFriendIds = prevFriends.map(f => f.id);
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
-        friends.data.forEach(f => {
-            const friendId = f.id;
-            if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
-showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
-    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
-    TabManager.profile('friends');
-    window.navigateTo('profile');
-    setTimeout(() => renderFriendsInProfile(), 300);
-});                shownFriendNotifications.push(friendId);
-                localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
-            }
+friends.data.forEach(f => {
+    const friendId = f.id;
+    const friendName = f.displayName || 'Пользователь';
+    if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
+        showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
+            // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
+            TabManager.profile('friends');
+            window.navigateTo('profile');
+            setTimeout(() => renderFriendsInProfile(), 300);
         });
+        shownFriendNotifications.push(friendId);
+        localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
+    }
+});
         localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
         friendsHtml = friends.data.map(f => {
             const initial = (f.displayName || 'П')[0].toUpperCase();
@@ -6129,6 +6368,17 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         }
         
         const userData = result.data;
+        
+        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ПОЛЬЗОВАТЕЛЯ ★★★
+        const achievements = userData.achievements || {};
+        updateAchievementsUI('friendRequestAchievements', achievements);
+        
+        // ★★★ УЧИТЫВАЕМ ВИДИМОСТЬ ДОСТИЖЕНИЙ ★★★
+        const visible = getAchievementsVisibility();
+        const container = document.getElementById('friendRequestAchievements');
+        if (container) {
+            container.classList.toggle('hidden', !visible);
+        }
         
         // Загружаем тренировки
         const workoutsResult = await getUserWorkoutsFromFirestore(fromUserId);
@@ -6281,6 +6531,7 @@ window.removeFriend = async function(friendId) {
                 
                 await renderFriendsInProfile();
                 showToast(`✅ ${friendName} удалён из друзей`);
+                await updateAchievementsAfterWorkout();
             } catch (error) {
                 console.error('Ошибка удаления друга:', error);
                 showToast('❌ Ошибка при удалении друга');
@@ -7430,7 +7681,6 @@ function toggleEditWorkout() {
     );
 }
 
-// ===================ИНИЦИАЛИЗАЦИЯ ===================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('SportApp загружен!');
     
@@ -7469,13 +7719,17 @@ document.addEventListener('DOMContentLoaded', function() {
         TabManager.applyAll();
     }, 100);
 
-        // ★★★ ИНИЦИАЛИЗИРУЕМ ТЕМУ ★★★
+    // ★★★ ИНИЦИАЛИЗИРУЕМ ТЕМУ ★★★
     updateThemeUI();
+    setupSystemThemeListener();
+
+    // Загрузка настройки видимости достижений
+loadAchievementsVisibility();
 
     setTimeout(() => {
-    listenForInvites();
+        listenForInvites();
     }, 1000);
-    // ★★★ ДОБАВЬТЕ ЭТУ СТРОКУ ★★★
+    
     setTimeout(() => {
         listenForFriendAcceptedNotifications();
     }, 1500);
@@ -7621,6 +7875,12 @@ async function resetProgress() {
         if (pendingWorkouts) {
             localStorage.setItem('pendingWorkouts', pendingWorkouts);
         }
+        // Сброс достижений
+await updateUserProfile(user.uid, { achievements: {} });
+// Очищаем уведомления о достижениях
+for (const ach of ACHIEVEMENTS_CONFIG) {
+    localStorage.removeItem('achievement_notified_' + ach.id);
+}
 
         showToast('✅ Статистика сброшена');
         setTimeout(() => {
@@ -8174,6 +8434,7 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
                     await updateUserProfile(user.uid, { totalXp: currentXp + xpEarned });
                 }
                 showToast('💾 Тренировка сохранена');
+                await updateAchievementsAfterWorkout();
             } else {
                 addPendingWorkout(workoutData);
                 showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
@@ -8247,6 +8508,17 @@ async function openFriendProfile(friendId) {
         }
         
         currentFriendData = result.data;
+        
+        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ДРУГА ★★★
+        const achievements = currentFriendData.achievements || {};
+        updateAchievementsUI('friendAchievements', achievements);
+        
+        // ★★★ УЧИТЫВАЕМ ВИДИМОСТЬ ДОСТИЖЕНИЙ ★★★
+        const visible = getAchievementsVisibility();
+        const container = document.getElementById('friendAchievements');
+        if (container) {
+            container.classList.toggle('hidden', !visible);
+        }
         
         const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
         let workouts = [];
@@ -8471,7 +8743,7 @@ document.addEventListener('change', function(event) {
     }
 });
 
-// =================== УПРАВЛЕНИЕ ТЕМОЙ (СВЕТЛАЯ/ТЁМНАЯ) ===================
+// =================== УПРАВЛЕНИЕ ТЕМОЙ (СВЕТЛАЯ/ТЁМНАЯ/СИСТЕМНАЯ) ===================
 
 // Ключ для localStorage
 const THEME_MODE_KEY = 'appThemeMode';
@@ -8479,30 +8751,65 @@ const THEME_MODE_KEY = 'appThemeMode';
 // ★★★ ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ВРЕМЕННОГО ВЫБОРА ★★★
 let tempTheme = null;
 
-/*** Получить текущую тему*/
+// ★★★ СЛУШАТЕЛЬ СИСТЕМНОЙ ТЕМЫ ★★★
+let systemThemeListener = null;
+
+/**
+ * Получить текущую тему пользователя
+ */
 function getThemeMode() {
-    return localStorage.getItem(THEME_MODE_KEY) || 'light';
+    return localStorage.getItem(THEME_MODE_KEY) || 'system';
 }
 
-/** * Обновить UI в зависимости от темы*/
+/**
+ * Получить системную тему (dark/light)
+ */
+function getSystemTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/**
+ * Определить, какая тема должна быть применена
+ */
+function getEffectiveTheme() {
+    const mode = getThemeMode();
+    if (mode === 'system') {
+        return getSystemTheme();
+    }
+    return mode;
+}
+
+/**
+ * Обновить UI в зависимости от темы
+ */
 function updateThemeUI() {
-    const theme = getThemeMode();
+    const mode = getThemeMode();
+    const effectiveTheme = getEffectiveTheme();
+    
     const themeStatus = document.getElementById('themeStatus');
     const themeIcon = document.getElementById('themeIcon');
     const themeIconElement = themeIcon?.querySelector('i');
     
     // ★★★ ПРИМЕНЯЕМ КЛАСС К BODY ★★★
     document.body.classList.remove('theme-dark-mode');
-    if (theme === 'dark') {
+    if (effectiveTheme === 'dark') {
         document.body.classList.add('theme-dark-mode');
     }
     
+    // ★★★ ОБНОВЛЯЕМ СТАТУС В НАСТРОЙКАХ ★★★
     if (themeStatus) {
-        themeStatus.textContent = theme === 'light' ? 'Светлая' : 'Тёмная';
+        if (mode === 'system') {
+            themeStatus.textContent = `Системная`;
+        } else {
+            themeStatus.textContent = mode === 'light' ? 'Светлая' : 'Тёмная';
+        }
     }
     
+    // ★★★ ОБНОВЛЯЕМ ИКОНКУ ★★★
     if (themeIconElement) {
-        if (theme === 'light') {
+        if (mode === 'system') {
+            themeIconElement.className = 'fa-solid fa-cloud-sun-rain';
+        } else if (mode === 'light') {
             themeIconElement.className = 'fa-solid fa-sun';
         } else {
             themeIconElement.className = 'fa-solid fa-moon';
@@ -8510,7 +8817,36 @@ function updateThemeUI() {
     }
 }
 
-/*** Открыть модальное окно выбора темы*/
+/**
+ * Настроить слушатель системной темы
+ */
+function setupSystemThemeListener() {
+    // Удаляем старый слушатель, если есть
+    if (systemThemeListener) {
+        systemThemeListener.removeEventListener('change', handleSystemThemeChange);
+        systemThemeListener = null;
+    }
+    
+    // Создаём новый слушатель
+    systemThemeListener = window.matchMedia('(prefers-color-scheme: dark)');
+    systemThemeListener.addEventListener('change', handleSystemThemeChange);
+}
+
+/**
+ * Обработчик изменения системной темы
+ */
+function handleSystemThemeChange(e) {
+    const mode = getThemeMode();
+    // Обновляем UI только если выбрана системная тема
+    if (mode === 'system') {
+        updateThemeUI();
+        console.log(`🔄 Системная тема изменилась: ${e.matches ? 'Тёмная 🌙' : 'Светлая ☀️'}`);
+    }
+}
+
+/**
+ * Открыть модальное окно выбора темы
+ */
 function toggleThemeModal() {
     const currentTheme = getThemeMode();
     
@@ -8531,7 +8867,9 @@ function toggleThemeModal() {
     openModal('themeModal');
 }
 
-/*** Выбрать тему (временно, без сохранения)*/
+/**
+ * Выбрать тему (временно, без сохранения)
+ */
 function selectTheme(theme) {
     // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
     tempTheme = theme;
@@ -8547,32 +8885,30 @@ function selectTheme(theme) {
     }
 }
 
-/*** ★★★ ПРИМЕНИТЬ ТЕМУ (ПРИ НАЖАТИИ "ГОТОВО") ★★★ */
+/**
+ * ★★★ ПРИМЕНИТЬ ТЕМУ (ПРИ НАЖАТИИ "ГОТОВО") ★★★
+ */
 function applyTheme() {
-    // Если есть временный выбор - проверяем, изменилась ли тема
     if (tempTheme) {
         const currentTheme = getThemeMode();
         
         // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛАСЬ ЛИ ТЕМА ★★★
         if (tempTheme !== currentTheme) {
-            // Тема реально изменилась - сохраняем и показываем тост
+            // Тема реально изменилась - сохраняем
             localStorage.setItem(THEME_MODE_KEY, tempTheme);
             
-            // ★★★ ПРИМЕНЯЕМ КЛАСС К BODY ★★★
-            document.body.classList.remove('theme-dark-mode');
-            if (tempTheme === 'dark') {
-                document.body.classList.add('theme-dark-mode');
-            }
-            
-            // Обновляем UI в настройках
+            // ★★★ ОБНОВЛЯЕМ UI ★★★
             updateThemeUI();
             
+            // ★★★ НАСТРАИВАЕМ СЛУШАТЕЛЬ ДЛЯ СИСТЕМНОЙ ТЕМЫ ★★★
+            setupSystemThemeListener();
+            
             // ★★★ ПОКАЗЫВАЕМ ТОСТ ТОЛЬКО ПРИ РЕАЛЬНОМ ИЗМЕНЕНИИ ★★★
-            showToast(`✅ Тема изменена на ${tempTheme === 'light' ? 'Светлую' : 'Тёмную'}`);
-            console.log(`✅ Применена тема: ${tempTheme === 'light' ? 'Светлая ☀️' : 'Тёмная 🌙'}`);
+            const themeName = tempTheme === 'system' ? 'Системную' : (tempTheme === 'light' ? 'Светлую' : 'Тёмную');
+            showToast(`✅ Тема изменена на ${themeName}`);
+            console.log(`✅ Применена тема: ${themeName}`);
         } else {
-            // Тема не изменилась - просто закрываем модалку
-            console.log('ℹ️ Тема не изменилась, модалка закрыта');
+            console.log('ℹ️ Тема не изменилась');
         }
     }
     
@@ -8958,5 +9294,325 @@ function editPassword() {
             
             showToast('❌ ' + message);
         }
+    });
+}
+// =================== ДОСТИЖЕНИЯ ===================
+const ACHIEVEMENTS_CONFIG = [
+    {
+        id: 'friendly',
+        icon: 'fa-solid fa-user-group',
+        name: 'Дружелюбный',
+        description: 'Добавить 10 человек в друзья',
+        check: async (userId, profile, workouts) => {
+            const friends = profile.friends || [];
+            return friends.length >= 10;
+        }
+    },
+    {
+        id: 'marathoner',
+        icon: 'fa-solid fa-dumbbell',
+        name: 'Марафонец',
+        description: 'Выполнить 50 тренировок',
+        check: async (userId, profile, workouts) => {
+            const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
+            return filtered.length >= 50;
+        }
+    },
+    {
+        id: 'unstoppable',
+        icon: 'fa-solid fa-fire',
+        name: 'Неудержимый',
+        description: 'Выполнить 14 дневную серию тренировок',
+        check: async (userId, profile, workouts) => {
+            const streak = profile.streakDays || 0;
+            return streak >= 14;
+        }
+    },
+    {
+        id: 'ironEndurance',
+        icon: 'fa-solid fa-stopwatch',
+        name: 'Железная выдержка',
+        description: 'Тренироваться 1000 минут суммарно',
+        check: async (userId, profile, workouts) => {
+            const totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+            const minutes = Math.floor(totalSeconds / 60);
+            return minutes >= 1000;
+        }
+    },
+    {
+        id: 'masterOfStyles',
+        icon: 'fa-solid fa-star',
+        name: 'Мастер всех стилей',
+        description: 'Выполнить по 10 тренировок в каждой категорий',
+        check: async (userId, profile, workouts) => {
+            const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+            const counts = {};
+            categories.forEach(c => counts[c] = 0);
+            workouts.forEach(w => {
+                const icon = getWorkoutIcon(w);
+                const cat = getCategoryByIcon(icon);
+                if (cat && counts[cat] !== undefined) {
+                    counts[cat] = (counts[cat] || 0) + 1;
+                }
+            });
+            return categories.every(c => (counts[c] || 0) >= 10);
+        }
+    }
+];
+
+async function checkAllAchievements(userId) {
+    try {
+        // Получаем профиль и тренировки
+        const profileResult = await getUserProfile(userId);
+        if (!profileResult.success) return null;
+        const profile = profileResult.data;
+        const workoutsResult = await getUserWorkoutsFromFirestore(userId);
+        const workouts = workoutsResult.success ? workoutsResult.data : [];
+
+        // Проверяем каждое достижение
+        const results = {};
+        for (const ach of ACHIEVEMENTS_CONFIG) {
+            const unlocked = await ach.check(userId, profile, workouts);
+            results[ach.id] = unlocked;
+        }
+
+        // Обновляем Firestore
+        const currentAchievements = profile.achievements || {};
+        let changed = false;
+        let newUnlocked = [];
+        for (const id in results) {
+            if (currentAchievements[id] !== results[id]) {
+                changed = true;
+                // Если стало true (было false) - новое достижение
+                if (results[id] === true && currentAchievements[id] !== true) {
+                    newUnlocked.push(id);
+                }
+                currentAchievements[id] = results[id];
+            }
+        }
+        if (changed) {
+            await updateUserProfile(userId, { achievements: currentAchievements });
+            
+            // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ ДЛЯ НОВЫХ ДОСТИЖЕНИЙ ★★★
+            for (const id of newUnlocked) {
+                showAchievementNotification(id);
+            }
+        }
+
+        return results;
+    } catch (error) {
+        console.error('Ошибка проверки достижений:', error);
+        return null;
+    }
+}
+
+function renderAchievements() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const visible = getAchievementsVisibility();
+    const container = document.getElementById('achievementsContainer');
+    if (container) {
+        container.classList.toggle('hidden', !visible);
+    }
+    if (!visible) return;
+
+    getUserProfile(user.uid).then(result => {
+        if (!result.success) return;
+        const achievements = result.data.achievements || {};
+        const icons = document.querySelectorAll('.achievement-icon');
+        icons.forEach(el => {
+            const id = el.dataset.achievement;
+            const unlocked = achievements[id] === true;
+            el.classList.remove('unlocked', 'locked');
+            el.classList.add(unlocked ? 'unlocked' : 'locked');
+        });
+    });
+}
+
+function openAchievementsModal() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('⚠️ Авторизуйтесь, чтобы увидеть достижения');
+        return;
+    }
+    getUserProfile(user.uid).then(async (result) => {
+        if (!result.success) return;
+        const profile = result.data;
+        const achievements = profile.achievements || {};
+        const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
+        const workouts = workoutsResult.success ? workoutsResult.data : [];
+
+        // Собираем прогресс для каждого достижения
+        const progressList = [];
+        for (const ach of ACHIEVEMENTS_CONFIG) {
+            let progress = '';
+            let isUnlocked = achievements[ach.id] === true;
+            // Для каждого достижения вычисляем прогресс (для отображения в модалке)
+            switch (ach.id) {
+case 'friendly': {
+    const friends = profile.friends || [];
+    progress = `${friends.length}/10`;
+    break;
+}
+case 'marathoner': {
+    const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
+    progress = `${filtered.length}/50`;
+    break;
+}
+case 'unstoppable': {
+    const streak = profile.streakDays || 0;
+    progress = `${streak}/14`;
+    break;
+}
+case 'ironEndurance': {
+    const totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    progress = `${minutes}/1000`;
+    break;
+}
+case 'masterOfStyles': {
+    const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+    const counts = {};
+    categories.forEach(c => counts[c] = 0);
+    workouts.forEach(w => {
+        const icon = getWorkoutIcon(w);
+        const cat = getCategoryByIcon(icon);
+        if (cat && counts[cat] !== undefined) {
+            counts[cat] = (counts[cat] || 0) + 1;
+        }
+    });
+    const done = categories.filter(c => (counts[c] || 0) >= 10).length;
+    progress = `${done}/${categories.length}`;
+    break;
+}
+                default: progress = '';
+            }
+            progressList.push({
+                ...ach,
+                unlocked: isUnlocked,
+                progress: progress
+            });
+        }
+
+// Рендерим модалку
+const list = document.getElementById('achievementsList');
+if (!list) return;
+list.innerHTML = progressList.map(ach => `
+    <div class="achievement-modal-item">
+        <div class="achievement-modal-icon ${ach.unlocked ? 'unlocked' : 'locked'}">
+            <i class="${ach.icon}"></i>
+        </div>
+        <div class="achievement-modal-info">
+            <div class="achievement-modal-name">${ach.name}</div>
+            <div class="achievement-modal-desc">${ach.description}</div>
+        </div>
+        <div class="achievement-modal-progress">
+            <div class="achievement-modal-progress-text ${ach.unlocked ? 'unlocked' : 'locked'}">
+                ${ach.progress}
+            </div>
+        </div>
+    </div>
+`).join('');
+
+        openModal('achievementsModal');
+    });
+}
+
+// Обёртка для вызова проверки достижений после завершения тренировки
+async function updateAchievementsAfterWorkout() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    await checkAllAchievements(user.uid);
+    renderAchievements();
+}
+
+// Переопределим функции, чтобы они вызывали обновление достижений
+const originalFinishTrainingSession = finishTrainingSession;
+finishTrainingSession = async function() {
+    // Вызываем оригинальную функцию
+    await originalFinishTrainingSession.apply(this, arguments);
+};
+
+// =================== УВЕДОМЛЕНИЕ О ДОСТИЖЕНИИ ===================
+function showAchievementNotification(achievementId) {
+    const ach = ACHIEVEMENTS_CONFIG.find(a => a.id === achievementId);
+    if (!ach) return;
+    
+    // Проверяем, не показывали ли уже уведомление для этого достижения
+    const notificationKey = 'achievement_notified_' + achievementId;
+    if (localStorage.getItem(notificationKey) === 'true') return;
+    
+    // Показываем уведомление
+    showNotification(
+        '🏆',
+        `Новое достижение: ${ach.name}!`,
+        null,
+        true,
+        function() {
+            window.navigateTo('profile');
+            TabManager.profile('my');
+        }
+    );
+    
+    // Отмечаем, что уведомление показано
+    localStorage.setItem(notificationKey, 'true');
+}
+
+// =================== НАСТРОЙКА: СКРЫТИЕ ДОСТИЖЕНИЙ ===================
+const ACHIEVEMENTS_VISIBILITY_KEY = 'achievementsVisible';
+
+function getAchievementsVisibility() {
+    return localStorage.getItem(ACHIEVEMENTS_VISIBILITY_KEY) !== 'false';
+}
+
+function updateAchievementsVisibilityUI(visible) {
+    const statusEl = document.getElementById('achievementsStatus');
+    if (statusEl) {
+        statusEl.textContent = visible ? 'Показаны' : 'Скрыты';
+    }
+    const container = document.getElementById('achievementsContainer');
+    if (container) {
+        container.classList.toggle('hidden', !visible);
+    }
+}
+
+function loadAchievementsVisibility() {
+    const visible = getAchievementsVisibility();
+    updateAchievementsVisibilityUI(visible);
+}
+
+function toggleAchievementsVisibility() {
+    const current = getAchievementsVisibility();
+    const newState = !current;
+
+    showConfirmModal(
+        newState ? 'Показать достижения в профиле?' : 'Скрыть достижения в профиле?',
+        newState
+            ? 'Достижения снова появятся в вашем профиле.'
+            : 'Достижения будут скрыты в вашем профиле.',
+        function() {
+            localStorage.setItem(ACHIEVEMENTS_VISIBILITY_KEY, String(newState));
+            updateAchievementsVisibilityUI(newState);
+            showToast(`✅ Достижения ${newState ? 'показаны' : 'скрыты'}`);
+        },
+        newState ? 'Показать' : 'Скрыть'
+    );
+}
+
+// =================== ОБНОВЛЕНИЕ ДОСТИЖЕНИЙ В ЛЮБОМ КОНТЕЙНЕРЕ ===================
+function updateAchievementsUI(containerId, achievements) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.warn('Контейнер ' + containerId + ' не найден');
+        return;
+    }
+    // Получаем все иконки достижений внутри контейнера
+    const icons = container.querySelectorAll('.achievement-icon');
+    icons.forEach(el => {
+        const id = el.dataset.achievement;
+        const unlocked = achievements && achievements[id] === true;
+        el.classList.remove('unlocked', 'locked');
+        el.classList.add(unlocked ? 'unlocked' : 'locked');
     });
 }
