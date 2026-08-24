@@ -1,5 +1,5 @@
 /* ===================RESET И ОСНОВНЫЕ СТИЛИ ==================== */
-* { 
+* {  
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -29,38 +29,33 @@ body {
     --white: #FFFFFF;
     --danger: #EF4444;
     --gold: #F7C948;
-    --success: #2ECC71;
+
+    --bg-primary: #0F172A;
+    --bg-secondary: #1E293B;
+    --text-primary: #94A3B8;
+    --text-secondary: #64748B;
+    --border-color: #334155;
+    --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 /* ===================ТЕМЫ ==================== */
-.theme-red { --accent: #DC143C; --accent-dark: #8B0A20; --accent-light: #FFD6DE; }
-.theme-orange { --accent: #FF6B35; --accent-dark: #CC4A1A; --accent-light: #FFE0D0; }
-.theme-yellow { --accent: #F7C948; --accent-dark: #C99B1A; --accent-light: #FFEDB3; }
-.theme-green { --accent: #2ECC71; --accent-dark: #1A8C4A; --accent-light: #D4F5E0; }
-.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #0D4A20; --accent-light: #C8EAD5; }
-.theme-blue { --accent: #3498DB; --accent-dark: #1A6FA0; --accent-light: #D4EAF7; }
-.theme-darkblue { --accent: #1a237e; --accent-dark: #0A0F3D; --accent-light: #D6D9F0; }
-.theme-purple { --accent: #9B59B6; --accent-dark: #6C3483; --accent-light: #EAD4F0; }
-.theme-pink { --accent: #E91E8C; --accent-dark: #B01060; --accent-light: #FAD4E8; }
-.theme-gray { --accent: #607D8B; --accent-dark: #3A4A54; --accent-light: #D8E0E5; }
+.theme-red { --accent: #DC143C; --accent-dark: #6B0820; --accent-light: #FFD6DE; }
+.theme-orange { --accent: #FF6B35; --accent-dark: #A83A12; --accent-light: #FFE0D0; }
+.theme-yellow { --accent: #F7C948; --accent-dark: #A67D14; --accent-light: #FFEDB3; }
+.theme-green { --accent: #2ECC71; --accent-dark: #11703A; --accent-light: #D4F5E0; }
+.theme-darkgreen { --accent: #1A7A3A; --accent-dark: #0A3318; --accent-light: #C8EAD5; }
+.theme-blue { --accent: #3498DB; --accent-dark: #135A85; --accent-light: #D4EAF7; }
+.theme-darkblue { --accent: #1a237e; --accent-dark: #080C2E; --accent-light: #D6D9F0; }
+.theme-purple { --accent: #9B59B6; --accent-dark: #55296A; --accent-light: #EAD4F0; }
+.theme-pink { --accent: #E91E8C; --accent-dark: #8D0D48; --accent-light: #FAD4E8; }
+.theme-gray { --accent: #607D8B; --accent-dark: #2E3A40; --accent-light: #D8E0E5; }
 
 /* ===================СТРАНИЦЫ ==================== */
-.page { display: none; }
-.page-active { display: block; }
-
-#page-login,
-#page-register,
-#page-loading,
-#page-hero,
-#page-training-session,
-#page-finish {
-    overflow: hidden !important;
-    height: 100vh !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+.page { 
+    display: none; 
+}
+.page-active { 
+    display: block; 
 }
 
 /* ===================КОНТЕЙНЕРЫ ==================== */
@@ -90,13 +85,6 @@ body {
     margin: 0;
     color: var(--dark);
     word-break: break-word;
-}
-
-.list-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
 }
 
 .profile-tab-content {
@@ -592,6 +580,7 @@ body {
     font-weight: 600;
     font-size: 0.9rem;
     margin-bottom: 0.2rem;
+    margin-left: 0.2rem;
     color: var(--dark);
 }
 
@@ -1147,7 +1136,7 @@ body {
     padding: 0.6rem 0.6rem 0.6rem 1rem;
     background: var(--light);
     border-radius: 10px;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
     word-break: break-word;
     white-space: nowrap;
     overflow: hidden;
@@ -1673,6 +1662,7 @@ body {
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
     background: var(--white);
     padding: 1rem;
     border-radius: 16px;
@@ -1732,13 +1722,8 @@ body {
     flex-shrink: 0;
 }
 
-.color-btn:active {
-    transform: scale(0.9);
-}
-
 .color-btn-active {
     border-color: var(--dark);
-    transform: scale(0.9);
 }
 
 /* ===================ВХОД И РЕГИСТРАЦИЯ ==================== */
@@ -1750,9 +1735,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     min-height: 100vh;
     height: 100vh;
+    justify-content: center;
+    padding-top: 10vh; /* ★★★ НЕБОЛЬШОЙ ОТСТУП СВЕРХУ ★★★ */
+    margin-top: -10vh; /* ★★★ КОМПЕНСИРУЕМ ОТСТУПОМ СВЕРХУ ★★★ */
 }
 
 .auth-title {
@@ -1781,16 +1768,16 @@ body {
     font-size: 1.8rem;
     font-weight: 700;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     color: var(--dark);
     letter-spacing: -0.01em;
     word-break: break-word;
 }
 
 .auth-switch {
-    margin-top: 1rem;
+    margin-top: 0.4rem;
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: var(--slate);
 font-style: italic;
 }
@@ -1965,7 +1952,7 @@ font-style: italic;
     max-width: 500px;
     margin: 0 auto;
     padding: 0 1.2rem 0rem;
-    background: #f8fafc;
+    background: var(--light);
     padding-top: calc(env(safe-area-inset-top, 40px) - 20px);
 }
 
@@ -2007,7 +1994,7 @@ font-style: italic;
     flex: 1;
     height: 100%;
     border-radius: 4px;
-    background: #E2E8F0;
+    background: var(--light);
     transition: background 0.3s ease;
 }
 
@@ -2175,7 +2162,7 @@ font-style: italic;
     max-width: 500px;
     margin: 0 auto;
     padding: 0 1.5rem;
-    background: #f8fafc;
+    background: var(--light);
 }
 
 .finish-content {
@@ -2760,10 +2747,6 @@ font-style: italic;
         font-size: 1rem;
     }
 
-    .exercise-search-block {
-        padding: 0.8rem 0.8rem 0.6rem;
-    }
-
     .exercise-search-block .search-btn {
         font-size: 0.75rem;
         padding: 0.5rem 0.8rem;
@@ -2965,13 +2948,6 @@ textarea.error {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.category-filter-label {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--dark);
 }
 
 /* =================== ПРАВИЛА (ГАЛОЧКИ) =================== */
@@ -3071,18 +3047,12 @@ textarea.error {
     flex-shrink: 0;
 }
 
+/* ★★★ ИКОНКА СОЛНЦА ★★★ */
 .theme-option-icon i {
     font-size: 1.5rem;
 }
-
-/* ★★★ ИКОНКА СОЛНЦА ★★★ */
 .theme-option-icon .fa-sun {
     color: var(--gold);
-}
-
-/* ★★★ ИКОНКА ЛУНЫ ★★★ */
-.theme-option-icon .fa-moon {
-    color: #1a237e;
 }
 
 /* ★★★ ИНФОРМАЦИЯ О ТЕМЕ ★★★ */
@@ -3108,7 +3078,548 @@ textarea.error {
     font-size: 0.8rem;
 }
 
+.theme-option-iconDark {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.settings-titleDark {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.settings-descDark {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ★★★ ИКОНКА СОЛНЦА ★★★ */
+.theme-option-iconDark i {
+    font-size: 1.5rem;
+}
+.theme-option-iconDark .fa-moon {
+    color: var(--gold);
+}
+
 /* ★★★ ПОКАЗЫВАЕМ ГАЛОЧКУ У АКТИВНОГО ВАРИАНТА ★★★ */
 .theme-option-active .theme-option-check {
     display: flex !important;
+}
+
+.auth-card .form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.2rem;
+}
+
+/* =================== НОЧНАЯ ТЕМА ==================== */
+body.theme-dark-mode {
+    --bg-primary: #0F172A;
+    --bg-secondary: #1E293B;
+    --text-primary: #94A3B8;
+    --text-secondary: #64748B;
+    --border-color: #334155;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ★★★ ПРИМЕНЯЕМ ЦВЕТА К ЭЛЕМЕНТАМ ★★★ */
+body.theme-dark-mode {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Фон контейнеров */
+body.theme-dark-mode .dashboard-container,
+body.theme-dark-mode .profile-container {
+    background: transparent;
+}
+
+/* Карточки и блоки */
+body.theme-dark-mode .section-block,
+body.theme-dark-mode .section-blockFriend {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .item-card,
+body.theme-dark-mode .exercise-item,
+body.theme-dark-mode .edit-exercise-item,
+body.theme-dark-mode .stat-card,
+body.theme-dark-mode .history-item,
+body.theme-dark-mode .friend-item,
+body.theme-dark-mode .friend-itemMOD,
+body.theme-dark-mode .friend-request-item,
+body.theme-dark-mode .friend-result-item {
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+body.theme-dark-mode .history-item-title {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .history-item-details {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .history-item-date {
+    color: var(--text-secondary);
+}
+
+/* ★★★ ИКОНКИ В КАРТОЧКАХ ★★★ */
+body.theme-dark-mode .item-icon {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .item-icon img {
+    filter: brightness(0.9);
+}
+
+/* ★★★ НОМЕРА В РЕЙТИНГАХ ★★★ */
+body.theme-dark-mode .item-icon .item-number,
+body.theme-dark-mode .item-icon span {
+    color: var(--accent);
+}
+
+/* ★★★ БЛОК ВЫБОРА ЗНАЧКА ★★★ */
+body.theme-dark-mode .icon-picker {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .icon-option {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .icon-option-active {
+    border-color: var(--accent);
+    background: var(--bg-accent-light);
+}
+
+body.theme-dark-mode .icon-option img {
+    filter: brightness(0.9);
+}
+
+/* ★★★ ИКОНКИ В РЕДАКТИРОВАНИИ УПРАЖНЕНИЙ ★★★ */
+body.theme-dark-mode .edit-exercise-item .item-icon {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .edit-exercise-item .item-icon img {
+    filter: brightness(0.9);
+}
+
+body.theme-dark-mode .form-label {
+    color: var(--text-primary);
+}
+
+/* ★★★ СТАТУС УПРАЖНЕНИЙ ★★★ */
+body.theme-dark-mode .exercise-status {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .exercise-number {
+    color: var(--accent);
+}
+
+body.theme-dark-mode .exercise-check {
+    border-color: var(--border-color);
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .exercise-check.completed {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .item-icon {
+    background: var(--accent-dark);
+}
+
+/* ★★★ ЗАГОЛОВКИ В ТЁМНОЙ ТЕМЕ ★★★ */
+body.theme-dark-mode .dashboard-title,
+body.theme-dark-mode .section-title,
+body.theme-dark-mode .item-title,
+body.theme-dark-mode .exercise-name,
+body.theme-dark-mode .edit-exercise-name,
+body.theme-dark-mode .settings-title,
+body.theme-dark-mode .profile-name,
+body.theme-dark-mode .modal-title,
+body.theme-dark-mode .auth-card-title,
+body.theme-dark-mode .finish-title,
+body.theme-dark-mode .level-title {
+    color: var(--text-primary) !important;
+}
+
+body.theme-dark-mode .item-desc,
+body.theme-dark-mode .exercise-details,
+body.theme-dark-mode .edit-exercise-details,
+body.theme-dark-mode .settings-desc,
+body.theme-dark-mode .modal-text,
+body.theme-dark-mode .finish-stat-label,
+body.theme-dark-mode .stat-label,
+body.theme-dark-mode .calendar-weekday,
+body.theme-dark-mode .auth-switch {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .stat-number,
+body.theme-dark-mode .finish-stat-value {
+    color: var(--text-primary);
+}
+
+/* Инпуты и формы */
+body.theme-dark-mode .form-input,
+body.theme-dark-mode .search-input {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .form-input:focus,
+body.theme-dark-mode .search-input:focus {
+    border-color: var(--accent);
+}
+
+body.theme-dark-mode .form-input::placeholder,
+body.theme-dark-mode .search-input::placeholder {
+    color: var(--border-color);
+}
+
+body.theme-dark-mode .item-card.current-user {
+    border-color: var(--accent);
+}
+
+body.theme-dark-mode .empty-state {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .empty-title {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .empty-text {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .progress-dash {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .progress-dash-active {
+    background: var(--accent);
+}
+
+body.theme-dark-mode .session-edit-btn {
+    background: var(--bg-secondary);
+    color: var(--accent);
+}
+
+body.theme-dark-mode .session-btn-prev,
+body.theme-dark-mode .session-btn-next {
+    background: var(--accent-dark);
+    color: var(--light);
+}
+
+body.theme-dark-mode .finish-container {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .toggle-group {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .toggle-btn {
+    color: var(--slate);
+}
+
+body.theme-dark-mode .toggle-btn:active {
+    opacity: 0.7;
+}
+
+body.theme-dark-mode .toggle-btn-active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+}
+
+body.theme-dark-mode .edit-header-block {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .premium-features li {
+    color: var(--text-secondary);
+}
+
+/* Вкладки */
+body.theme-dark-mode .tabs {
+    background: var(--bg-);
+}
+
+body.theme-dark-mode .tab-btn {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .tab-btn-active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+}
+
+/* Навигация */
+body.theme-dark-mode .bottom-nav {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .nav-item {
+    color: var(--border-color);
+}
+
+body.theme-dark-mode .nav-item-active {
+    color: var(--accent);
+}
+
+/* Модальные окна */
+body.theme-dark-mode .modal-content {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Аккордеон */
+body.theme-dark-mode .section-header .section-title {
+    color: var(--text-primary);
+}
+
+/* Профиль */
+body.theme-dark-mode .profile-card {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .profile-info {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .profile-info strong {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .level-block {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .level-lvl,
+body.theme-dark-mode .level-progress-text {
+    color: var(--text-secondary);
+    
+}
+
+body.theme-dark-mode .level-bar {
+    background: var(--slate);
+}
+
+body.theme-dark-mode .color-btn {
+    border: 3px solid var(--bg-primary);;
+}
+
+body.theme-dark-mode .color-btn-active {
+    border-color: var(--light);
+}
+
+/* ★★★ ИКОНКИ В КАРТОЧКАХ (ДЛЯ РЕЙТИНГА) ★★★ */
+body.theme-dark-mode .item-icon {
+    background: var(--accent-dark) !important;
+}
+
+/* Календарь */
+body.theme-dark-mode .calendar-container {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .calendar-day {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .calendar-day-today {
+    box-shadow: inset 0 0 0 2px var(--accent-dark);
+}
+
+body.theme-dark-mode .calendar-day-has-workout-1 {
+    background: var(--bg-accent-light);
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .calendar-nav #currentMonthYear {
+    color: var(--text-primary);
+}
+
+/* Легенда календаря */
+body.theme-dark-mode .calendar-legend {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .legend-item {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .legend-box-today {
+    background: var(--bg-secondary);
+}
+
+/* Статистика */
+body.theme-dark-mode .stats-summaryMOD {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .stats-summaryMOD .stat-card {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .stat-item {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .stat-name {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .stat-bar {
+    background: var(--border-color);
+}
+
+/* Настройки */
+body.theme-dark-mode .settings-block {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .settings-item {
+    border-bottom-color: var(--border-color) !important;
+}
+
+body.theme-dark-mode .settings-icon {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .settings-icon-danger {
+    background: #6B0820  !important;
+    color: #EF4444 !important;
+}
+
+/* Друзья */
+body.theme-dark-mode .friends-list-block {
+    background: var(--bg-secondary);
+}
+
+/* Уведомления */
+body.theme-dark-mode #notificationCard {
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+body.theme-dark-mode .notification-text {
+    color: var(--text-primary);
+}
+
+/* Страница входа/регистрации */
+body.theme-dark-mode .auth-card {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .auth-title {
+    background: var(--accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Тренировка сессия */
+body.theme-dark-mode .training-session-container {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .session-bottom {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .session-exercise-info h2 {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .session-exercise-details-row p {
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .session-bg {
+    background: var(--bg-primary);
+}
+
+body.theme-dark-mode .session-timer {
+    color: var(--text-primary);
+}
+
+/* Финиш */
+body.theme-dark-mode .finish-content {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .finish-stat-item {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Тост */
+body.theme-dark-mode #toast {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+/* Правила */
+body.theme-dark-mode .rules-list {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .rule-item {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .rule-checkbox {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .rule-checkbox:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ★★★ СКРОЛЛБАР ДЛЯ ТЁМНОЙ ТЕМЫ ★★★ */
+body.theme-dark-mode ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+body.theme-dark-mode ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
 }

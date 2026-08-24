@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ru">
 <head> 
     <meta charset="UTF-8">
@@ -456,7 +456,7 @@
                     <button class="btn btn-primary search-btn">Найти</button>
                 </div>
                 <div class="category-filter-header">
-                    <span class="category-filter-label">Категории</span>
+                    <span class="section-title">Категории</span>
                 </div>
                 <div class="icon-picker" id="exerciseCategoryFilter">
                     <div class="icon-option active" data-category="all">
@@ -497,7 +497,7 @@
                     </div>
                 </div>
             </div>
-            <h2 class="list-title">Каталог упражнений</h2>
+            <h2 class="section-title">Каталог упражнений</h2>
             <div id="exerciseListContainer" class="item-grid"></div>
             <div id="exerciseListBackBtn" style="margin-top: 1rem;">
     <button class="btn btn-primary" onclick="goBackToEditWorkout()">Вернуться к тренировке</button>
@@ -767,20 +767,31 @@
                     </div>
 
                     <div id="profileEdit" style="display:none;">
-                        <div class="form-group">
+                        <div class="form-group" style="margin-bottom: 0.5rem;">
                             <label class="form-label">Имя Фамилия</label>
-                            <input type="text" id="editName" class="form-input" maxlength="30" placeholder="Введите ваше имя"/>
+                            <input type="text" id="editName" class="form-input"  maxlength="30" placeholder="Введите ваше имя"/>
                         </div>
 
-                        <div class="profile-info">
-                            <i class="fa-regular fa-envelope"></i>
-                            <span>Почта: <strong id="profileEmailDisplay">email@mail.ru</strong></span>
-                        </div>
+<div class="profile-info">
+    <i class="fa-regular fa-envelope"></i>
+    <span>Почта: <strong id="profileEmailDisplay">email@mail.ru</strong></span>
+    <button class="profile-edit-btn" onclick="editEmail()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
+        <i class="fa-regular fa-pen-to-square"></i>
+    </button>
+</div>
 
-                        <div class="profile-info" id="profileDateBlock">
-                            <i class="fa-regular fa-calendar"></i>
-                            <span>Дата регистрации: <strong id="profileDate">—</strong></span>
-                        </div>
+<div class="profile-info">
+    <i class="fa-solid fa-lock"></i>
+    <span>Пароль: <strong id="profilePasswordDisplay">******</strong></span>
+    <button class="profile-edit-btn" onclick="editPassword()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
+        <i class="fa-regular fa-pen-to-square"></i>
+    </button>
+</div>
+
+<div class="profile-info" id="profileDateBlock">
+    <i class="fa-regular fa-calendar"></i>
+    <span>Дата регистрации: <strong id="profileDate">—</strong></span>
+</div>
 
                         <div class="form-actions">
                             <button class="btn btn-secondary" id="cancelProfileEditBtn" style="flex:1;">Отмена</button>
@@ -817,7 +828,7 @@
 
 <div class="settings-item" onclick="toggleThemeModal()">
     <div class="settings-icon" id="themeIcon">
-        <i class="fa-regular fa-sun"></i>
+        <i class="fa-solid fa-sun"></i>
     </div>
     <div class="settings-info">
         <div class="settings-title">Тема приложения</div>
@@ -987,55 +998,128 @@
         </div>
     </div>
 
-    <!-- ===== СТРАНИЦА: ВХОД ===== -->
-    <div id="page-login" class="page">
-        <div class="auth-container">
-            <h1 class="auth-title">SportApp</h1>
-            <div class="auth-card">
-                <h2 class="auth-card-title">Войти в аккаунт</h2>
-                <form id="loginForm" novalidate>
-                    <div class="form-group">
-                        <input type="email" id="loginEmail" class="form-input" placeholder="Почта" maxlength="50" required />
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="loginPassword" class="form-input" placeholder="Пароль" maxlength="20" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Войти в аккаунт</button>
-                    <button type="button" class="btn btn-secondary" onclick="resendVerification()" style="margin-top:0.5rem;">
-                        <i class="fa-regular fa-envelope"></i> Отправить письмо
-                    </button>
-                </form>
-                <p class="auth-switch">
-                    Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a>
-                </p>
-            </div>
+<!-- ===== СТРАНИЦА: РЕГИСТРАЦИЯ (ШАГ 1 - ИМЯ) ===== -->
+<div id="page-register" class="page">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Создать аккаунт</h2>
+            <form id="registerFormStep1" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Как вас зовут?</label>
+                    <input type="text" id="regName" class="form-input" placeholder="Введите ваше имя" maxlength="30" required />
+                </div>
+                <button type="submit" class="btn btn-primary" id="registerStep1Btn">Продолжить</button>
+            </form>
+            <p class="auth-switch">
+                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
+            </p>
         </div>
     </div>
+</div>
 
-    <!-- ===== СТРАНИЦА: РЕГИСТРАЦИЯ ===== -->
-    <div id="page-register" class="page">
-        <div class="auth-container">
-            <h1 class="auth-title">SportApp</h1>
-            <div class="auth-card">
-                <h2 class="auth-card-title">Создать аккаунт</h2>
-                <form id="registerForm" novalidate>
-                    <div class="form-group">
-                        <input type="text" id="regName" class="form-input" placeholder="Имя" maxlength="30" required />
-                    </div>
-                    <div class="form-group">
-                        <input type="email" id="regEmail" class="form-input" placeholder="Почта" maxlength="50" required />
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="regPassword" class="form-input" placeholder="Пароль" maxlength="20" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-                </form>
-                <p class="auth-switch">
-                    Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
-                </p>
-            </div>
+<!-- ===== СТРАНИЦА: РЕГИСТРАЦИЯ (ШАГ 2 - ПОЧТА) ===== -->
+<div id="page-register-email" class="page" style="display:none;">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Создать аккаунт</h2>
+            <form id="registerFormStep2" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Ваша почта</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
+                </div>
+                <button type="submit" class="btn btn-primary" id="registerStep2Btn">Продолжить</button>
+            </form>
+            <p class="auth-switch">
+                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
+            </p>
         </div>
     </div>
+</div>
+
+<!-- ===== СТРАНИЦА: РЕГИСТРАЦИЯ (ШАГ 3 - ПАРОЛЬ) ===== -->
+<div id="page-register-password" class="page" style="display:none;">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Создать аккаунт</h2>
+            <form id="registerFormStep3" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Придумайте пароль</label>
+                    <input type="password" id="regPassword" class="form-input" placeholder="Минимум 6 символов" maxlength="20" required />
+                </div>
+                <button type="submit" class="btn btn-primary" id="registerStep3Btn">Продолжить</button>
+            </form>
+            <p class="auth-switch">
+                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== СТРАНИЦА: РЕГИСТРАЦИЯ (ШАГ 4 - ПОДТВЕРЖДЕНИЕ ПОЧТЫ) ===== -->
+<div id="page-register-verify" class="page" style="display:none;">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Создать аккаунт</h2>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📧</div>
+                <p style="color: var(--dark); font-weight: 600; margin-bottom: 0.5rem;">Подтвердите почту</p>
+                <p style="color: var(--slate); font-size: 0.9rem;">Вам пришло письмо на вашу почту</p>
+            </div>
+            <button class="btn btn-primary" id="registerVerifyBtn">Продолжить</button>
+            <p class="auth-switch">
+                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== СТРАНИЦА: ВХОД (ШАГ 1 - ПОЧТА) ===== -->
+<div id="page-login" class="page">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Войти в аккаунт</h2>
+            <form id="loginFormStep1" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Ваша почта</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginStep1Btn">Продолжить</button>
+            </form>
+            <p class="auth-switch">
+                Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== СТРАНИЦА: ВХОД (ШАГ 2 - ПАРОЛЬ) ===== -->
+<div id="page-login-password" class="page" style="display:none;">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        <div class="auth-card">
+            <h2 class="auth-card-title">Войти в аккаунт</h2>
+            <form id="loginFormStep2" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Введите пароль" maxlength="20" required />
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginStep2Btn">Продолжить</button>
+            </form>
+            <p class="auth-switch">
+                Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a>
+            </p>
+            <!-- ★★★ ССЫЛКА "ЗАБЫЛИ ПАРОЛЬ?" - СКРЫТА ПО УМОЛЧАНИЮ ★★★ -->
+            <p class="auth-switch" id="forgotPasswordLink" style="display: none;">
+                Забыли пароль? <a href="#" onclick="sendPasswordReset()">Восстановить</a>
+            </p>
+        </div>
+    </div>
+</div>
 
     <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
     <nav class="bottom-nav" id="bottomNav" style="display:none;">
@@ -1058,7 +1142,7 @@
             <!-- Светлая тема -->
             <div class="theme-option theme-option-active" data-theme="light" onclick="selectTheme('light')">
                 <div class="theme-option-icon">
-                    <i class="fa-regular fa-sun"></i>
+                    <i class="fa-solid fa-sun"></i>
                 </div>
                 <div class="theme-option-info">
                     <div class="settings-title">Светлая</div>
@@ -1070,13 +1154,13 @@
             </div>
             
             <!-- Тёмная тема -->
-            <div class="theme-option" data-theme="dark" onclick="selectTheme('dark')">
-                <div class="theme-option-icon">
-                    <i class="fa-regular fa-moon"></i>
+            <div class="theme-option" style="background: var(--bg-primary)" data-theme="dark" onclick="selectTheme('dark')">
+                <div class="theme-option-iconDark">
+                    <i class="fa-solid fa-moon"></i>
                 </div>
                 <div class="theme-option-info">
-                    <div class="settings-title">Тёмная</div>
-                    <div class="settings-desc">Тёмный фон, светлый текст</div>
+                    <div class="settings-titleDark">Тёмная</div>
+                    <div class="settings-descDark">Тёмный фон, светлый текст</div>
                 </div>
                 <div class="theme-option-check">
                     <i class="fa-solid fa-check"></i>
@@ -1349,19 +1433,19 @@
                 <div class="rules-list">
                     <label class="rule-item">
                         <input type="checkbox" class="rule-checkbox" data-rule="1">
-                        <span>буду честно писать сколько упражнений выполнил</span>
+                        <span>Буду честно создавать тренировку для себя</span>
                     </label>
                     <label class="rule-item">
                         <input type="checkbox" class="rule-checkbox" data-rule="2">
-                        <span>если не выполнил упражнение — буду его пропускать</span>
+                        <span>Если не выполнил/а упражнение - буду его пропускать</span>
                     </label>
                     <label class="rule-item">
                         <input type="checkbox" class="rule-checkbox" data-rule="3">
-                        <span>буду честно ставить количество подходов и повторений</span>
+                        <span>Буду честно ставить количество подходов и повторений</span>
                     </label>
                     <label class="rule-item">
                         <input type="checkbox" class="rule-checkbox" data-rule="4">
-                        <span>буду честно ставить время</span>
+                        <span>Буду честно ставить время</span>
                     </label>
                 </div>
             </div>

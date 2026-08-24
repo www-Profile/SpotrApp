@@ -1,5 +1,5 @@
 // ===================ОСНОВНЫЕ ДАННЫЕ ===================
-const exercisesData = { 
+const exercisesData = {  
     // ===================СИЛОВЫЕ ===================
     'Силовые': {
         'Руки': {
@@ -2238,14 +2238,11 @@ const notificationOkBtn = document.getElementById('notificationOkBtn');
 
 notificationContainer.style.display = 'block';
 
-// =================== СИСТЕМА УВЕДОМЛЕНИЙ ===================
-
 function showNotification(icon, text, actionCallback, autoClose = true, okAction = null) {
     // ★★★ РАСПОЗНАЁМ ПРИГЛАШЕНИЕ ★★★
     const isInvite = text.includes('приглашает') || text.includes('пригласил');
     
     if (isInvite) {
-        // Приглашения — всегда показываем, без проверки localStorage
         const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
         notificationQueue.push({ 
             icon, 
@@ -2253,7 +2250,7 @@ function showNotification(icon, text, actionCallback, autoClose = true, okAction
             actionCallback, 
             id: uniqueId, 
             isInvite: true,
-            autoClose: false, // Приглашения не закрываются автоматически
+            autoClose: false,
             okAction: null
         });
         if (!isNotificationShowing) {
@@ -2262,7 +2259,6 @@ function showNotification(icon, text, actionCallback, autoClose = true, okAction
         return;
     }
     
-    // Обычные уведомления — проверяем localStorage
     const notificationId = text + icon;
     const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
     if (seen.includes(notificationId)) {
@@ -2416,106 +2412,6 @@ function clearSeenNotifications() {
     console.log('✅ История уведомлений очищена');
 }
 
-function processNotificationQueue() {
-    console.log('🔵 processNotificationQueue вызвана');
-    console.log('📊 Очередь:', notificationQueue.length);
-    console.log('📊 isNotificationShowing:', isNotificationShowing);
-    
-    if (notificationQueue.length === 0 || isNotificationShowing) {
-        console.log('⏭️ Очередь пуста или уведомление уже показывается');
-        return;
-    }
-    
-    isNotificationShowing = true;
-    const notification = notificationQueue.shift();
-    console.log('📄 Уведомление:', notification);
-    
-    notificationIcon.textContent = notification.icon;
-    notificationText.textContent = notification.text;
-    
-    const okBtn = document.getElementById('notificationOkBtn');
-    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
-    
-    if (notification.actionCallback) {
-        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
-        okBtn.textContent = 'Принять';
-        okBtn.onclick = function(e) {
-            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
-            if (notification.actionCallback) {
-                console.log('🔵 Вызываем actionCallback');
-                try {
-                    notification.actionCallback();
-                    console.log('✅ actionCallback выполнен');
-                } catch (error) {
-                    console.error('❌ Ошибка в actionCallback:', error);
-                }
-            }
-            hideNotification();
-            
-            if (!notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
-    } else {
-        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
-        okBtn.textContent = 'ОК';
-        okBtn.onclick = function() {
-            console.log('🔵 Кнопка "ОК" нажата');
-            
-            // ★★★ ВЫЗЫВАЕМ ДЕЙСТВИЕ ДЛЯ ОК ★★★
-            if (notification.okAction) {
-                try {
-                    notification.okAction();
-                    console.log('✅ okAction выполнен');
-                } catch (error) {
-                    console.error('❌ Ошибка в okAction:', error);
-                }
-            }
-            
-            hideNotification();
-            
-            if (notification.isFriendRequest && notification.requestId) {
-                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
-                if (!shownRequests.includes(notification.requestId)) {
-                    shownRequests.push(notification.requestId);
-                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
-                }
-                shownThisSession.delete(notification.requestId);
-            }
-            
-            if (!notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
-    }
-    
-    notificationCard.classList.remove('show');
-    notificationCard.style.transform = 'translateY(-120px)';
-    notificationCard.style.opacity = '0';
-    
-    setTimeout(() => {
-        notificationCard.classList.add('show');
-        notificationCard.style.transform = '';
-        notificationCard.style.opacity = '';
-        console.log('✅ Уведомление показано');
-        
-        // ★★★ АВТОМАТИЧЕСКОЕ ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕКУНД ★★★
-        if (notification.autoClose !== false) { // По умолчанию true
-            console.log('⏰ Уведомление закроется через 10 секунд');
-            setTimeout(() => {
-                if (isNotificationShowing) {
-                    console.log('⏰ Авто-закрытие уведомления');
-                    hideNotification();
-                    
-                    if (!notification.isInvite && notification.id) {
-                        markNotificationSeen(notification.id);
-                    }
-                }
-            }, 10000);
-        }
-    }, 100);
-}
-
 function showFriendRequestNotification(icon, text, requestId) {
     const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
     if (shownRequests.includes(requestId) || shownThisSession.has(requestId)) {
@@ -2530,7 +2426,6 @@ function showFriendRequestNotification(icon, text, requestId) {
         text, 
         actionCallback: null,
         okAction: function() {
-            // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
             TabManager.profile('friends');
             window.navigateTo('profile');
             setTimeout(() => renderFriendsInProfile(), 300);
@@ -2538,103 +2433,12 @@ function showFriendRequestNotification(icon, text, requestId) {
         id: null, 
         isFriendRequest: true,
         requestId: requestId,
-        autoClose: true // ★★★ АВТО-ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕК ★★★
+        autoClose: true
     });
     
     if (!isNotificationShowing) {
         processNotificationQueue();
     }
-}
-
-// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ processNotificationQueue ===================
-function processNotificationQueue() {
-    console.log('🔵 processNotificationQueue вызвана');
-    console.log('📊 Очередь:', notificationQueue.length);
-    console.log('📊 isNotificationShowing:', isNotificationShowing);
-    
-    if (notificationQueue.length === 0 || isNotificationShowing) {
-        console.log('⏭️ Очередь пуста или уведомление уже показывается');
-        return;
-    }
-    
-    isNotificationShowing = true;
-    const notification = notificationQueue.shift();
-    console.log('📄 Уведомление:', notification);
-    
-    notificationIcon.textContent = notification.icon;
-    notificationText.textContent = notification.text;
-    
-    const okBtn = document.getElementById('notificationOkBtn');
-    console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
-    
-    if (notification.actionCallback) {
-        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
-        okBtn.textContent = 'Принять';
-        okBtn.onclick = function(e) {
-            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
-            if (notification.actionCallback) {
-                console.log('🔵 Вызываем actionCallback');
-                try {
-                    notification.actionCallback();
-                    console.log('✅ actionCallback выполнен');
-                } catch (error) {
-                    console.error('❌ Ошибка в actionCallback:', error);
-                }
-            }
-            hideNotification();
-            
-            // ★★★ СОХРАНЯЕМ ТОЛЬКО НЕ-ПРИГЛАШЕНИЯ ★★★
-            if (!notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
-    } else {
-        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
-        okBtn.textContent = 'ОК';
-        okBtn.onclick = function() {
-            console.log('🔵 Кнопка "ОК" нажата');
-            hideNotification();
-            
-            if (notification.isFriendRequest && notification.requestId) {
-                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
-                if (!shownRequests.includes(notification.requestId)) {
-                    shownRequests.push(notification.requestId);
-                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
-                }
-                shownThisSession.delete(notification.requestId);
-            }
-            
-            // ★★★ СОХРАНЯЕМ ТОЛЬКО НЕ-ПРИГЛАШЕНИЯ ★★★
-            if (!notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
-    }
-    
-    notificationCard.classList.remove('show');
-    notificationCard.style.transform = 'translateY(-120px)';
-    notificationCard.style.opacity = '0';
-    
-    setTimeout(() => {
-        notificationCard.classList.add('show');
-        notificationCard.style.transform = '';
-        notificationCard.style.opacity = '';
-        console.log('✅ Уведомление показано');
-    }, 100);
-}
-
-function hideNotification() {
-    console.log('🔵 hideNotification вызвана');
-    notificationCard.classList.remove('show');
-    isNotificationShowing = false;
-    notificationOkBtn.onclick = null;
-    
-    setTimeout(() => {
-        if (notificationQueue.length > 0) {
-            console.log('🔄 Показываем следующее уведомление');
-            processNotificationQueue();
-        }
-    }, 400);
 }
 
 function markNotificationSeen(id) {
@@ -4985,7 +4789,7 @@ async function loadStats() {
     const historyContainer = document.getElementById('workoutHistory');
     if (historyContainer) {
         if (workouts.length === 0) {
-            historyContainer.innerHTML = '<p style="color:var(--slate);text-align:center;">Нет выполненных тренировок</p>';
+            historyContainer.innerHTML = '<div class="empty-state"><span class="empty-icon">📋</span><h3 class="empty-title">Нет выполненных тренировок</h3><p class="empty-text">Выполните свою первую тренировку!</p></div>';
         } else {
             const sortedWorkouts = workouts.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
             historyContainer.innerHTML = sortedWorkouts.map(w => {
@@ -5198,6 +5002,12 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
 
 // ===================СЛУШАТЕЛЬ АВТОРИЗАЦИИ ===================
 firebase.auth().onAuthStateChanged(async (user) => {
+    // ★★★ ПРОВЕРЯЕМ ФЛАГ РЕГИСТРАЦИИ ★★★
+    if (isRegistering) {
+        console.log('⏳ Идёт регистрация, пропускаем onAuthStateChanged');
+        return;
+    }
+    
     const bottomNav = document.getElementById('bottomNav');
     try {
         if (user) {
@@ -5310,16 +5120,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
             // ★★★ ДАННЫЕ ЗАГРУЖЕНЫ, НО СТРАНИЦУ ЗАГРУЗКИ НЕ ЗАКРЫВАЕМ ★★★
             console.log('✅ Данные загружены, ждем нажатия кнопки');
          
-    } else {
-        // Пользователь не авторизован - сбрасываем флаг
-        isDataLoaded = false;
-        console.log('👤 Пользователь не авторизован');
-        if (bottomNav) bottomNav.style.display = 'none';
-        
-        showHero(); // <-- ВМЕСТО ручного переключения
-        
-        clearAuthFields();
-    }
+        } else {
+            // Пользователь не авторизован - сбрасываем флаг
+            isDataLoaded = false;
+            console.log('👤 Пользователь не авторизован');
+            if (bottomNav) bottomNav.style.display = 'none';
+            
+            showHero();
+            
+            clearAuthFields();
+        }
     } catch (error) {
         console.error('❌ Ошибка в onAuthStateChanged:', error);
         // При ошибке сбрасываем флаг
@@ -5381,231 +5191,470 @@ function showHero() {
     clearAuthFields();
 }
 
-// ===================РЕГИСТРАЦИЯ ===================
-const registerForm = document.getElementById('registerForm');
-if (registerForm) {
-    const nameInput = document.getElementById('regName');
-    const emailInput = document.getElementById('regEmail');
-    const passwordInput = document.getElementById('regPassword');
-    let isSubmitting = false;
-    
-    // Очистка ошибок при вводе
-    nameInput.addEventListener('input', () => { 
-        nameInput.classList.remove('error'); 
-    });
-    emailInput.addEventListener('input', () => { 
-        emailInput.classList.remove('error'); 
-    });
-    passwordInput.addEventListener('input', () => { 
-        passwordInput.classList.remove('error'); 
+// =================== РЕГИСТРАЦИЯ (ПОШАГОВАЯ) ===================
+
+// Хранилище данных регистрации
+let registerData = {
+    name: '',
+    email: '',
+    password: ''
+};
+
+function switchToPage(pageId) {
+    // Сначала скрываем ВСЕ страницы
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
     });
     
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Проверяем, не выполняется ли уже регистрация
-        if (isSubmitting) {
-            showToast('⏳ Подождите, регистрация уже выполняется...');
-            return;
-        }
-        
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const btn = registerForm.querySelector('.btn-primary');
-        let hasError = false;
-        
-        // Валидация
-        if (!name) { 
-            nameInput.classList.add('error'); 
-            showToast('⚠️ Введите имя');
-            hasError = true; 
-        } else { 
-            nameInput.classList.remove('error'); 
-        }
-        
-        if (!email) { 
-            emailInput.classList.add('error'); 
-            showToast('⚠️ Введите почту');
-            hasError = true; 
-        } else { 
-            emailInput.classList.remove('error'); 
-        }
-        
-        if (!password) { 
-            passwordInput.classList.add('error'); 
-            showToast('⚠️ Введите пароль');
-            hasError = true; 
-        } else if (password.length < 6) { 
-            passwordInput.classList.add('error'); 
-            showToast('⚠️ Пароль минимум 6 символов');
-            hasError = true; 
-        } else { 
-            passwordInput.classList.remove('error'); 
-        }
-        
-        if (hasError) return;
-        
-        // Блокируем кнопку
-        isSubmitting = true;
-        btn.textContent = 'Регистрация...';
-        btn.disabled = true;
-        
-        try {
-            const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
-            await result.user.updateProfile({ displayName: name });
-            await saveUserProfile(result.user.uid, {
-                displayName: name,
-                email: email,
-                avatar: 'bodybuilding',
-                level: 1,
-                totalXp: 0,
-                createdAt: new Date().toISOString(),
-                tutorialCompleted: false
-            });
-            await result.user.sendEmailVerification();
-            
-            // Разблокируем кнопку
-            isSubmitting = false;
-            btn.textContent = 'Зарегистрироваться';
-            btn.disabled = false;
-            
-            showToast('📧 Подтвердите почту! Письмо отправлено на ' + email);
-            
-            // Переключаем на страницу входа
-            setTimeout(() => {
-                showLogin();
-            }, 1000);
-            
-        } catch (error) {
-            let message = 'Ошибка регистрации';
-            if (error.code === 'auth/email-already-in-use') { 
-                message = 'Почта уже используется'; 
-                emailInput.classList.add('error'); 
-            } else if (error.code === 'auth/weak-password') { 
-                message = 'Пароль минимум 6 символов'; 
-                passwordInput.classList.add('error'); 
-            } else if (error.code === 'auth/invalid-email') { 
-                message = 'Неверный формат почты'; 
-                emailInput.classList.add('error'); 
-            } else if (error.code === 'auth/network-request-failed') { 
-                message = 'Проверьте интернет-соединение'; 
-                passwordInput.classList.add('error'); 
-            } else {
-                message = error.message;
-            }
-            showToast('❌ ' + message);
-            
-            // Разблокируем кнопку
-            isSubmitting = false;
-            btn.textContent = 'Зарегистрироваться';
-            btn.disabled = false;
-        }
-    });
+    // Потом показываем нужную страницу
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.classList.add('page-active');
+        target.style.display = 'block';
+    }
 }
 
-// ===================ВХОД ===================
-const loginForm = document.getElementById('loginForm');
-if (loginForm) {
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
-    let isSubmitting = false;
+// Шаг 1: Имя
+document.getElementById('registerFormStep1')?.addEventListener('submit', function(e) {
+    e.preventDefault();
     
-    // Очистка ошибок при вводе
-    emailInput.addEventListener('input', () => { 
-        emailInput.classList.remove('error'); 
-    });
-    passwordInput.addEventListener('input', () => { 
-        passwordInput.classList.remove('error'); 
-    });
+    const nameInput = document.getElementById('regName');
+    const name = nameInput.value.trim();
     
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    if (!name) {
+        nameInput.classList.add('error');
+        showToast('⚠️ Введите ваше имя');
+        return;
+    }
+    nameInput.classList.remove('error');
+    
+    registerData.name = name;
+    
+    switchToPage('page-register-email');
+    document.getElementById('regEmail').focus();
+});
+
+// Шаг 2: Почта (регистрация)
+document.getElementById('registerFormStep2')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('regEmail');
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+        emailInput.classList.add('error');
+        showToast('⚠️ Введите вашу почту');
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        emailInput.classList.add('error');
+        showToast('⚠️ Неверный формат email');
+        return;
+    }
+    
+    emailInput.classList.remove('error');
+    registerData.email = email;
+    
+    switchToPage('page-register-password');
+    document.getElementById('regPassword').focus();
+});
+
+// ★★★ ФЛАГ ДЛЯ ПРЕДОТВРАЩЕНИЯ СРАБАТЫВАНИЯ onAuthStateChanged ★★★
+let isRegistering = false;
+
+// Шаг 3: Пароль + создание аккаунта
+document.getElementById('registerFormStep3')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const passwordInput = document.getElementById('regPassword');
+    const password = passwordInput.value;
+    const btn = document.getElementById('registerStep3Btn');
+    
+    if (!password || password.length < 6) {
+        passwordInput.classList.add('error');
+        showToast('⚠️ Пароль должен быть минимум 6 символов');
+        return;
+    }
+    passwordInput.classList.remove('error');
+    
+    registerData.password = password;
+    
+    // ★★★ УСТАНАВЛИВАЕМ ФЛАГ ★★★
+    isRegistering = true;
+    
+    btn.disabled = true;
+    
+    try {
+        const result = await firebase.auth().createUserWithEmailAndPassword(
+            registerData.email, 
+            registerData.password
+        );
         
-        // Проверяем, не выполняется ли уже вход
-        if (isSubmitting) {
-            showToast('⏳ Подождите, вход уже выполняется...');
+        await result.user.updateProfile({ displayName: registerData.name });
+        
+        await saveUserProfile(result.user.uid, {
+            displayName: registerData.name,
+            email: registerData.email,
+            avatar: 'bodybuilding',
+            level: 1,
+            totalXp: 0,
+            createdAt: new Date().toISOString(),
+            tutorialCompleted: false
+        });
+        
+        await result.user.sendEmailVerification();
+        
+        // ★★★ ПЕРЕХОД НА ШАГ 4 ★★★
+        switchToPage('page-register-verify');
+        
+        showToast('📧 Письмо отправлено на ' + registerData.email);
+        registerData = { name: '', email: '', password: '' };
+        
+    } catch (error) {
+        let message = 'Ошибка регистрации';
+        const emailInput = document.getElementById('regEmail');
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                message = 'Эта почта уже используется';
+                emailInput.classList.add('error');
+                break;
+            case 'auth/invalid-email':
+                message = 'Неверный формат почты';
+                emailInput.classList.add('error');
+                break;
+            case 'auth/weak-password':
+                message = 'Пароль должен быть минимум 6 символов';
+                passwordInput.classList.add('error');
+                break;
+            case 'auth/network-request-failed':
+                message = 'Проверьте интернет-соединение';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Слишком много попыток. Подождите.';
+                break;
+            case 'auth/operation-not-allowed':
+                message = 'Регистрация временно отключена';
+                break;
+            default:
+                message = error.message || 'Произошла ошибка, попробуйте позже';
+        }
+        
+        showToast('❌ ' + message);
+        btn.disabled = false;
+    } finally {
+        // ★★★ СБРАСЫВАЕМ ФЛАГ ★★★
+        isRegistering = false;
+    }
+});
+
+// Шаг 4: Проверка подтверждения почты
+document.getElementById('registerVerifyBtn')?.addEventListener('click', async function() {
+    const btn = this;
+    
+    if (btn.disabled) {
+        return;
+    }
+    
+    btn.disabled = true;
+    
+    try {
+        const user = firebase.auth().currentUser;
+        
+        if (!user) {
+            showToast('❌ Пользователь не найден');
+            btn.disabled = false;
             return;
         }
         
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const btn = loginForm.querySelector('.btn-primary');
-        let hasError = false;
+        await user.reload();
         
-        // Валидация
-        if (!email) { 
-            emailInput.classList.add('error'); 
-            showToast('⚠️ Введите почту');
-            hasError = true; 
-        } else { 
-            emailInput.classList.remove('error'); 
-        }
-        
-        if (!password) { 
-            passwordInput.classList.add('error'); 
-            showToast('⚠️ Введите пароль');
-            hasError = true; 
-        } else { 
-            passwordInput.classList.remove('error'); 
-        }
-        
-        if (hasError) return;
-        
-        // Блокируем кнопку
-        isSubmitting = true;
-        btn.textContent = 'Вход...';
-        btn.disabled = true;
-        
-        try {
-            const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        if (user.emailVerified) {
+            showToast('✅ Почта подтверждена!');
             
-            if (!result.user.emailVerified) {
-                showToast('⚠️ Подтвердите почту! Письмо отправлено на ' + email);
-                // Разблокируем кнопку
-                isSubmitting = false;
-                btn.textContent = 'Войти в аккаунт';
-                btn.disabled = false;
-                return;
-            }
+            // ★★★ ПЕРЕХОД НА СТРАНИЦУ ЗАГРУЗКИ ★★★
+            switchToPage('page-loading');
+            document.getElementById('bottomNav').style.display = 'none';
             
-            // Успешный вход - разблокируем перед перезагрузкой
-            isSubmitting = false;
-            btn.textContent = 'Войти в аккаунт';
-            btn.disabled = false;
-            
-            // Показываем уведомление и перезагружаем
-            showToast('✅ Вход выполнен успешно!');
             setTimeout(() => {
-                window.location.reload();
+                switchToPage('page-workouts');
+                document.getElementById('bottomNav').style.display = 'block';
+                refreshNotificationData();
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.section-block').forEach(block => block.classList.add('open'));
+                    saveBlocksState();
+                }, 100);
+                
+                setTimeout(() => {
+                    startTutorial();
+                }, 1000);
             }, 500);
             
-} catch (error) {
-    let message = '';
+        } else {
+            const sent = await resendVerificationEmail();
+            
+            if (sent) {
+                showToast('⚠️ Подтвердите почту!');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Проверить снова';
+        }
+        
+    } catch (error) {
+        if (error.code === 'auth/too-many-requests') {
+            showToast('⚠️ Слишком много попыток');
+        } else {
+            showToast('❌ Ошибка проверки почты');
+        }
+        
+        btn.disabled = false;
+        btn.textContent = 'Продолжить';
+    }
+});
+
+// =================== ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
+
+async function resendVerificationEmail() {
+    const user = firebase.auth().currentUser;
     
-    if (error.code === 'auth/invalid-credential' || 
-        error.code === 'auth/user-not-found' || 
-        error.code === 'auth/wrong-password') {
-        message = 'Неверный email или пароль.';
-    } else if (error.code === 'auth/invalid-email') {
-        message = 'Неверный формат email.';
-    } else if (error.code === 'auth/too-many-requests') {
-        message = 'Слишком много попыток.';
-    } else if (error.code === 'auth/network-request-failed') {
-        message = 'Проверьте интернет-соединение';
-    } else {
-        message = 'Ошибка входа. Попробуйте позже';
+    if (!user) {
+        showToast('❌ Пользователь не найден');
+        return false;
     }
     
-    passwordInput.classList.add('error');
-    showToast('❌ ' + message);
-            
-            // Разблокируем кнопку
-            isSubmitting = false;
-            btn.textContent = 'Войти в аккаунт';
-            btn.disabled = false;
+    await user.reload();
+    
+    if (user.emailVerified) {
+        showToast('✅ Почта уже подтверждена');
+        return false;
+    }
+    
+    const lastSent = localStorage.getItem('lastVerificationSent');
+    
+    if (lastSent) {
+        const timeDiff = Date.now() - parseInt(lastSent);
+        
+        if (timeDiff < 60000) {
+            const remaining = Math.ceil((60000 - timeDiff) / 1000);
+            showToast(`⏳ Подождите ${remaining} сек перед повторной отправкой`);
+            return false;
         }
+    }
+    
+    try {
+        await user.sendEmailVerification();
+        localStorage.setItem('lastVerificationSent', String(Date.now()));
+        showToast('📧 Письмо отправлено на ' + user.email);
+        return true;
+        
+    } catch (error) {
+        if (error.code === 'auth/too-many-requests') {
+            showToast('⚠️ Слишком много запросов');
+        } else if (error.code === 'auth/network-request-failed') {
+            showToast('⚠️ Проверьте интернет-соединение');
+        } else {
+            showToast('❌ Не удалось отправить письмо');
+        }
+        return false;
+    }
+}
+
+// =================== ВХОД (ПОШАГОВЫЙ) ===================
+
+// Хранилище данных входа
+let loginData = {
+    email: '',
+    password: ''
+};
+
+// Шаг 1: Почта
+document.getElementById('loginFormStep1')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('loginEmail');
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+        emailInput.classList.add('error');
+        showToast('⚠️ Введите вашу почту');
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        emailInput.classList.add('error');
+        showToast('⚠️ Неверный формат email');
+        return;
+    }
+    
+    emailInput.classList.remove('error');
+    loginData.email = email;
+    
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    if (forgotLink) {
+        forgotLink.style.display = 'none';
+    }
+    
+    switchToPage('page-login-password');
+    document.getElementById('loginPassword').focus();
+});
+
+// Шаг 2: Пароль + вход
+document.getElementById('loginFormStep2')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const passwordInput = document.getElementById('loginPassword');
+    const password = passwordInput.value;
+    const btn = document.getElementById('loginStep2Btn');
+    
+    if (!password) {
+        passwordInput.classList.add('error');
+        showToast('⚠️ Введите пароль');
+        return;
+    }
+    passwordInput.classList.remove('error');
+    
+    loginData.password = password;
+    
+    btn.disabled = true;
+    
+    try {
+        const result = await firebase.auth().signInWithEmailAndPassword(
+            loginData.email,
+            loginData.password
+        );
+        
+        if (!result.user.emailVerified) {
+            showToast('⚠️ Подтвердите почту! Письмо отправлено');
+            await result.user.sendEmailVerification();
+            btn.disabled = false;
+            return;
+        }
+        
+        switchToPage('page-loading');
+        document.getElementById('bottomNav').style.display = 'none';
+        
+        showToast('✅ Вход выполнен!');
+        loginData = { email: '', password: '' };
+        
+        // Ждём загрузки данных
+        setTimeout(() => {
+            // onAuthStateChanged сам переключит на workouts
+        }, 500);
+        
+    } catch (error) {
+        let message = '';
+        let showForgotLink = false;
+        
+        if (error.code === 'auth/invalid-credential' || 
+            error.code === 'auth/user-not-found' || 
+            error.code === 'auth/wrong-password') {
+            message = 'Неверный email или пароль.';
+            showForgotLink = true;
+        } else if (error.code === 'auth/invalid-email') {
+            message = 'Неверный формат email.';
+        } else if (error.code === 'auth/too-many-requests') {
+            message = 'Слишком много попыток. Подождите.';
+            showForgotLink = true;
+        } else if (error.code === 'auth/network-request-failed') {
+            message = 'Проверьте интернет-соединение';
+        } else {
+            message = 'Ошибка входа. Попробуйте позже';
+        }
+        
+        if (showForgotLink) {
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            if (forgotLink) {
+                forgotLink.style.display = 'block';
+            }
+        }
+        
+        passwordInput.classList.add('error');
+        showToast('❌ ' + message);
+        btn.disabled = false;
+    }
+});
+
+// =================== ВОССТАНОВЛЕНИЕ ПАРОЛЯ (БЕЗ МОДАЛКИ) ===================
+
+async function sendPasswordReset() {
+    if (!loginData.email) {
+        showToast('⚠️ Сначала введите почту');
+        return;
+    }
+    
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    const linkElement = forgotLink?.querySelector('a');
+    
+    if (linkElement) {
+        linkElement.style.pointerEvents = 'none';
+    }
+    
+    try {
+        await firebase.auth().sendPasswordResetEmail(loginData.email);
+        showToast('📧 Письмо для сброса пароля отправлено');
+        
+        if (forgotLink) {
+            forgotLink.style.display = 'none';
+        }
+        
+    } catch (error) {
+        let message = 'Ошибка отправки';
+        if (error.code === 'auth/invalid-email') {
+            message = 'Неверный формат почты';
+        } else if (error.code === 'auth/too-many-requests') {
+            message = 'Слишком много попыток. Подождите.';
+        }
+        showToast('❌ ' + message);
+    } finally {
+        if (linkElement) {
+            linkElement.style.pointerEvents = 'auto';
+            linkElement.style.opacity = '1';
+            linkElement.textContent = 'Восстановить';
+        }
+    }
+}
+
+// =================== ОБНОВЛЁННЫЕ ФУНКЦИИ НАВИГАЦИИ ===================
+
+function showRegister() {
+    // Показываем первый шаг регистрации
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
     });
+    const registerPage = document.getElementById('page-register');
+    registerPage.classList.add('page-active');
+    registerPage.style.display = 'block';
+    
+    // Очищаем поля
+    document.getElementById('regName').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+    registerData = { name: '', email: '', password: '' };
+    clearAuthFields();
+}
+
+function showLogin() {
+    // Показываем первый шаг входа
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
+    });
+    const loginPage = document.getElementById('page-login');
+    loginPage.classList.add('page-active');
+    loginPage.style.display = 'block';
+    
+    // Очищаем поля
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    loginData = { email: '', password: '' };
+    clearAuthFields();
 }
 
 // ===================ОЧИСТКА ПОЛЕЙ ВВОДА ===================
@@ -6337,7 +6386,7 @@ function renderExerciseListPageContent() {
 container.innerHTML = filtered.map(ex => {
     const icon = getExerciseIcon(ex.name);
     return `<div class="item-card" onclick="addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')" style="cursor:pointer;">
-        <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <div class="item-icon" style="width:44px;height:44px;min-width:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;">
             <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;">
         </div>
         <div class="item-info"><h3 class="item-title">${ex.name}</h3><p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p></div>
@@ -7420,6 +7469,9 @@ document.addEventListener('DOMContentLoaded', function() {
         TabManager.applyAll();
     }, 100);
 
+        // ★★★ ИНИЦИАЛИЗИРУЕМ ТЕМУ ★★★
+    updateThemeUI();
+
     setTimeout(() => {
     listenForInvites();
     }, 1000);
@@ -8427,21 +8479,23 @@ const THEME_MODE_KEY = 'appThemeMode';
 // ★★★ ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ВРЕМЕННОГО ВЫБОРА ★★★
 let tempTheme = null;
 
-/**
- * Получить текущую тему
- */
+/*** Получить текущую тему*/
 function getThemeMode() {
     return localStorage.getItem(THEME_MODE_KEY) || 'light';
 }
 
-/**
- * Обновить UI в зависимости от темы
- */
+/** * Обновить UI в зависимости от темы*/
 function updateThemeUI() {
     const theme = getThemeMode();
     const themeStatus = document.getElementById('themeStatus');
     const themeIcon = document.getElementById('themeIcon');
     const themeIconElement = themeIcon?.querySelector('i');
+    
+    // ★★★ ПРИМЕНЯЕМ КЛАСС К BODY ★★★
+    document.body.classList.remove('theme-dark-mode');
+    if (theme === 'dark') {
+        document.body.classList.add('theme-dark-mode');
+    }
     
     if (themeStatus) {
         themeStatus.textContent = theme === 'light' ? 'Светлая' : 'Тёмная';
@@ -8449,16 +8503,14 @@ function updateThemeUI() {
     
     if (themeIconElement) {
         if (theme === 'light') {
-            themeIconElement.className = 'fa-regular fa-sun';
+            themeIconElement.className = 'fa-solid fa-sun';
         } else {
-            themeIconElement.className = 'fa-regular fa-moon';
+            themeIconElement.className = 'fa-solid fa-moon';
         }
     }
 }
 
-/**
- * Открыть модальное окно выбора темы
- */
+/*** Открыть модальное окно выбора темы*/
 function toggleThemeModal() {
     const currentTheme = getThemeMode();
     
@@ -8479,9 +8531,7 @@ function toggleThemeModal() {
     openModal('themeModal');
 }
 
-/**
- * Выбрать тему (временно, без сохранения)
- */
+/*** Выбрать тему (временно, без сохранения)*/
 function selectTheme(theme) {
     // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
     tempTheme = theme;
@@ -8497,29 +8547,416 @@ function selectTheme(theme) {
     }
 }
 
-/**
- * ★★★ ПРИМЕНИТЬ ТЕМУ (ПРИ НАЖАТИИ "ГОТОВО") ★★★
- */
+/*** ★★★ ПРИМЕНИТЬ ТЕМУ (ПРИ НАЖАТИИ "ГОТОВО") ★★★ */
 function applyTheme() {
-    // Если есть временный выбор - сохраняем его
+    // Если есть временный выбор - проверяем, изменилась ли тема
     if (tempTheme) {
-        localStorage.setItem(THEME_MODE_KEY, tempTheme);
+        const currentTheme = getThemeMode();
         
-        // Обновляем UI в настройках
-        updateThemeUI();
-        
-        // ★★★ ПОКАЗЫВАЕМ ТОСТ ТОЛЬКО ЗДЕСЬ ★★★
-        showToast(`✅ Тема изменена на ${tempTheme === 'light' ? 'Светлую' : 'Тёмную'}`);
-        console.log(`✅ Применена тема: ${tempTheme === 'light' ? 'Светлая ☀️' : 'Тёмная 🌙'}`);
+        // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛАСЬ ЛИ ТЕМА ★★★
+        if (tempTheme !== currentTheme) {
+            // Тема реально изменилась - сохраняем и показываем тост
+            localStorage.setItem(THEME_MODE_KEY, tempTheme);
+            
+            // ★★★ ПРИМЕНЯЕМ КЛАСС К BODY ★★★
+            document.body.classList.remove('theme-dark-mode');
+            if (tempTheme === 'dark') {
+                document.body.classList.add('theme-dark-mode');
+            }
+            
+            // Обновляем UI в настройках
+            updateThemeUI();
+            
+            // ★★★ ПОКАЗЫВАЕМ ТОСТ ТОЛЬКО ПРИ РЕАЛЬНОМ ИЗМЕНЕНИИ ★★★
+            showToast(`✅ Тема изменена на ${tempTheme === 'light' ? 'Светлую' : 'Тёмную'}`);
+            console.log(`✅ Применена тема: ${tempTheme === 'light' ? 'Светлая ☀️' : 'Тёмная 🌙'}`);
+        } else {
+            // Тема не изменилась - просто закрываем модалку
+            console.log('ℹ️ Тема не изменилась, модалка закрыта');
+        }
     }
     
     // Закрываем модалку
     closeModal('themeModal');
 }
 
-// =================== ИНИЦИАЛИЗАЦИЯ ===================
+// =================== РЕДАКТИРОВАНИЕ ПОЧТЫ И ПАРОЛЯ ===================
 
-// При загрузке страницы обновляем UI темы
-document.addEventListener('DOMContentLoaded', function() {
-    updateThemeUI();
-});
+/**
+ * Редактирование почты
+ */
+function editEmail() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+    
+    const currentEmail = user.email || '';
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'editEmailModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:420px; width:95%;">
+            <div class="modal-title">Изменить почту</div>
+            <p class="modal-text" style="margin-bottom: 1rem;">
+                Введите новый email. На него придёт письмо для подтверждения.
+            </p>
+            <div class="form-group" style="text-align:left; margin-bottom: 1rem;">
+                <label class="form-label">Новая почта</label>
+                <input type="email" id="newEmailInput" class="form-input" placeholder="example@mail.ru" value="${currentEmail}" maxlength="50" />
+            </div>
+            <div class="form-group" style="text-align:left; margin-bottom: 1rem;">
+                <label class="form-label">Пароль для подтверждения</label>
+                <input type="password" id="emailConfirmPassword" class="form-input" placeholder="Введите пароль" maxlength="20" />
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <button class="btn btn-secondary" id="editEmailCancel" style="flex:1;">Отмена</button>
+                <button class="btn btn-primary" id="editEmailSave" style="flex:1;">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    document.getElementById('editEmailCancel').addEventListener('click', function() {
+        overlay.remove();
+    });
+    
+    document.getElementById('editEmailSave').addEventListener('click', async function() {
+        const newEmail = document.getElementById('newEmailInput').value.trim();
+        const password = document.getElementById('emailConfirmPassword').value.trim();
+        
+        const emailInput = document.getElementById('newEmailInput');
+        const passwordInput = document.getElementById('emailConfirmPassword');
+        
+        emailInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        
+        let hasError = false;
+        let errorMessage = '';
+        
+        if (!newEmail) {
+            emailInput.classList.add('error');
+            hasError = true;
+            errorMessage = 'Введите email';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            emailInput.classList.add('error');
+            hasError = true;
+            errorMessage = 'Неверный формат email';
+        }
+        
+        if (!password) {
+            passwordInput.classList.add('error');
+            hasError = true;
+            if (!errorMessage) errorMessage = 'Введите пароль';
+        }
+        
+        if (hasError) {
+            showToast('⚠️ ' + errorMessage);
+            return;
+        }
+        
+        if (newEmail === currentEmail) {
+            showToast('ℹ️ Почта не изменилась');
+            return;
+        }
+        
+        try {
+            // ★★★ 1. ПЕРЕАУТЕНТИФИКАЦИЯ ★★★
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+            await user.reauthenticateWithCredential(credential);
+            
+            // ★★★ 2. СОХРАНЯЕМ СТАРЫЙ EMAIL (на всякий случай) ★★★
+            const oldEmail = user.email;
+            
+            // ★★★ 3. ОТПРАВЛЯЕМ ПИСЬМО ПОДТВЕРЖДЕНИЯ ★★★
+            await user.verifyBeforeUpdateEmail(newEmail);
+            
+            // ★★★ 4. СОХРАНЯЕМ ВРЕМЕННЫЕ ДАННЫЕ ★★★
+            localStorage.setItem('pendingEmailChange', newEmail);
+            localStorage.setItem('pendingEmailChangeTime', String(Date.now()));
+            localStorage.setItem('pendingOldEmail', oldEmail);
+            
+            // ★★★ 5. ЗАКРЫВАЕМ ПЕРВУЮ МОДАЛКУ ★★★
+            overlay.remove();
+            
+            // ★★★ 6. ПОКАЗЫВАЕМ МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ★★★
+            showEmailVerificationModal(newEmail);
+            
+        } catch (error) {
+            console.error('Ошибка изменения почты:', error);
+            
+            let message = 'Ошибка изменения почты';
+            
+            switch (error.code) {
+                case 'auth/invalid-credential':
+                case 'auth/wrong-password':
+                    message = 'Неверный пароль';
+                    passwordInput.classList.add('error');
+                    break;
+                case 'auth/email-already-in-use':
+                    message = 'Эта почта уже используется';
+                    emailInput.classList.add('error');
+                    break;
+                case 'auth/requires-recent-login':
+                    message = 'Требуется повторный вход. Выйдите и зайдите снова.';
+                    break;
+                case 'auth/network-request-failed':
+                    message = 'Проверьте интернет-соединение';
+                    break;
+                case 'auth/too-many-requests':
+                    message = 'Слишком много попыток. Подождите.';
+                    break;
+                case 'auth/invalid-email':
+                    message = 'Неверный формат email';
+                    emailInput.classList.add('error');
+                    break;
+                case 'auth/operation-not-allowed':
+                    message = 'Операция запрещена. Обратитесь к администратору.';
+                    break;
+                default:
+                    message = error.message || 'Ошибка изменения почты';
+            }
+            
+            showToast('❌ ' + message);
+        }
+    });
+}
+
+/**
+ * Показать модальное окно подтверждения почты
+ */
+function showEmailVerificationModal(newEmail) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'emailVerificationModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:420px; width:95%;">
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <div style="font-size: 4rem; margin-bottom: 0.5rem;">📧</div>
+                <div class="modal-title">Подтвердите почту</div>
+                <p class="modal-text" style="margin-bottom: 1rem;">
+                    Вам пришло письмо на <strong>${newEmail}</strong>
+                </p>
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <button class="btn btn-secondary" id="emailVerifyCancel" style="flex:1;">Отмена</button>
+                <button class="btn btn-primary" id="emailVerifyConfirm" style="flex:1;">Продолжить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // ★★★ КНОПКА "ОТМЕНА" - ВОЗВРАЩАЕМ СТАРУЮ ПОЧТУ ★★★
+    document.getElementById('emailVerifyCancel').addEventListener('click', async function() {
+        const oldEmail = localStorage.getItem('pendingOldEmail');
+        const user = firebase.auth().currentUser;
+        
+        if (user && oldEmail) {
+            try {
+                // ★★★ ВОЗВРАЩАЕМ СТАРУЮ ПОЧТУ ★★★
+                await user.updateEmail(oldEmail);
+                await updateUserProfile(user.uid, { email: oldEmail });
+                document.getElementById('profileEmailDisplay').textContent = oldEmail;
+                showToast('✅ Почта возвращена на ' + oldEmail);
+            } catch (error) {
+                console.error('Ошибка возврата почты:', error);
+                showToast('⚠️ Не удалось вернуть старую почту. Перезайдите в аккаунт.');
+            }
+        }
+        
+        localStorage.removeItem('pendingEmailChange');
+        localStorage.removeItem('pendingEmailChangeTime');
+        localStorage.removeItem('pendingOldEmail');
+        overlay.remove();
+    });
+    
+    // ★★★ КНОПКА "ПРОДОЛЖИТЬ" - ПРОВЕРЯЕМ ПОДТВЕРЖДЕНИЕ ★★★
+    document.getElementById('emailVerifyConfirm').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Проверка...';
+        
+        try {
+            const user = firebase.auth().currentUser;
+            
+            if (!user) {
+                showToast('❌ Пользователь не найден');
+                btn.disabled = false;
+                btn.textContent = 'Продолжить';
+                return;
+            }
+            
+            // ★★★ ПЕРЕЗАГРУЖАЕМ ПОЛЬЗОВАТЕЛЯ ★★★
+            await user.reload();
+            
+            // ★★★ ПРОВЕРЯЕМ, ПОДТВЕРЖДЕНА ЛИ НОВАЯ ПОЧТА ★★★
+            // ★★★ ВАЖНО: проверяем, что email совпадает с новым И подтверждён ★★★
+            if (user.email === newEmail && user.emailVerified) {
+                // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - ОБНОВЛЯЕМ FIRESTORE ★★★
+                try {
+                    await updateUserProfile(user.uid, { email: newEmail });
+                    document.getElementById('profileEmailDisplay').textContent = newEmail;
+                    
+                    localStorage.removeItem('pendingEmailChange');
+                    localStorage.removeItem('pendingEmailChangeTime');
+                    localStorage.removeItem('pendingOldEmail');
+                    
+                    overlay.remove();
+                    showToast('✅ Почта успешно изменена на ' + newEmail);
+                    
+                } catch (error) {
+                    console.error('Ошибка обновления профиля:', error);
+                    showToast('❌ Ошибка обновления профиля');
+                    btn.disabled = false;
+                    btn.textContent = 'Продолжить';
+                }
+            } else {
+                // ★★★ ПОЧТА НЕ ПОДТВЕРЖДЕНА ★★★
+                showToast('⚠️ Подтвердите почту! Проверьте письмо');
+                btn.disabled = false;
+                btn.textContent = 'Продолжить';
+            }
+            
+        } catch (error) {
+            console.error('Ошибка проверки почты:', error);
+            showToast('❌ Ошибка проверки почты');
+            btn.disabled = false;
+            btn.textContent = 'Продолжить';
+        }
+    });
+}
+
+/**
+ * Редактирование пароля
+ */
+function editPassword() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'editPasswordModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:420px; width:95%;">
+            <div class="modal-title">Изменить пароль</div>
+            <p class="modal-text" style="margin-bottom: 1rem;">
+                Введите текущий пароль и новый пароль.
+            </p>
+            <div class="form-group" style="text-align:left; margin-bottom: 0.8rem;">
+                <label class="form-label">Текущий пароль</label>
+                <input type="password" id="currentPasswordInput" class="form-input" placeholder="Введите текущий пароль" maxlength="20" />
+            </div>
+            <div class="form-group" style="text-align:left; margin-bottom: 0.8rem;">
+                <label class="form-label">Новый пароль</label>
+                <input type="password" id="newPasswordInput" class="form-input" placeholder="Минимум 6 символов" maxlength="20" />
+            </div>
+            <div class="form-group" style="text-align:left; margin-bottom: 1rem;">
+                <label class="form-label">Подтвердите новый пароль</label>
+                <input type="password" id="confirmPasswordInput" class="form-input" placeholder="Повторите новый пароль" maxlength="20" />
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <button class="btn btn-secondary" id="editPasswordCancel" style="flex:1;">Отмена</button>
+                <button class="btn btn-primary" id="editPasswordSave" style="flex:1;">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    document.getElementById('editPasswordCancel').addEventListener('click', function() {
+        overlay.remove();
+    });
+    
+    document.getElementById('editPasswordSave').addEventListener('click', async function() {
+        const currentPassword = document.getElementById('currentPasswordInput').value.trim();
+        const newPassword = document.getElementById('newPasswordInput').value.trim();
+        const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
+        
+        const currentInput = document.getElementById('currentPasswordInput');
+        const newInput = document.getElementById('newPasswordInput');
+        const confirmInput = document.getElementById('confirmPasswordInput');
+        
+        [currentInput, newInput, confirmInput].forEach(inp => inp.classList.remove('error'));
+        
+        let hasError = false;
+        let errorMessage = '';
+        
+        if (!currentPassword) {
+            currentInput.classList.add('error');
+            hasError = true;
+            errorMessage = 'Введите текущий пароль';
+        }
+        
+        if (!newPassword || newPassword.length < 6) {
+            newInput.classList.add('error');
+            hasError = true;
+            if (!errorMessage) errorMessage = 'Пароль должен быть минимум 6 символов';
+        }
+        
+        if (newPassword !== confirmPassword) {
+            confirmInput.classList.add('error');
+            hasError = true;
+            if (!errorMessage) errorMessage = 'Пароли не совпадают';
+        }
+        
+        if (newPassword === currentPassword) {
+            newInput.classList.add('error');
+            hasError = true;
+            if (!errorMessage) errorMessage = 'Новый пароль совпадает с текущим';
+        }
+        
+        if (hasError) {
+            showToast('⚠️ ' + errorMessage);
+            return;
+        }
+        
+        try {
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+            await user.reauthenticateWithCredential(credential);
+            await user.updatePassword(newPassword);
+            
+            showToast('✅ Пароль обновлён!');
+            overlay.remove();
+            
+        } catch (error) {
+            console.error('Ошибка изменения пароля:', error);
+            console.log('Код ошибки:', error.code);
+            console.log('Сообщение:', error.message);
+            
+            let message = 'Ошибка изменения пароля';
+            
+            // ★★★ ОБНОВЛЁННАЯ ОБРАБОТКА ОШИБОК ★★★
+            switch (error.code) {
+                case 'auth/invalid-credential':
+                case 'auth/wrong-password':
+                    message = 'Неверный текущий пароль';
+                    currentInput.classList.add('error');
+                    break;
+                case 'auth/requires-recent-login':
+                    message = 'Требуется повторный вход. Выйдите и зайдите снова.';
+                    break;
+                case 'auth/weak-password':
+                    message = 'Пароль слишком простой. Минимум 6 символов.';
+                    newInput.classList.add('error');
+                    break;
+                case 'auth/network-request-failed':
+                    message = 'Проверьте интернет-соединение';
+                    break;
+                case 'auth/too-many-requests':
+                    message = 'Слишком много попыток. Подождите.';
+                    break;
+                case 'auth/user-not-found':
+                    message = 'Пользователь не найден';
+                    break;
+                default:
+                    message = error.message || 'Ошибка изменения пароля';
+            }
+            
+            showToast('❌ ' + message);
+        }
+    });
+}

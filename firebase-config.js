@@ -2,7 +2,7 @@
 // firebase-config.js
 // ============================================================
 
-const firebaseConfig = {
+const firebaseConfig = { 
   apiKey: "AIzaSyD6uUMfXa3MA6wa3RoatzYFex4M6QAo4Iw",
   authDomain: "sportapp-f3e54.firebaseapp.com",
   projectId: "sportapp-f3e54",
