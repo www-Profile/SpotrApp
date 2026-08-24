@@ -5177,6 +5177,7 @@ showNotification('🎉', `Поздравляем! Вы достигли ${curren
     renderAchievements();
     // ★★★ ЗАГРУЖАЕМ НАСТРОЙКУ ВИДИМОСТИ ДОСТИЖЕНИЙ ★★★
 loadAchievementsVisibility();
+document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
     
     // Проверяем достижения в фоне и обновляем, если что-то изменилось
     try {
@@ -9589,8 +9590,8 @@ function toggleAchievementsVisibility() {
     showConfirmModal(
         newState ? 'Показать достижения в профиле?' : 'Скрыть достижения в профиле?',
         newState
-            ? 'Достижения снова появятся в вашем профиле.'
-            : 'Достижения будут скрыты в вашем профиле.',
+            ? 'Достижения снова появятся в вашем профиле, и профиле друзей.'
+            : 'Достижения будут скрыты в вашем профиле, и профиле друзей.',
         function() {
             localStorage.setItem(ACHIEVEMENTS_VISIBILITY_KEY, String(newState));
             updateAchievementsVisibilityUI(newState);
@@ -9616,3 +9617,32 @@ function updateAchievementsUI(containerId, achievements) {
         el.classList.add(unlocked ? 'unlocked' : 'locked');
     });
 }
+
+function openLevelInfoModal() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('❌ Авторизуйтесь');
+        return;
+    }
+    getUserProfile(user.uid).then(result => {
+        if (!result.success) return;
+        const profile = result.data;
+        const xp = profile.totalXp || 0;
+        const currentLevel = getCurrentLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLevel = getNextLevel(xp);
+        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+
+        document.getElementById('levelInfoLvl').textContent = currentLevel.id + ' LVL';
+        document.getElementById('levelInfoTitle').textContent = currentLevel.name;
+        document.getElementById('levelInfoProgress').textContent = progressText;
+        document.getElementById('levelInfoFill').style.width = progress + '%';
+
+        openModal('levelInfoModal');
+    });
+}
+
+document.getElementById('levelInfoOkBtn')?.addEventListener('click', function() {
+    closeModal('levelInfoModal');
+    openAchievementsModal();
+});

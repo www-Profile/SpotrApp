@@ -749,21 +749,21 @@
                     <div class="profile-avatar"><span id="profileInitials">А</span></div>
                     <h2 class="profile-name" id="profileName">Пользователь</h2>
 
-                    <div class="level-block" onclick="openAchievementsModal()">
-                        <div class="level-header">
-                            <div class="level-left">
-                                <span class="level-lvl" id="levelLvl">1 LVL</span>
-                            </div>
-                            <div class="level-center">
-                                <span class="level-title" id="levelTitle">НАЧИНАЮЩИЙ</span>
-                            </div>
-                            <div class="level-right">
-                                <span class="level-progress-text" id="levelProgressText">0/100XP</span>
-                            </div>
-                        </div>
-                        <div class="level-bar">
-                            <div class="level-fill" id="levelFill" style="width:0%;"></div>
-                        </div>
+<div class="level-block" id="profileLevelBlock">
+    <div class="level-header">
+        <div class="level-left">
+            <span class="level-lvl" id="levelLvl">1 LVL</span>
+        </div>
+        <div class="level-center">
+            <span class="level-title" id="levelTitle">НАЧИНАЮЩИЙ</span>
+        </div>
+        <div class="level-right">
+            <span class="level-progress-text" id="levelProgressText">0/100XP</span>
+        </div>
+    </div>
+    <div class="level-bar">
+        <div class="level-fill" id="levelFill" style="width:0%;"></div>
+    </div>
                                             <!-- ===== БЛОК ДОСТИЖЕНИЙ ===== -->
 <div class="achievements-container" id="achievementsContainer">
     <div class="achievement-icon locked" data-achievement="friendly">
@@ -1165,6 +1165,38 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+    <!-- ===== МОДАЛКА: ИНФОРМАЦИЯ ОБ УРОВНЕ ===== -->
+<div id="levelInfoModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:420px;">
+        <div class="modal-title">Уровень профиля</div>
+        <p class="modal-text" style="margin-bottom: 0.5rem;">
+Ваш уровень растёт с каждой тренировкой.
+        </p>
+        <div class="level-block" style="margin: 0rem 0rem 0.2rem 0rem;">
+            <div class="level-header">
+                <div class="level-left">
+                    <span class="level-lvl" id="levelInfoLvl">1 LVL</span>
+                </div>
+                <div class="level-center">
+                    <span class="level-title" id="levelInfoTitle">НАЧИНАЮЩИЙ</span>
+                </div>
+                <div class="level-right">
+                    <span class="level-progress-text" id="levelInfoProgress">0/100XP</span>
+                </div>
+            </div>
+            <div class="level-bar">
+                <div class="level-fill" id="levelInfoFill" style="width:0%;"></div>
+            </div>
+        </div>
+        <p class="modal-text" style="margin-bottom: 0.5rem;">
+            Это основная статистика, по которой работает рейнтинг пользователей, 
+            с помощью него вы можете соревноваться с друзьями!
+            Продолжайте тренироваться, чтобы достигать новых вершин!
+        </p>
+        <button class="btn btn-primary" id="levelInfoOkBtn">Понятно</button>
+    </div>
+</div>
 
     <!-- ===== МОДАЛКА: ДОСТИЖЕНИЯ ===== -->
 <div id="achievementsModal" class="modal-overlay" style="display:none;">
