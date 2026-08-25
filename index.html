@@ -982,31 +982,32 @@
         </div>
     </div>
 
-    <!-- ===== СТРАНИЦА: ПРИВЕТСТВИЕ ===== -->
-    <div id="page-hero" class="page">
-        <div class="hero">
-            <div class="hero-content">
-                <h1 class="hero-title">SportApp</h1>
-                <div class="hero-features">
-                    <div class="feature">
-                        <i class="fa-solid fa-chart-bar"></i>
-                        <span>Анализируй результаты</span>
-                    </div>
-<div class="feature">
-    <i class="fa-solid fa-dumbbell"></i>
-    <span>Создавай тренировки</span>
-</div>
-                    <div class="feature">
-                        <i class="fa-solid fa-user-group"></i>
-                        <span>Соревнуйся с друзьями</span>
-                    </div>
+<!-- ===== СТРАНИЦА: ПРИВЕТСТВИЕ ===== -->
+<div id="page-hero" class="page">
+    <div class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">SportApp</h1>
+            <div class="hero-features">
+                <div class="feature">
+                    <i class="fa-solid fa-chart-bar"></i>
+                    <span>Анализируй результаты</span>
                 </div>
-                <div class="hero-buttons">
-                    <button class="btn btn-primary" onclick="showRegister()">Начать тренироваться</button>
+                <div class="feature">
+                    <i class="fa-solid fa-dumbbell"></i>
+                    <span>Создавай тренировки</span>
                 </div>
+                <div class="feature">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Соревнуйся с друзьями</span>
+                </div>
+            </div>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="showLogin()">Войти</button>
+                <button class="btn btn-primary" onclick="showRegister()">Зарегистрироваться</button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- ===== СТРАНИЦА: ЗАГРУЗКИ ===== -->
     <div id="page-loading" class="page">
@@ -1038,18 +1039,23 @@
 <div id="page-register" class="page">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Создать аккаунт</h2>
             <form id="registerFormStep1" novalidate>
-                <div class="form-group">
-                    <label class="form-label">Как вас зовут?</label>
+                <label class="form-label-large">Как вас зовут?</label>
+                <div class="input-with-btn">
                     <input type="text" id="regName" class="form-input" placeholder="Введите ваше имя" maxlength="30" required />
+                    <button type="submit" class="btn-submit-arrow" id="registerStep1Btn">›</button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="registerStep1Btn">Продолжить</button>
             </form>
-            <p class="auth-switch">
-                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
-            </p>
         </div>
     </div>
 </div>
@@ -1058,18 +1064,23 @@
 <div id="page-register-email" class="page" style="display:none;">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Создать аккаунт</h2>
             <form id="registerFormStep2" novalidate>
-                <div class="form-group">
-                    <label class="form-label">Ваша почта</label>
+                <label class="form-label-large">Ваша почта</label>
+                <div class="input-with-btn">
                     <input type="email" id="regEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
+                    <button type="submit" class="btn-submit-arrow" id="registerStep2Btn">›</button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="registerStep2Btn">Продолжить</button>
             </form>
-            <p class="auth-switch">
-                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
-            </p>
         </div>
     </div>
 </div>
@@ -1078,18 +1089,23 @@
 <div id="page-register-password" class="page" style="display:none;">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Создать аккаунт</h2>
             <form id="registerFormStep3" novalidate>
-                <div class="form-group">
-                    <label class="form-label">Придумайте пароль</label>
+                <label class="form-label-large">Придумайте пароль</label>
+                <div class="input-with-btn">
                     <input type="password" id="regPassword" class="form-input" placeholder="Минимум 6 символов" maxlength="20" required />
+                    <button type="submit" class="btn-submit-arrow" id="registerStep3Btn">›</button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="registerStep3Btn">Продолжить</button>
             </form>
-            <p class="auth-switch">
-                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
-            </p>
         </div>
     </div>
 </div>
@@ -1098,17 +1114,21 @@
 <div id="page-register-verify" class="page" style="display:none;">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Создать аккаунт</h2>
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📧</div>
-                <p style="color: var(--dark); font-weight: 600; margin-bottom: 0.5rem;">Подтвердите почту</p>
-                <p style="color: var(--slate); font-size: 0.9rem;">Вам пришло письмо на вашу почту</p>
+            <div style="text-align: center; margin-top: -2rem;">
+                <div style="font-size: 4rem">📧</div>
+                <p style="color: var(--slate); font-size: 0.9rem;">На вашу почту пришло письмо.</p>
             </div>
-            <button class="btn btn-primary" id="registerVerifyBtn">Продолжить</button>
-            <p class="auth-switch">
-                Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти в аккаунт</a>
-            </p>
+            <button class="btn btn-primary" id="registerVerifyBtn" style="margin-top: 0.5rem;">Продолжить</button>
         </div>
     </div>
 </div>
@@ -1117,18 +1137,22 @@
 <div id="page-login" class="page">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Войти в аккаунт</h2>
             <form id="loginFormStep1" novalidate>
-                <div class="form-group">
-                    <label class="form-label">Ваша почта</label>
+                <label class="form-label-large">Ваша почта</label>
+                <div class="input-with-btn">
                     <input type="email" id="loginEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
+                    <button type="submit" class="btn-submit-arrow" id="loginStep1Btn">›</button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="loginStep1Btn">Продолжить</button>
             </form>
-            <p class="auth-switch">
-                Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a>
-            </p>
+            <p class="auth-switch" style="visibility: hidden; margin-top: 0.8rem; height: 1.6rem;">Забыли пароль? <a >Восстановить</a></p>
         </div>
     </div>
 </div>
@@ -1137,22 +1161,24 @@
 <div id="page-login-password" class="page" style="display:none;">
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+        </div>
+        
         <div class="auth-card">
-            <h2 class="auth-card-title">Войти в аккаунт</h2>
             <form id="loginFormStep2" novalidate>
-                <div class="form-group">
-                    <label class="form-label">Пароль</label>
+                <label class="form-label-large">Ваш пароль</label>
+                <div class="input-with-btn">
                     <input type="password" id="loginPassword" class="form-input" placeholder="Введите пароль" maxlength="20" required />
+                    <button type="submit" class="btn-submit-arrow" id="loginStep2Btn">›</button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="loginStep2Btn">Продолжить</button>
             </form>
-            <p class="auth-switch">
-                Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a>
-            </p>
-            <!-- ★★★ ССЫЛКА "ЗАБЫЛИ ПАРОЛЬ?" - СКРЫТА ПО УМОЛЧАНИЮ ★★★ -->
-            <p class="auth-switch" id="forgotPasswordLink" style="display: none;">
-                Забыли пароль? <a href="#" onclick="sendPasswordReset()">Восстановить</a>
-            </p>
+<p class="auth-switch" id="forgotPasswordLink" style="visibility: hidden; margin-top: 0.8rem; height: 1.6rem;">
+    Забыли пароль? <a href="#" onclick="sendPasswordReset()">Восстановить</a>
+</p>
         </div>
     </div>
 </div>
@@ -1169,7 +1195,7 @@
     <!-- ===== МОДАЛКА: ИНФОРМАЦИЯ ОБ УРОВНЕ ===== -->
 <div id="levelInfoModal" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-width:420px;">
-        <div class="modal-title">Уровень профиля</div>
+        <div class="modal-title">УРОВЕНЬ ПРОФИЛЯ</div>
         <p class="modal-text" style="margin-bottom: 0.5rem;">
 Ваш уровень растёт с каждой тренировкой.
         </p>
@@ -1231,6 +1257,20 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
             </div>
+
+                                    <!-- Системная тема -->
+            <div class="theme-option" style="background: var(--slate)" data-theme="system" onclick="selectTheme('system')">
+                <div class="theme-option-iconSistem">
+                    <i class="fa-solid fa-cloud-sun-rain" style="color: var(--gold)"></i>
+                </div>
+                <div class="theme-option-info">
+                    <div class="settings-title" style="color: var(--bg-primary)">Системная</div>
+                    <div class="settings-desc" style="color: var(--bg-primary)">Переключаеться автоматически</div>
+                </div>
+                <div class="theme-option-check">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
             
             <!-- Тёмная тема -->
             <div class="theme-option" style="background: var(--bg-primary)" data-theme="dark" onclick="selectTheme('dark')">
@@ -1240,19 +1280,6 @@
                 <div class="theme-option-info">
                     <div class="settings-titleDark">Тёмная</div>
                     <div class="settings-descDark">Тёмный фон, светлый текст</div>
-                </div>
-                <div class="theme-option-check">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-            </div>
-                        <!-- Системная тема -->
-            <div class="theme-option" style="background: linear-gradient(to right, var(--light), var(--bg-primary));" data-theme="system" onclick="selectTheme('system')">
-                <div class="theme-option-iconSistem">
-                    <i class="fa-solid fa-cloud-sun-rain"></i>
-                </div>
-                <div class="theme-option-info">
-                    <div class="settings-title">Системная</div>
-                    <div class="settings-desc">Переключаеться автоматически</div>
                 </div>
                 <div class="theme-option-check">
                     <i class="fa-solid fa-check"></i>
@@ -1600,6 +1627,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="exercises-catalog.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

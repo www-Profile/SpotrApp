@@ -29,6 +29,7 @@ body {
     --white: #FFFFFF;
     --danger: #EF4444;
     --gold: #F7C948;
+    --light-grey: #E2E8F0;
 
     --bg-primary: #0F172A;
     --bg-secondary: #1E293B;
@@ -379,7 +380,7 @@ body {
     align-items: center;
     gap: 1rem;
     background: var(--white);
-    padding: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border: 2px solid transparent;
@@ -395,6 +396,13 @@ body {
     line-height: 0.4;
     user-select: none;
     -webkit-user-select: none;
+}
+
+.edit-exercise-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
 }
 
 .edit-drag-handle span {
@@ -586,7 +594,7 @@ body {
 .form-input {
     width: 100%;
     padding: 0.6rem 1rem;
-    border: 1.5px solid #E2E8F0;
+    border: 1.5px solid var(--light-grey);
     border-radius: 10px;
     font-size: 0.9rem;
     background: #FAFCFF;
@@ -830,7 +838,7 @@ body {
 .stat-bar {
     flex: 1;
     height: 6px;
-    background: #E2E8F0;
+    background: var(--light-grey);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -1219,7 +1227,7 @@ body {
 .level-bar {
     width: 100%;
     height: 6px;
-    background: #E2E8F0;
+    background: var(--light-grey);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
@@ -1247,7 +1255,7 @@ body {
     padding: 0.8rem 0rem;
     gap: 1rem;
     cursor: pointer;
-    border-bottom: 1px solid #E2E8F0 !important;
+    border-bottom: 1px solid var(--light-grey)!important;
     margin: 0 1.2rem; /* ★★★ ДОБАВЛЯЕМ ОТСТУПЫ СЛЕВА И СПРАВА ★★★ */
     width: auto; /* Убираем ширину 100% */
 }
@@ -1347,7 +1355,7 @@ body {
     cursor: pointer;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border: 2px solid transparent;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--light-grey);
     margin-bottom: 0.5rem;
 }
 
@@ -1374,7 +1382,7 @@ body {
     padding: 0.8rem 0.8rem;
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--light-grey);
 }
 
 .friend-result-item .friend-avatar {
@@ -1625,7 +1633,7 @@ body {
 .search-input {
     flex: 1;
     padding: 0.6rem 1rem;
-    border: 1.5px solid #E2E8F0;
+    border: 1.5px solid var(--light-grey);
     border-radius: 10px;
     font-size: 0.9rem;
     background: #FAFCFF;
@@ -1670,7 +1678,7 @@ body {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    border: 2px solid #E2E8F0;
+    border: 2px solid var(--light-grey);
     background: var(--light);
     display: flex;
     align-items: center;
@@ -1708,7 +1716,7 @@ body {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 3px solid #E2E8F0;
+    border: 3px solid var(--light-grey);
     cursor: pointer;
     flex-shrink: 0;
 }
@@ -1729,18 +1737,16 @@ body {
     min-height: 100vh;
     height: 100vh;
     justify-content: center;
-    padding-top: 10vh; /* ★★★ НЕБОЛЬШОЙ ОТСТУП СВЕРХУ ★★★ */
-    margin-top: -10vh; /* ★★★ КОМПЕНСИРУЕМ ОТСТУПОМ СВЕРХУ ★★★ */
+    padding-top: 20vh; /* ★★★ НЕБОЛЬШОЙ ОТСТУП СВЕРХУ ★★★ */
+    margin-top: -20vh; /* ★★★ КОМПЕНСИРУЕМ ОТСТУПОМ СВЕРХУ ★★★ */
 }
 
 .auth-title {
     font-size: 4rem;
     font-weight: 800;
-    letter-spacing: -0.02em;
     text-align: center;
     display: block;
     width: 100%;
-    margin-bottom: 1.5rem;
     background: var(--accent);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1748,21 +1754,16 @@ body {
 }
 
 .auth-card {
-    background: var(--white);
-    padding: 1rem 1rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
+    background: none;
     width: 100%;
 }
 
-.auth-card-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    text-align: center;
+.form-label-large {
+    display: block;
+    font-weight: 600;
+    font-size: 1.3rem;
     margin-bottom: 1rem;
     color: var(--dark);
-    letter-spacing: -0.01em;
-    word-break: break-word;
 }
 
 .auth-switch {
@@ -1782,16 +1783,91 @@ font-style: italic;
     font-style: italic;
 }
 
+/* =================== ПОЛОСКИ ШАГОВ РЕГИСТРАЦИИ ==================== */
+.step-dots {
+    display: flex;
+    gap: 0.5rem;
+    width: 90%;
+    max-width: 400px;
+    margin-bottom: 2rem;
+}
+
+.step-dot {
+    flex: 1;
+    height: 6px;
+    border-radius: 10px;
+    background: var(--light-grey);
+    transition: background 0.4s ease;
+}
+
+.step-dot.active {
+    background: var(--accent);
+}
+
+/* Для тёмной темы */
+body.theme-dark-mode .step-dot {
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .step-dot.active {
+    background: var(--accent);
+}
+
+/* =================== ПОЛЕ ВВОДА С КНОПКОЙ ==================== */
+.input-with-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.input-with-btn .form-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-submit-arrow {
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--white);
+    font-size: 1.6rem;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-sizing: border-box;
+    width: 38px;
+    height: 38px;
+}
+
+/* Для тёмной темы */
+body.theme-dark-mode .btn-submit-arrow {
+    background: var(--accent);
+    color: var(--light-grey);
+}
+
+/* Для мобильных устройств */
+@media (max-width: 480px) {
+    .btn-submit-arrow {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        font-size: 1.6rem;
+    }
+}
+
 /* ===================HERO ==================== */
 .hero {
     min-height: 100vh;
     height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;      /* ← было center */
     justify-content: center;
+    padding-top: 30vh;            /* ← добавить */
     background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
-    padding: 0rem;
-    margin: 0;
 }
 
 .hero-content {
@@ -1832,15 +1908,15 @@ font-style: italic;
 
 .hero-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    align-items: center;
+    flex-direction: row !important;
+    gap: 0.5rem;
     margin-top: 1rem;
     width: 100%;
 }
 
 .hero-buttons .btn {
-    min-width: 200px;
+    flex: 1;
+    min-width: 0;
     width: 100%;
     max-width: 100%;
 }
@@ -1983,8 +2059,7 @@ font-style: italic;
     flex: 1;
     height: 100%;
     border-radius: 4px;
-    background: var(--light);
-    transition: background 0.3s ease;
+    background: var(--light-grey);
 }
 
 .progress-dash-active {
@@ -2206,7 +2281,7 @@ font-style: italic;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--light-grey);
 }
 
 .finish-stat-label {
@@ -2646,6 +2721,11 @@ font-style: italic;
         font-size: 1rem;
     }
 
+    .edit-exercise-icon {
+        width: 24px;
+        height: 24px;
+    }
+
     .stats-summary {
         gap: 0.5rem;
     }
@@ -2765,14 +2845,6 @@ font-style: italic;
         height: 30px;
     }
 
-    .auth-card {
-        padding: 1.5rem 1rem;
-    }
-
-    .auth-card-title {
-        font-size: 1.4rem;
-    }
-
     .auth-title {
         font-size: 3rem;
     }
@@ -2885,7 +2957,7 @@ textarea.error {
 .edit-header-block .form-input {
     width: 100%;
     padding: 0.7rem 1rem;
-    border: 1.5px solid #E2E8F0;
+    border: 1.5px solid var(--light-grey);
     border-radius: 10px;
     font-size: 0.95rem;
     background: #FAFCFF;
@@ -2908,7 +2980,7 @@ textarea.error {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    border: 2px solid #E2E8F0;
+    border: 2px solid var(--light-grey);
     background: var(--light);
     display: flex;
     align-items: center;
@@ -3265,7 +3337,6 @@ body.theme-dark-mode .edit-exercise-name,
 body.theme-dark-mode .settings-title,
 body.theme-dark-mode .profile-name,
 body.theme-dark-mode .modal-title,
-body.theme-dark-mode .auth-card-title,
 body.theme-dark-mode .finish-title,
 body.theme-dark-mode .level-title {
     color: var(--text-primary) !important;
@@ -3324,6 +3395,7 @@ body.theme-dark-mode .empty-text {
 
 body.theme-dark-mode .progress-dash {
     background: var(--bg-secondary);
+    
 }
 
 body.theme-dark-mode .progress-dash-active {
@@ -3364,10 +3436,6 @@ body.theme-dark-mode .toggle-btn-active {
 
 body.theme-dark-mode .edit-header-block {
     background: var(--bg-primary);
-}
-
-body.theme-dark-mode .premium-features li {
-    color: var(--text-secondary);
 }
 
 /* Вкладки */
@@ -3437,7 +3505,7 @@ body.theme-dark-mode .level-progress-text {
 }
 
 body.theme-dark-mode .level-bar {
-    background: var(--slate);
+    background: var(--bg-secondary);
 }
 
 body.theme-dark-mode .color-btn {
@@ -3582,11 +3650,6 @@ body.theme-dark-mode .notification-text {
     color: var(--text-primary);
 }
 
-/* Страница входа/регистрации */
-body.theme-dark-mode .auth-card {
-    background: var(--bg-secondary);
-}
-
 body.theme-dark-mode .auth-title {
     background: var(--accent);
     -webkit-background-clip: text;
@@ -3687,12 +3750,6 @@ body.theme-dark-mode .auth-container {
     background: var(--bg-primary);
 }
 
-/* Карточка */
-body.theme-dark-mode .auth-card {
-    background: var(--bg-secondary);
-    box-shadow: 0 8px 40px var(--shadow-color);
-}
-
 /* Заголовки */
 body.theme-dark-mode .auth-title {
     background: var(--accent);
@@ -3701,7 +3758,7 @@ body.theme-dark-mode .auth-title {
     background-clip: text;
 }
 
-body.theme-dark-mode .auth-card-title {
+body.theme-dark-mode .form-label-large {
     color: var(--text-primary);
 }
 
@@ -3761,7 +3818,7 @@ body.theme-dark-mode .form-input.error {
 /* Кнопки */
 body.theme-dark-mode .btn-primary {
     background: var(--accent);
-    color: var(--white);
+    color: var(--light-grey);
 }
 
 body.theme-dark-mode .btn-secondary {
@@ -3770,14 +3827,9 @@ body.theme-dark-mode .btn-secondary {
     box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-body.theme-dark-mode .btn-secondary:hover {
-    background: var(--accent-dark);
-    color: var(--white);
-}
-
 body.theme-dark-mode .btn-danger {
     background: var(--danger);
-    color: var(--white);
+    color: var(--light-grey);
 }
 
 /* Hero страница */
@@ -3790,11 +3842,6 @@ body.theme-dark-mode .hero-title {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}
-
-body.theme-dark-mode .feature {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
 }
 
 body.theme-dark-mode .feature span {
@@ -3820,14 +3867,19 @@ body.theme-dark-mode #page-loading .hero-title {
 
 /* Тёмная тема */
 body.theme-dark-mode .achievement-icon.locked {
-    background: var(--bg-primary) !important;
-    border-color: var(--border-color);
+    color: var(--bg-secondary) !important;
 }
 
 body.theme-dark-mode .achievement-icon.unlocked {
-    background: var(--gold) !important;
-    color: var(--dark) !important;
-    border-color: var(--gold);
+    color: var(--gold) !important;
+}
+
+body.theme-dark-mode .achievement-icon-top.unlocked {
+    color: var(--gold) !important;
+}
+
+body.theme-dark-mode .achievement-icon-top.locked {
+    color: var(--bg-primary) !important;
 }
 
 /* Тёмная тема */
@@ -3897,12 +3949,32 @@ body.theme-dark-mode .achievement-modal-progress-text.unlocked {
     font-size: 1.2rem;
 }
 
+/* =================== ДОСТИЖЕНИЯ В РЕЙТИНГАХ ==================== */
+.achievement-icon-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    width: 20px;
+    height: 20px;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
+.achievement-icon-top.unlocked {
+    color: var(--gold) !important;
+}
+
+.achievement-icon-top.locked {
+    color: var(--light-grey) !important;
+}
+
 .achievement-icon.unlocked {
     color: var(--gold) !important;
 }
 
 .achievement-icon.locked {
-    color: #E2E8F0 !important;
+    color: var(--light-grey) !important;
 }
 
 /* =================== ДОСТИЖЕНИЯ В МОДАЛКЕ ==================== */
@@ -3911,7 +3983,7 @@ body.theme-dark-mode .achievement-modal-progress-text.unlocked {
     align-items: center;
     gap: 0.2rem;
     padding: 0.5rem 0rem;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid var(--light-grey);
 }
 
 .achievement-modal-item:last-child {
@@ -3979,5 +4051,24 @@ body.theme-dark-mode .achievement-modal-progress-text.unlocked {
 }
 
 .achievement-modal-progress-text.locked {
+    color: var(--slate);
+}
+
+/* =================== PREMIUM ЛОКИРОВКА В КАТАЛОГЕ ==================== */
+.item-card.premium-locked {
+    cursor: pointer;
+    opacity: 0.7;
+    border-color: var(--gold);
+}
+
+.item-card.premium-locked .item-icon {
+    background: var(--light);
+}
+
+.item-card.premium-locked .item-icon img {
+    filter: grayscale(1);
+}
+
+.item-card.premium-locked .item-title {
     color: var(--slate);
 }

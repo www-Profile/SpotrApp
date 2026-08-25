@@ -4362,22 +4362,22 @@ function renderEditExercises() {
     }
     const exercisesHtml = editExercises.map((ex, index) => {
         const icon = ex.icon || getExerciseIcon(ex.name);
-        return `
-            <div class="edit-exercise-item" data-index="${index}" draggable="true">
-                <div class="edit-drag-handle"><span>☰</span></div>
-                <div class="item-icon">
-                    <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;">
-                </div>
-                <div class="edit-exercise-info">
-                    <h4 class="edit-exercise-name">${ex.name}</h4>
-                    <p class="edit-exercise-details">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
-                </div>
-                <div class="edit-exercise-actions">
-                    <button class="edit-btn" onclick="openExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
-                    <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
-                </div>
-            </div>
-        `;
+return `
+    <div class="edit-exercise-item" data-index="${index}" draggable="true">
+        <div class="edit-drag-handle"><span>☰</span></div>
+        <div class="item-icon">
+            <img src="images/${icon}.png" class="edit-exercise-icon">
+        </div>
+        <div class="edit-exercise-info">
+            <h4 class="edit-exercise-name">${ex.name}</h4>
+            <p class="edit-exercise-details">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
+        </div>
+        <div class="edit-exercise-actions">
+            <button class="edit-btn" onclick="openExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+    </div>
+`;
     }).join('');
     container.innerHTML = headerHtml + exercisesHtml;
     setupDragDrop();
@@ -5255,22 +5255,39 @@ firebase.auth().onAuthStateChanged(async (user) => {
             }
             
             // Проверка подтверждения почты
-            if (!user.emailVerified) {
-                // Сбрасываем флаг при неподтвержденной почте
-                isDataLoaded = false;
-                document.querySelectorAll('.page').forEach(p => {
-                    p.style.display = 'none';
-                    p.classList.remove('page-active');
-                });
-                if (bottomNav) bottomNav.style.display = 'none';
-                const loginPage = document.getElementById('page-login');
-                if (loginPage) {
-                    loginPage.style.display = 'block';
-                    loginPage.classList.add('page-active');
-                }
-                clearAuthFields();
+if (!user.emailVerified) {
+    // ★★★ ЕСЛИ ПОЧТА НЕ ПОДТВЕРЖДЕНА - ПРОВЕРЯЕМ ВРЕМЯ ★★★
+    const pendingTime = localStorage.getItem('pendingVerification_' + user.uid);
+    if (pendingTime) {
+        const elapsed = Date.now() - parseInt(pendingTime);
+        if (elapsed > 300000) {
+            // Прошло больше 5 минут - удаляем аккаунт
+            try {
+                await firebase.firestore().collection('users').doc(user.uid).delete();
+                await user.delete();
+                localStorage.removeItem('pendingVerification_' + user.uid);
+                showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
+                showHero();  // ← ПОКАЗЫВАЕМ ПРИВЕТСТВИЕ
                 return;
+            } catch (e) {
+                console.warn('Ошибка удаления просроченного аккаунта:', e);
             }
+        }
+    }
+    
+    // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ПРИВЕТСТВИЯ ★★★
+    isDataLoaded = false;
+    document.querySelectorAll('.page').forEach(p => {
+        p.style.display = 'none';
+        p.classList.remove('page-active');
+    });
+    if (bottomNav) bottomNav.style.display = 'none';
+    
+    showHero();  // ← ПОКАЗЫВАЕМ ПРИВЕТСТВИЕ
+    
+    clearAuthFields();
+    return;
+}
             
             // ★★★ ПРОВЕРЯЕМ ФЛАГ ★★★
             if (isDataLoaded) {
@@ -5519,9 +5536,7 @@ document.getElementById('registerFormStep3')?.addEventListener('submit', async f
     
     registerData.password = password;
     
-    // ★★★ УСТАНАВЛИВАЕМ ФЛАГ ★★★
     isRegistering = true;
-    
     btn.disabled = true;
     
     try {
@@ -5544,7 +5559,9 @@ document.getElementById('registerFormStep3')?.addEventListener('submit', async f
         
         await result.user.sendEmailVerification();
         
-        // ★★★ ПЕРЕХОД НА ШАГ 4 ★★★
+        // ★★★ ЗАПУСКАЕМ ТАЙМЕР УДАЛЕНИЯ ★★★
+        scheduleAccountDeletion(result.user);
+        
         switchToPage('page-register-verify');
         
         showToast('📧 Письмо отправлено на ' + registerData.email);
@@ -5583,7 +5600,6 @@ document.getElementById('registerFormStep3')?.addEventListener('submit', async f
         showToast('❌ ' + message);
         btn.disabled = false;
     } finally {
-        // ★★★ СБРАСЫВАЕМ ФЛАГ ★★★
         isRegistering = false;
     }
 });
@@ -5592,9 +5608,7 @@ document.getElementById('registerFormStep3')?.addEventListener('submit', async f
 document.getElementById('registerVerifyBtn')?.addEventListener('click', async function() {
     const btn = this;
     
-    if (btn.disabled) {
-        return;
-    }
+    if (btn.disabled) return;
     
     btn.disabled = true;
     
@@ -5610,9 +5624,11 @@ document.getElementById('registerVerifyBtn')?.addEventListener('click', async fu
         await user.reload();
         
         if (user.emailVerified) {
+            // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - УДАЛЯЕМ МЕТКУ ★★★
+            localStorage.removeItem('pendingVerification_' + user.uid);
+            
             showToast('✅ Почта подтверждена!');
             
-            // ★★★ ПЕРЕХОД НА СТРАНИЦУ ЗАГРУЗКИ ★★★
             switchToPage('page-loading');
             document.getElementById('bottomNav').style.display = 'none';
             
@@ -5633,13 +5649,10 @@ document.getElementById('registerVerifyBtn')?.addEventListener('click', async fu
             
         } else {
             const sent = await resendVerificationEmail();
-            
             if (sent) {
-                showToast('⚠️ Подтвердите почту!');
+                showToast('⚠️ Подтвердите почту! У вас 5 минут.');
             }
-            
             btn.disabled = false;
-            btn.textContent = 'Проверить снова';
         }
         
     } catch (error) {
@@ -5648,7 +5661,6 @@ document.getElementById('registerVerifyBtn')?.addEventListener('click', async fu
         } else {
             showToast('❌ Ошибка проверки почты');
         }
-        
         btn.disabled = false;
         btn.textContent = 'Продолжить';
     }
@@ -5675,7 +5687,6 @@ async function resendVerificationEmail() {
     
     if (lastSent) {
         const timeDiff = Date.now() - parseInt(lastSent);
-        
         if (timeDiff < 60000) {
             const remaining = Math.ceil((60000 - timeDiff) / 1000);
             showToast(`⏳ Подождите ${remaining} сек перед повторной отправкой`);
@@ -5686,6 +5697,10 @@ async function resendVerificationEmail() {
     try {
         await user.sendEmailVerification();
         localStorage.setItem('lastVerificationSent', String(Date.now()));
+        
+        // ★★★ ОБНОВЛЯЕМ ТАЙМЕР УДАЛЕНИЯ ★★★
+        refreshDeletionTimer(user);
+        
         showToast('📧 Письмо отправлено на ' + user.email);
         return true;
         
@@ -5699,6 +5714,82 @@ async function resendVerificationEmail() {
         }
         return false;
     }
+}
+
+// =================== АВТОУДАЛЕНИЕ НЕПОДТВЕРЖДЁННЫХ АККАУНТОВ ===================
+
+/**
+ * Запускает таймер на удаление аккаунта через 5 минут
+ * Если пользователь подтвердит почту раньше - таймер отменяется
+ */
+function scheduleAccountDeletion(user) {
+    if (!user) return;
+    
+    // Сохраняем время создания в localStorage
+    const creationTime = Date.now();
+    localStorage.setItem('pendingVerification_' + user.uid, String(creationTime));
+    
+    // Запускаем проверку через 5 минут (300000 мс)
+    setTimeout(async () => {
+        try {
+            // Проверяем, не подтверждена ли уже почта
+            await user.reload();
+            
+            if (user.emailVerified) {
+                // Почта подтверждена - удаляем метку
+                localStorage.removeItem('pendingVerification_' + user.uid);
+                console.log('✅ Почта подтверждена, аккаунт сохранён');
+                return;
+            }
+            
+            // Проверяем, не удалили ли уже аккаунт
+            const pendingTime = localStorage.getItem('pendingVerification_' + user.uid);
+            if (!pendingTime) return;
+            
+            // Проверяем, прошло ли 5 минут
+            const elapsed = Date.now() - parseInt(pendingTime);
+            if (elapsed < 300000) return; // Если меньше 5 минут - пропускаем
+            
+            // Удаляем аккаунт
+            console.log('⏰ Прошло 5 минут, почта не подтверждена. Удаляем аккаунт...');
+            
+            // Сначала удаляем данные пользователя из Firestore
+            try {
+                await firebase.firestore().collection('users').doc(user.uid).delete();
+            } catch (e) {
+                console.warn('Ошибка удаления данных из Firestore:', e);
+            }
+            
+            // Удаляем сам аккаунт
+            await user.delete();
+            
+            localStorage.removeItem('pendingVerification_' + user.uid);
+            console.log('🗑️ Аккаунт удалён (почта не подтверждена за 5 минут)');
+            
+            // Показываем уведомление, если пользователь всё ещё на странице
+            showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
+            
+            // Перекидываем на страницу регистрации
+            setTimeout(() => {
+                showRegister();
+            }, 1000);
+            
+        } catch (error) {
+            // Если пользователь уже удалён или ошибка - просто игнорируем
+            console.log('ℹ️ Аккаунт уже удалён или произошла ошибка:', error.message);
+            localStorage.removeItem('pendingVerification_' + user.uid);
+        }
+    }, 300000); // 5 минут
+}
+
+/**
+ * Обновляет таймер удаления при повторной отправке письма
+ */
+function refreshDeletionTimer(user) {
+    if (!user) return;
+    // Обновляем время в localStorage
+    localStorage.setItem('pendingVerification_' + user.uid, String(Date.now()));
+    console.log('🔄 Таймер удаления обновлён');
 }
 
 // =================== ВХОД (ПОШАГОВЫЙ) ===================
@@ -5734,7 +5825,7 @@ document.getElementById('loginFormStep1')?.addEventListener('submit', function(e
     
     const forgotLink = document.getElementById('forgotPasswordLink');
     if (forgotLink) {
-        forgotLink.style.display = 'none';
+        forgotLink.style.visibility = 'hidden';
     }
     
     switchToPage('page-login-password');
@@ -5804,12 +5895,12 @@ document.getElementById('loginFormStep2')?.addEventListener('submit', async func
             message = 'Ошибка входа. Попробуйте позже';
         }
         
-        if (showForgotLink) {
-            const forgotLink = document.getElementById('forgotPasswordLink');
-            if (forgotLink) {
-                forgotLink.style.display = 'block';
-            }
-        }
+if (showForgotLink) {
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    if (forgotLink) {
+        forgotLink.style.visibility = 'visible';
+    }
+}
         
         passwordInput.classList.add('error');
         showToast('❌ ' + message);
@@ -5837,7 +5928,7 @@ async function sendPasswordReset() {
         showToast('📧 Письмо для сброса пароля отправлено');
         
         if (forgotLink) {
-            forgotLink.style.display = 'none';
+            forgotLink.style.visibility = 'hidden';
         }
         
     } catch (error) {
@@ -6542,38 +6633,41 @@ window.removeFriend = async function(friendId) {
     );
 };
 
-// ===================ВСЕ УПРАЖНЕНИЯ ДЛЯ СПИСКА ===================
+// =================== ВСЕ УПРАЖНЕНИЯ ДЛЯ СПИСКА ===================
+// =================== ВСЕ УПРАЖНЕНИЯ ДЛЯ СПИСКА ===================
 function getAllExercises() {
-    const all = [];
-    for (const category in exercisesData) {
-        if (typeof exercisesData[category] === 'object' && !Array.isArray(exercisesData[category])) {
-            for (const subCategory in exercisesData[category]) {
-                if (exercisesData[category][subCategory]._premium) continue;
-                if (typeof exercisesData[category][subCategory] === 'object' && !Array.isArray(exercisesData[category][subCategory])) {
-                    for (const level in exercisesData[category][subCategory]) {
-                        const levelData = exercisesData[category][subCategory][level];
-                        // Проверяем, массив ли это
-                        if (Array.isArray(levelData)) {
-                            levelData.forEach(ex => {
-                                if (!all.some(e => e.name === ex.name && e.category === subCategory)) {
-                                    all.push({ ...ex, category: subCategory, level: level });
-                                }
-                            });
-                        }
-                        // Или объект с _exercises
-                        else if (levelData && typeof levelData === 'object' && levelData._exercises) {
-                            levelData._exercises.forEach(ex => {
-                                if (!all.some(e => e.name === ex.name && e.category === subCategory)) {
-                                    all.push({ ...ex, category: subCategory, level: level });
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        }
+    // ★★★ ИСПОЛЬЗУЕМ ОТДЕЛЬНЫЙ КАТАЛОГ ★★★
+    if (typeof EXERCISES_CATALOG === 'undefined') {
+        console.warn('EXERCISES_CATALOG не найден, используем пустой список');
+        return [];
     }
-    return all;
+    
+    // Маппинг категорий на иконки
+    const categoryIconMap = {
+        'Грудь': 'breast',
+        'Спина': 'back',
+        'Ноги': 'legs',
+        'Плечи': 'shoulder',
+        'Пресс': 'press',
+        'Руки': 'bodybuilding',
+        'Всё тело': 'WholeBody',
+        'Кардио': 'cardio',
+        'Растяжка': 'stretching',
+        'Растяжка позвоночника': 'stretching',
+        'Зарядка': 'charging',
+        'Пилатес': 'Pilates',
+        'Кроссфит': 'crossfit',
+        'Мужская сила': 'men',
+        'Женское счастье': 'woman'
+    };
+    
+    return EXERCISES_CATALOG.map(ex => ({
+        ...ex,
+        // Если у упражнения нет icon - берём по категории
+        icon: ex.icon || categoryIconMap[ex.category] || 'bodybuilding',
+        category: ex.category || 'Без категории',
+        level: ex.level || '1 LVL'
+    }));
 }
 
 let allExercisesList = [];
@@ -6624,24 +6718,50 @@ function renderExerciseListPageContent() {
     const container = document.getElementById('exerciseListContainer');
     const searchQuery = currentSearchQuery.toLowerCase();
     let filtered = allExercisesList;
+    
+    // Фильтр по категории
     if (currentCategoryFilter !== 'all') {
         filtered = filtered.filter(ex => ex.category === currentCategoryFilter);
     }
+    
+    // Поиск по названию
     if (searchQuery) {
         filtered = filtered.filter(ex => ex.name.toLowerCase().includes(searchQuery));
     }
+    
+    // ★★★ ФИЛЬТРУЕМ PREMIUM УПРАЖНЕНИЯ ★★★
+    const premiumCategories = ['Кроссфит', 'Мужская сила', 'Женское счастье'];
+    const hasPremiumAccess = hasPremium();  // ← проверяем актуальный статус
+    
+    if (!hasPremiumAccess) {
+        filtered = filtered.filter(ex => !premiumCategories.includes(ex.category));
+    }
+    
     filtered.sort((a, b) => a.name.localeCompare(b.name));
+    
     if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📋</span><h3 class="empty-title">Упражнения не найдены</h3><p class="empty-text">По вашему запросу ничего не нашлось.</p></div>`;
+        let message = 'Упражнения не найдены';
+        if (!hasPremiumAccess && currentCategoryFilter !== 'all' && premiumCategories.includes(currentCategoryFilter)) {
+            message = 'PREMIUM упражнения недоступны. Купите PREMIUM, чтобы открыть их!';
+        }
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📋</span><h3 class="empty-title">${message}</h3><p class="empty-text">По вашему запросу ничего не нашлось.</p></div>`;
         return;
     }
+    
 container.innerHTML = filtered.map(ex => {
-    const icon = getExerciseIcon(ex.name);
-    return `<div class="item-card" onclick="addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')" style="cursor:pointer;">
-        <div class="item-icon" style="width:44px;height:44px;min-width:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;">
-            <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;">
+    const icon = ex.icon || getExerciseIcon(ex.name);  // ← сначала из объекта, потом из функции
+    const isPremium = premiumCategories.includes(ex.category);
+    const disabled = isPremium && !hasPremiumAccess;
+    
+    return `<div class="item-card ${disabled ? 'premium-locked' : ''}" onclick="${disabled ? 'openPremiumModal()' : `addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')`}" style="${disabled ? 'opacity:0.6;' : ''}">
+        <div class="item-icon" style="width:44px;height:44px;min-width:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;${disabled ? 'background:#E2E8F0;' : ''}">
+            <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;${disabled ? 'filter:grayscale(1);' : ''}">
         </div>
-        <div class="item-info"><h3 class="item-title">${ex.name}</h3><p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p></div>
+        <div class="item-info">
+            <h3 class="item-title">${ex.name}</h3>
+            <p class="item-desc">${formatSets(ex.sets)} × ${formatReps(ex.reps)}</p>
+        </div>
+        ${disabled ? '<span style="font-size:0.6rem;color:var(--gold);font-weight:700;padding:0.2rem 0.6rem;border:1px solid var(--gold);border-radius:4px;">PREMIUM</span>' : ''}
         <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
     </div>`;
 }).join('');
@@ -6668,8 +6788,33 @@ function addExerciseFromList(name, sets, reps) {
     const repsValue = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
     const repsDisplay = isSeconds ? `${repsValue} секунд` : `${repsValue}`;
     
-    // Получаем иконку по имени упражнения
-    const icon = getExerciseIcon(name);
+    // ★★★ ПОЛУЧАЕМ ИКОНКУ ИЗ КАТАЛОГА ★★★
+    let icon = 'bodybuilding';
+    if (typeof EXERCISES_CATALOG !== 'undefined') {
+        const found = EXERCISES_CATALOG.find(e => e.name === name);
+        if (found && found.icon) {
+            icon = found.icon;
+        } else if (found && found.category) {
+            const categoryIconMap = {
+                'Грудь': 'breast',
+                'Спина': 'back',
+                'Ноги': 'legs',
+                'Плечи': 'shoulder',
+                'Пресс': 'press',
+                'Руки': 'bodybuilding',
+                'Всё тело': 'WholeBody',
+                'Кардио': 'cardio',
+                'Растяжка': 'stretching',
+                'Растяжка позвоночника': 'stretching',
+                'Зарядка': 'charging',
+                'Пилатес': 'Pilates',
+                'Кроссфит': 'crossfit',
+                'Мужская сила': 'men',
+                'Женское счастье': 'woman'
+            };
+            icon = categoryIconMap[found.category] || 'bodybuilding';
+        }
+    }
     
     editExercises.push({ 
         name: name, 
@@ -6949,19 +7094,33 @@ async function loadWorldLeaderboard() {
         
 container.innerHTML = users.map((userData, index) => {
     const position = index + 1;
-    const level = getCurrentLevel(userData.totalXp || 0);
-    const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
+    const achievements = userData.achievements || {};
     const isCurrentUser = userData.id === user.uid;
-return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-    <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
-    </div>
-    <div class="item-info">
-        <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
-        <p class="item-desc">Уровень ${level.id} · ${date}</p>
-    </div>
-    <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
-</div>`;
+    
+    // Смайлики достижений
+    const achievementIcons = [
+        { id: 'friendly', icon: 'fa-solid fa-user-group' },
+        { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
+        { id: 'unstoppable', icon: 'fa-solid fa-fire' },
+        { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
+        { id: 'masterOfStyles', icon: 'fa-solid fa-star' }
+    ];
+    
+    let achievementsHtml = achievementIcons.map(a => {
+        const unlocked = achievements[a.id] === true;
+        return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
+    }).join('');
+    
+    return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+        <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
+        </div>
+        <div class="item-info">
+            <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
+            <p class="item-desc">${achievementsHtml}</p>
+        </div>
+        <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+    </div>`;
 }).join('');
     } catch (error) {
         console.error('Ошибка загрузки рейтинга:', error);
@@ -7019,24 +7178,37 @@ async function loadFriendsLeaderboard() {
             checkRankNotification(currentRank, 'friends');
         }
 
-        let html = allUsers.map((userData, index) => {
-            const position = index + 1;
-            const level = getCurrentLevel(userData.totalXp || 0);
-            const date = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('ru-RU') : '—';
-            const isCurrentUser = userData.isCurrentUser;
-            const name = userData.displayName || 'Пользователь';
-            
-return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-    <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
-    </div>
-    <div class="item-info">
-        <h3 class="item-title">${name}</h3>
-        <p class="item-desc">Уровень ${level.id} · ${date}</p>
-    </div>
-    <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
-</div>`;
-        }).join('');
+let html = allUsers.map((userData, index) => {
+    const position = index + 1;
+    const isCurrentUser = userData.isCurrentUser;
+    const name = userData.displayName || 'Пользователь';
+    const achievements = userData.achievements || {};
+    
+    // Смайлики достижений
+    const achievementIcons = [
+        { id: 'friendly', icon: 'fa-solid fa-user-group' },
+        { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
+        { id: 'unstoppable', icon: 'fa-solid fa-fire' },
+        { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
+        { id: 'masterOfStyles', icon: 'fa-solid fa-star' }
+    ];
+    
+    let achievementsHtml = achievementIcons.map(a => {
+        const unlocked = achievements[a.id] === true;
+        return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
+    }).join('');
+    
+    return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+        <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
+        </div>
+        <div class="item-info">
+            <h3 class="item-title">${name}</h3>
+            <p class="item-desc">${achievementsHtml}</p>
+        </div>
+        <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+    </div>`;
+}).join('');
 
         if (friends.length === 0) {
             html += `<div class="empty-state">
@@ -7529,6 +7701,24 @@ function buyPremium() {
     localStorage.setItem(PREMIUM_KEY, 'true');
     closePremiumModal();
     updatePremiumUI();
+    
+    // ★★★ ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ★★★
+    // Перезагружаем каталог упражнений
+    allExercisesList = getAllExercises();
+    currentCategoryFilter = 'all';
+    currentSearchQuery = '';
+    document.getElementById('exerciseSearchInput').value = '';
+    
+    // Если страница списка упражнений активна — перерендериваем
+    if (document.getElementById('page-exercise-list').classList.contains('page-active')) {
+        renderExerciseListPageContent();
+    }
+    
+    // Если страница тренировок активна — обновляем премиум-блоки
+    if (document.getElementById('page-workouts').classList.contains('page-active')) {
+        updatePremiumUI();
+    }
+    
     showToast('👑 Поздравляем! PREMIUM активирован!');
     setTimeout(() => openPremiumActiveModal(), 300);
 }
@@ -8465,8 +8655,17 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
 });
 
 // =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
+// =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
 function getExerciseIcon(exerciseName) {
-    // Сначала ищем в exercisesData
+    // ★★★ СНАЧАЛА ИЩЕМ В ОТДЕЛЬНОМ КАТАЛОГЕ ★★★
+    if (typeof EXERCISES_CATALOG !== 'undefined') {
+        const found = EXERCISES_CATALOG.find(e => e.name === exerciseName);
+        if (found && found.icon) {
+            return found.icon;
+        }
+    }
+    
+    // ★★★ ПОТОМ В exercisesData (как fallback) ★★★
     for (const parent in exercisesData) {
         if (typeof exercisesData[parent] === 'object') {
             for (const subCategory in exercisesData[parent]) {
@@ -8474,18 +8673,45 @@ function getExerciseIcon(exerciseName) {
                     if (exercisesData[parent][subCategory]._premium) continue;
                     for (const level in exercisesData[parent][subCategory]) {
                         const levelData = exercisesData[parent][subCategory][level];
-if (Array.isArray(levelData)) {
-    const found = levelData.find(e => e.name === exerciseName);
-    if (found && found.icon) return found.icon;
-} else if (levelData && typeof levelData === 'object' && levelData._exercises) {
-    const found = levelData._exercises.find(e => e.name === exerciseName);
-    if (found && found.icon) return found.icon;
-}
+                        if (Array.isArray(levelData)) {
+                            const found = levelData.find(e => e.name === exerciseName);
+                            if (found && found.icon) return found.icon;
+                        } else if (levelData && typeof levelData === 'object' && levelData._exercises) {
+                            const found = levelData._exercises.find(e => e.name === exerciseName);
+                            if (found && found.icon) return found.icon;
+                        }
                     }
                 }
             }
         }
     }
+    
+    // ★★★ ЕСЛИ НЕ НАШЛИ — ОПРЕДЕЛЯЕМ ПО КАТЕГОРИИ ★★★
+    // Ищем категорию упражнения в каталоге
+    if (typeof EXERCISES_CATALOG !== 'undefined') {
+        const found = EXERCISES_CATALOG.find(e => e.name === exerciseName);
+        if (found && found.category) {
+            const categoryIconMap = {
+                'Грудь': 'breast',
+                'Спина': 'back',
+                'Ноги': 'legs',
+                'Плечи': 'shoulder',
+                'Пресс': 'press',
+                'Руки': 'bodybuilding',
+                'Всё тело': 'WholeBody',
+                'Кардио': 'cardio',
+                'Растяжка': 'stretching',
+                'Растяжка позвоночника': 'stretching',
+                'Зарядка': 'charging',
+                'Пилатес': 'Pilates',
+                'Кроссфит': 'crossfit',
+                'Мужская сила': 'men',
+                'Женское счастье': 'woman'
+            };
+            return categoryIconMap[found.category] || 'bodybuilding';
+        }
+    }
+    
     return 'bodybuilding';
 }
 
