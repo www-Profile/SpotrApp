@@ -1,5 +1,5 @@
 // ===================ОСНОВНЫЕ ДАННЫЕ ===================
-const exercisesData = {  
+const exercisesData = {   
     // ===================СИЛОВЫЕ ===================
     'Силовые': {
         'Руки': {
@@ -5145,18 +5145,23 @@ async function loadProfile() {
     if (levelProgressText) levelProgressText.textContent = progressText;
     if (levelFill) levelFill.style.width = progress + '%';
     
-    const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
-    if (currentLevel.id > prevLevel) {
+// В функции loadProfile() (примерно строка 5130)
+const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
+if (currentLevel.id > prevLevel) {
+    // ★★★ НЕ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ДЛЯ 1-ГО УРОВНЯ ★★★
+    if (currentLevel.id > 1) {
         const id = 'new_level_' + currentLevel.id;
         if (!isNotificationSeen(id)) {
-showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null, true, function() {
-    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ПРОФИЛЯ ★★★
-    TabManager.profile('my');
-    window.navigateTo('profile');
-    setTimeout(() => loadProfile(), 300);
-});        }
-        localStorage.setItem('prevLevel', String(currentLevel.id));
+            showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null, true, function() {
+                TabManager.profile('my');
+                window.navigateTo('profile');
+                setTimeout(() => loadProfile(), 300);
+            });
+            markNotificationSeen(id);
+        }
     }
+    localStorage.setItem('prevLevel', String(currentLevel.id));
+}
     
     const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
     if (lastVisit) {
@@ -6039,8 +6044,6 @@ function enterApp() {
 
     // Переходим на страницу тренировок
     window.navigateTo('workouts');
-
-        // Убеждаемся, что нижнее меню видно
     document.getElementById('bottomNav').style.display = 'block';
 
     refreshNotificationData();
@@ -6051,18 +6054,16 @@ function enterApp() {
         saveBlocksState();
     }, 100);
 
-    // Запускаем туториал, если нужно
-    if (window._tutorialNeeded) {
-        setTimeout(() => startTutorial(), 1000);
+    // ★★★ ИСПРАВЛЕНО: ЗАПУСКАЕМ ТУТОРИАЛ ТОЛЬКО ЕСЛИ НУЖНО ★★★
+    if (window._tutorialNeeded && !isTutorialCompleted()) {
+       // setTimeout(() => startTutorial(), 1000);
     }
 
     if (!navigator.onLine) {
-        // ★★★ ЗАДЕРЖКА 1000мс (1 секунда) ★★★
         setTimeout(() => {
             showOfflineModal();
         }, 1000);
-        return;
-    } 
+    }
 }
 
 // ===================ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
@@ -7159,7 +7160,7 @@ async function loadFriendsLeaderboard() {
 
         const userProfileResult = await getUserProfile(user.uid);
         if (!userProfileResult.success) {
-            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Ошибка загрузки профиля</div>';
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:2rem 0;">Ошибка загрузки друзей</div>';
             return;
         }
 
@@ -7317,6 +7318,12 @@ let _savedEditPagesState = true;
 let _savedEditWorkoutState = true;
 
 function startTutorial() {
+    // ★★★ ПРОВЕРЯЕМ, НЕ ЗАВЕРШЕНО ЛИ ОБУЧЕНИЕ ★★★
+    if (isTutorialCompleted()) {
+        console.log('✅ Обучение уже завершено, пропускаем');
+        return;
+    }
+    
     if (document.getElementById('tutorialOverlay')) return;
 
     _savedEditPagesState = localStorage.getItem(EDIT_PAGES_KEY) !== 'false';
@@ -7426,7 +7433,7 @@ function createTutorialOverlay(step) {
         <div class="tutorial-dots">${dotsHtml}</div>
         <p class="tutorial-text">${step.text}</p>
         <div class="tutorial-buttons">
-            <button class="btn btn-primary" onclick="nextTutorialStep()" >${buttonText}</button>
+            <button class="btn btn-primary" onclick="nextTutorialStep()">${buttonText}</button>
         </div>
     `;
     document.body.appendChild(tooltip);
@@ -7508,9 +7515,9 @@ function nextTutorialStep() {
 
 async function finishTutorial() {
     removeTutorialOverlay();
-    setTutorialCompleted();
+    setTutorialCompleted(); // ← Сохраняем в localStorage
     const user = await getFirebaseUser();
-    if (user) await updateUserProfile(user.uid, { tutorialCompleted: true });
+    if (user) await updateUserProfile(user.uid, { tutorialCompleted: true }); // ← Сохраняем в Firestore
     tutorialActive = false;
     document.removeEventListener('click', blockClicksDuringTutorial, true);
 
@@ -7519,7 +7526,6 @@ async function finishTutorial() {
     updateEditPagesUI(_savedEditPagesState);
     updateEditWorkoutUI(_savedEditWorkoutState);
 
-    // ★★★ ПОКАЗЫВАЕМ ПРАВИЛА ПОСЛЕ ЗАВЕРШЕНИЯ ТУТОРИАЛА ★★★
     setTimeout(showRulesModal, 600);
 }
 
@@ -8942,7 +8948,7 @@ function handleRulesAccept() {
     if (areAllRulesChecked()) {
         // Все правила приняты - закрываем окно
         closeModal('rulesModal');
-        showToast('✅ Спасибо за честность! Приятных тренировок! 💪');
+        showToast('✅ Спасибо за честность! Приятных тренировок!');
         console.log('✅ Все правила приняты, модальное окно закрыто');
     } else {
         // Не все правила приняты - показываем тост

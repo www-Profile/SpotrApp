@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>   
 <html lang="ru">
 <head> 
     <meta charset="UTF-8">
@@ -464,7 +464,9 @@
             <div class="exercise-search-block">
                 <div class="search-container">
                     <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Поиск по названию..." />
-                    <button class="btn btn-primary search-btn">Найти</button>
+                        <button class="btn btn-primary search-btn" id="searchBtn">
+        <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
                 </div>
                 <div class="category-filter-header">
                     <span class="section-title">Категории</span>
@@ -793,7 +795,7 @@
 
                     <div id="profileEdit" style="display:none;">
                         <div class="form-group" style="margin-bottom: 0.5rem;">
-                            <label class="form-label">Имя Фамилия</label>
+                            <label class="form-label">Как вас зовут?</label>
                             <input type="text" id="editName" class="form-input"  maxlength="30" placeholder="Введите ваше имя"/>
                         </div>
 
@@ -824,6 +826,77 @@
                         </div>
                     </div>
                 </div>
+
+<!-- ===== ЗАДАНИЯ ===== -->
+<div class="section-block" id="tasks-block">
+    <div class="section-header">
+        <h2 class="section-title">Задания</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="section-body">
+        <div class="settings-block">
+            <!-- Задание 1: Первая тренировка -->
+            <div class="settings-item" style="cursor: default;">
+                <div class="settings-icon"><i class="fa-solid fa-play"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Первый шаг</div>
+                    <div class="settings-desc">Пройти свою первую тренировку</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 2: Статистика -->
+            <div class="settings-item" style="cursor: default;">
+                <div class="settings-icon"><i class="fa-solid fa-chart-bar"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Статистика</div>
+                    <div class="settings-desc">Посмотреть свою статистику</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 3: Создать тренировку -->
+            <div class="settings-item" style="cursor: default;">
+                <div class="settings-icon"><i class="fa-solid fa-pen-ruler"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Индивидуальность</div>
+                    <div class="settings-desc">Создать свою тренировку</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 4: Добавить друга -->
+            <div class="settings-item" style="cursor: default;">
+                <div class="settings-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Новые знакомства</div>
+                    <div class="settings-desc">Добавить друга в друзья</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 5: Настройки -->
+            <div class="settings-item" style="cursor: default;">
+                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Оформление</div>
+                    <div class="settings-desc">Настроить стили в SportApp</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Дополнительные настройки -->
                 <div class="section-block" id="settings-block-main">
@@ -947,10 +1020,12 @@
     <!-- Блок 1: Поиск -->
     <div class="section-blockFriend" data-block-id="friends-search">
         <div class="friends-list-block">
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
-                <button class="btn btn-primary search-btn" id="searchBtn">Найти</button>
-            </div>
+<div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
+    <button class="btn btn-primary search-btn" id="searchBtn">
+        <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+</div>
             <div id="searchResults" class="item-grid"></div>
         </div>
     </div>
