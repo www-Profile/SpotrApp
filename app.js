@@ -3024,6 +3024,20 @@ function openColorModal() {
     const currentColor = localStorage.getItem('themeColor') || 'red';
     tempColor = currentColor;
     
+    // ★★★ УБИРАЕМ КАСТОМНЫЕ CSS-ПЕРЕМЕННЫЕ, ЧТОБЫ ВИДЕТЬ РЕАЛЬНЫЙ ЦВЕТ ★★★
+    document.body.style.removeProperty('--accent');
+    document.body.style.removeProperty('--accent-dark');
+    document.body.style.removeProperty('--accent-light');
+    
+    // ★★★ ПРИМЕНЯЕМ СТАНДАРТНЫЙ ЦВЕТ ЧЕРЕЗ КЛАСС ★★★
+    document.body.className = 'theme-' + currentColor;
+    
+    const isDarkMode = localStorage.getItem('appThemeMode') === 'dark' || 
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
+    
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('color-btn-active', btn.dataset.color === currentColor);
     });
@@ -3033,9 +3047,38 @@ function openColorModal() {
 function selectColor(color) {
     tempColor = color;
     
+    // ★★★ ПРИ ВЫБОРЕ ГОТОВОГО ЦВЕТА СРАЗУ ПРИМЕНЯЕМ ЕГО ★★★
+    applySelectedColor(color);
+    
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('color-btn-active', btn.dataset.color === color);
     });
+}
+
+function applySelectedColor(color) {
+    // ★★★ УБИРАЕМ ВСЕ КАСТОМНЫЕ CSS-ПЕРЕМЕННЫЕ ★★★
+    document.body.style.removeProperty('--accent');
+    document.body.style.removeProperty('--accent-dark');
+    document.body.style.removeProperty('--accent-light');
+    
+    // ★★★ УДАЛЯЕМ ФЛАГ КАСТОМНОГО ЦВЕТА ★★★
+    localStorage.removeItem('themeColorCustom');
+    
+    // ★★★ ПРИМЕНЯЕМ СТАНДАРТНЫЙ ЦВЕТ ЧЕРЕЗ КЛАСС ★★★
+    const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
+                      localStorage.getItem('appThemeMode') === 'dark' ||
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    document.body.className = 'theme-' + color;
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
+    
+    // ★★★ СОХРАНЯЕМ В localStorage ★★★
+    localStorage.setItem('themeColor', color);
+    
+    updateColorButtons(color);
+    updateColorStatus(color);
 }
 
 function applyColor() {
@@ -3043,16 +3086,8 @@ function applyColor() {
         const currentColor = localStorage.getItem('themeColor') || 'red';
         
         if (tempColor !== currentColor) {
-            // ★★★ ПРИМЕНЯЕМ ЦВЕТ ТОЛЬКО ЗДЕСЬ ★★★
-            const isDarkMode = document.body.classList.contains('theme-dark-mode');
-            document.body.className = 'theme-' + tempColor;
-            if (isDarkMode) {
-                document.body.classList.add('theme-dark-mode');
-            }
-            
-            localStorage.setItem('themeColor', tempColor);
-            updateColorButtons(tempColor);
-            updateColorStatus(tempColor);
+            // ★★★ ИСПОЛЬЗУЕМ applySelectedColor ДЛЯ ПРИМЕНЕНИЯ ★★★
+            applySelectedColor(tempColor);
             
             const colorNames = {
                 'red': 'Красный', 'orange': 'Оранжевый', 'yellow': 'Желтый',
@@ -3062,13 +3097,13 @@ function applyColor() {
             showToast(`✅ Акцентный цвет изменён на ${colorNames[tempColor] || tempColor}`);
             
             // ★★★ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
-    if (!tasks[5]) {
-        tasks[5] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Оформление" выполнено!');
-        addTaskXp();
-    }
+            if (!tasks[5]) {
+                tasks[5] = true;
+                saveTasks();
+                updateTasksUI();
+                showToast('✅ Задание "Оформление" выполнено!');
+                addTaskXp();
+            }
         }
     }
     
@@ -3093,11 +3128,35 @@ function updateColorStatus(color) {
     }
 }
 
-// Инициализация при загрузке
+// ★★★ ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ★★★
 const savedColor = localStorage.getItem('themeColor') || 'red';
-document.body.className = 'theme-' + savedColor;
-updateColorButtons(savedColor);
-updateColorStatus(savedColor);
+const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+
+if (isCustom && savedColor && savedColor.startsWith('#')) {
+    // Кастомный цвет — применяем через CSS-переменные
+    applyColorToTheme(savedColor);
+} else {
+    // Стандартный цвет — применяем через класс
+    document.body.className = 'theme-' + savedColor;
+}
+
+// ★★★ ДОПОЛНИТЕЛЬНО: ОБНОВЛЯЕМ ПРИ ЗАГРУЗКЕ ★★★
+document.addEventListener('DOMContentLoaded', function() {
+    const savedColor2 = localStorage.getItem('themeColor') || 'red';
+    const isCustom2 = localStorage.getItem('themeColorCustom') === 'true';
+    
+    if (!isCustom2) {
+        // Если это НЕ кастомный цвет, убеждаемся, что классы правильные
+        const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
+                          localStorage.getItem('appThemeMode') === 'dark' ||
+                          (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        document.body.className = 'theme-' + savedColor2;
+        if (isDarkMode) {
+            document.body.classList.add('theme-dark-mode');
+        }
+    }
+});
 
 // ===================НАВИГАЦИЯ ===================
 window.navigateTo = function(page, params) {
@@ -8099,17 +8158,27 @@ document.addEventListener('DOMContentLoaded', function() {
         syncPendingWorkouts();
     }
     
-    // 4. Цветовая тема
+    // ★★★ 4. ВОССТАНАВЛИВАЕМ КАСТОМНЫЙ ЦВЕТ ★★★
+    const savedColor = localStorage.getItem('themeColor');
+    const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+    
+    if (isCustom && savedColor && savedColor.startsWith('#')) {
+        applyColorToTheme(savedColor);
+    } else {
+        document.body.className = 'theme-' + (savedColor || 'red');
+    }
+    
+    // ★★★ 5. ОБНОВЛЯЕМ СТАТУС ЦВЕТА ★★★
     const currentColor = localStorage.getItem('themeColor') || 'red';
     updateColorStatus(currentColor);
 
-    // 5. Настройки редактирования
+    // 6. Настройки редактирования
     loadEditSettings();
     
-    // 6. Аккордеон
+    // 7. Аккордеон
     initAccordion();
 
-    // 7. Состояние блоков
+    // 8. Состояние блоков
     setTimeout(loadBlocksState, 1000);
     
     // 9. Pull-to-refresh
@@ -8123,18 +8192,18 @@ document.addEventListener('DOMContentLoaded', function() {
         TabManager.applyAll();
     }, 100);
 
-    // ★★★ ИНИЦИАЛИЗИРУЕМ ТЕМУ ★★★
+    // ★★★ 12. ИНИЦИАЛИЗИРУЕМ ТЕМУ ★★★
     updateThemeUI();
     setupSystemThemeListener();
 
     // Загрузка настройки видимости достижений
-loadAchievementsVisibility();
+    loadAchievementsVisibility();
 
     // Загружаем задания
     loadTasks();
     loadDailyTasks();
 
-        // Инициализация ежедневных заданий
+    // Инициализация ежедневных заданий
     setTimeout(async () => {
         await initDailyTasks();
     }, 2000);
@@ -11133,4 +11202,102 @@ function checkDailyTasksAfterAddFriend() {
             completeDailyTaskIfExists(task.id);
         }
     });
+}
+
+// ★★★ ВЫБОР СВОБОДНОГО ЦВЕТА ★★★
+function applyCustomColor() {
+    const colorPicker = document.getElementById('customColorPicker');
+    const color = colorPicker.value;
+    
+    // Сохраняем как custom цвет
+    localStorage.setItem('themeColor', color);
+    localStorage.setItem('themeColorCustom', 'true');
+    
+    // Применяем
+    applyColorToTheme(color);
+    closeModal('colorModal');
+    showToast(`✅ Цвет изменён на ${color}`);
+}
+
+function applyColorToTheme(color) {
+    const isDarkMode = document.body.classList.contains('theme-dark-mode');
+    
+    // Убираем все классы тем
+    document.body.className = '';
+    
+    // Добавляем кастомный цвет как CSS переменную
+    document.body.style.setProperty('--accent', color);
+    document.body.style.setProperty('--accent-dark', darkenColor(color, 30));
+    document.body.style.setProperty('--accent-light', lightenColor(color, 85));
+    
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
+}
+
+// ★★★ УТЕМНЕНИЕ ЦВЕТА ★★★
+function darkenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.max((num >> 16) - amt, 0);
+    const G = Math.max((num >> 8 & 0x00FF) - amt, 0);
+    const B = Math.max((num & 0x0000FF) - amt, 0);
+    return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+}
+
+// ★★★ ОСВЕТЛЕНИЕ ЦВЕТА ★★★
+function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.min((num >> 16) + amt, 255);
+    const G = Math.min((num >> 8 & 0x00FF) + amt, 255);
+    const B = Math.min((num & 0x0000FF) + amt, 255);
+    return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+}
+
+// ★★★ ОТКРЫТЬ ПАЛИТРУ ★★★
+function openPaletteModal() {
+    const currentColor = localStorage.getItem('themeColor') || '#DC143C';
+    const picker = document.getElementById('customColorPicker');
+    if (picker) {
+        picker.value = currentColor;
+    }
+    openModal('paletteModal');
+}
+
+// ★★★ ПРИМЕНИТЬ ЦВЕТ ИЗ ПАЛИТРЫ ★★★
+function applyPaletteColor() {
+    const colorPicker = document.getElementById('customColorPicker');
+    const color = colorPicker.value;
+    
+    // ★★★ СОХРАНЯЕМ В tempColor ★★★
+    tempColor = color;
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('themeColor', color);
+    localStorage.setItem('themeColorCustom', 'true');
+    
+    // ★★★ ПРИМЕНЯЕМ ЦВЕТ СРАЗУ ★★★
+    applyColorToTheme(color);
+    
+    // Закрываем палитру
+    closeModal('paletteModal');
+    
+    // ★★★ ОБНОВЛЯЕМ КНОПКИ В МОДАЛКЕ ВЫБОРА ЦВЕТА ★★★
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('color-btn-active', btn.dataset.color === color);
+    });
+    
+    updateColorStatus(color);
+    
+    showToast(`✅ Цвет изменён`);
+}
+
+function openPaletteWithPremiumCheck() {
+    closeModal('colorModal');
+    if (hasPremium()) {
+        openPaletteModal();
+    } else {
+        openModal('premiumModal');
+    }
 }
