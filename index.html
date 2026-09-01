@@ -733,376 +733,342 @@
         </main>
     </div>
 
-    <!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
-    <div id="page-profile" class="page">
-        <div class="profile-container">
-            <header class="dashboard-header">
-                <h1 class="dashboard-title">ПРОФИЛЬ</h1>
-            </header>
+<!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
+<div id="page-profile" class="page">
+    <div class="profile-container">
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">ПРОФИЛЬ</h1>
+        </header>
 
-            <div class="tabs" style="margin-bottom:0.3rem;">
-                <button class="tab-btn profile-tab-btn tab-btn-active" data-tab="my">Мой</button>
-                <button class="tab-btn profile-tab-btn" data-tab="friends">Друзья</button>
-            </div>
+        <div class="tabs" style="margin-bottom:0.3rem;">
+            <button class="tab-btn profile-tab-btn tab-btn-active" data-tab="my">Мой</button>
+            <button class="tab-btn profile-tab-btn" data-tab="friends">Друзья</button>
+        </div>
 
-            <!-- Вкладка: Мой -->
-            <div id="profileTab-my" class="profile-tab-content profile-tab-content-active">
-                <div class="profile-card">
-                    <div class="profile-avatar"><span id="profileInitials">А</span></div>
-                    <h2 class="profile-name" id="profileName">Пользователь</h2>
+        <!-- ★★★ ВКЛАДКА: МОЙ ★★★ -->
+        <div id="profileTab-my" class="profile-tab-content profile-tab-content-active">
+            <div class="profile-card">
+                <div class="profile-avatar"><span id="profileInitials">А</span></div>
+                <h2 class="profile-name" id="profileName">Пользователь</h2>
 
-<div class="level-block" id="profileLevelBlock">
-    <div class="level-header">
-        <div class="level-left">
-            <span class="level-lvl" id="levelLvl">1 LVL</span>
-        </div>
-        <div class="level-center">
-            <span class="level-title" id="levelTitle">НАЧИНАЮЩИЙ</span>
-        </div>
-        <div class="level-right">
-            <span class="level-progress-text" id="levelProgressText">0/100XP</span>
-        </div>
-    </div>
-    <div class="level-bar">
-        <div class="level-fill" id="levelFill" style="width:0%;"></div>
-    </div>
-                                            <!-- ===== БЛОК ДОСТИЖЕНИЙ ===== -->
-<div class="achievements-container" id="achievementsContainer">
-    <div class="achievement-icon locked" data-achievement="friendly">
-        <i class="fa-solid fa-user-group"></i>
-    </div>
-    <div class="achievement-icon locked" data-achievement="marathoner">
-        <i class="fa-solid fa-dumbbell"></i>
-    </div>
-    <div class="achievement-icon locked" data-achievement="unstoppable">
-        <i class="fa-solid fa-fire"></i>
-    </div>
-    <div class="achievement-icon locked" data-achievement="ironEndurance">
-        <i class="fa-solid fa-stopwatch"></i>
-    </div>
-    <div class="achievement-icon locked" data-achievement="masterOfStyles">
-        <i class="fa-solid fa-star"></i>
-    </div>
-</div>
+                <div class="level-block" id="profileLevelBlock">
+                    <div class="level-header">
+                        <div class="level-left">
+                            <span class="level-lvl" id="levelLvl">1 LVL</span>
+                        </div>
+                        <div class="level-center">
+                            <span class="level-title" id="levelTitle">НАЧИНАЮЩИЙ</span>
+                        </div>
+                        <div class="level-right">
+                            <span class="level-progress-text" id="levelProgressText">0/100XP</span>
+                        </div>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-fill" id="levelFill" style="width:0%;"></div>
                     </div>
 
+                    <!-- ===== БЛОК ДОСТИЖЕНИЙ ===== -->
+                    <div class="achievements-container" id="achievementsContainer">
+                        <div class="achievement-icon locked" data-achievement="friendly">
+                            <i class="fa-solid fa-user-group"></i>
+                        </div>
+                        <div class="achievement-icon locked" data-achievement="marathoner">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </div>
+                        <div class="achievement-icon locked" data-achievement="unstoppable">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+                        <div class="achievement-icon locked" data-achievement="ironEndurance">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div class="achievement-icon locked" data-achievement="masterOfStyles">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                    </div>
+                </div>
 
-                    <div id="profileView">
-                        <button class="btn btn-primary btn-center" id="editProfileBtn">
-                            <i class="fa-regular fa-pen-to-square"></i> Редактировать профиль
+                <div id="profileView">
+                    <button class="btn btn-primary btn-center" id="editProfileBtn">
+                        <i class="fa-regular fa-pen-to-square"></i> Редактировать профиль
+                    </button>
+                </div>
+
+                <div id="profileEdit" style="display:none;">
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
+                        <label class="form-label">Как вас зовут?</label>
+                        <input type="text" id="editName" class="form-input" maxlength="30" placeholder="Введите ваше имя"/>
+                    </div>
+
+                    <div class="profile-info">
+                        <i class="fa-regular fa-envelope"></i>
+                        <span>Почта: <strong id="profileEmailDisplay">email@mail.ru</strong></span>
+                        <button class="profile-edit-btn" onclick="editEmail()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
+                            <i class="fa-regular fa-pen-to-square"></i>
                         </button>
                     </div>
 
-                    <div id="profileEdit" style="display:none;">
-                        <div class="form-group" style="margin-bottom: 0.5rem;">
-                            <label class="form-label">Как вас зовут?</label>
-                            <input type="text" id="editName" class="form-input"  maxlength="30" placeholder="Введите ваше имя"/>
+                    <div class="profile-info">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Пароль: <strong id="profilePasswordDisplay">******</strong></span>
+                        <button class="profile-edit-btn" onclick="editPassword()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <div class="profile-info" id="profileDateBlock">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>Дата регистрации: <strong id="profileDate">—</strong></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" id="cancelProfileEditBtn" style="flex:1;">Отмена</button>
+                        <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ЗАДАНИЯ ===== -->
+            <div class="section-block" id="tasks-block">
+                <div class="section-header">
+                    <h2 class="section-title">Задания</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="section-body">
+                    <div class="settings-block">
+                        <!-- Задание 1: Первая тренировка -->
+                        <div class="settings-item" style="cursor: default;">
+                            <div class="settings-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Первый шаг</div>
+                                <div class="settings-desc">Пройти свою первую тренировку</div>
+                            </div>
+                            <button class="settings-action task-checkbox" onclick="toggleTask(1)">
+                                <i class="fa-regular fa-square" id="taskIcon1"></i>
+                            </button>
                         </div>
-
-<div class="profile-info">
-    <i class="fa-regular fa-envelope"></i>
-    <span>Почта: <strong id="profileEmailDisplay">email@mail.ru</strong></span>
-    <button class="profile-edit-btn" onclick="editEmail()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
-        <i class="fa-regular fa-pen-to-square"></i>
-    </button>
-</div>
-
-<div class="profile-info">
-    <i class="fa-solid fa-lock"></i>
-    <span>Пароль: <strong id="profilePasswordDisplay">******</strong></span>
-    <button class="profile-edit-btn" onclick="editPassword()" style="margin-left: auto; background: none; border: none; color: var(--slate); cursor: pointer; padding: 0 0.3rem;">
-        <i class="fa-regular fa-pen-to-square"></i>
-    </button>
-</div>
-
-<div class="profile-info" id="profileDateBlock">
-    <i class="fa-regular fa-calendar"></i>
-    <span>Дата регистрации: <strong id="profileDate">—</strong></span>
-</div>
-
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" id="cancelProfileEditBtn" style="flex:1;">Отмена</button>
-                            <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">Сохранить</button>
+                        
+                        <!-- Задание 2: Статистика -->
+                        <div class="settings-item" style="cursor: default;">
+                            <div class="settings-icon"><i class="fa-solid fa-chart-bar"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Статистика</div>
+                                <div class="settings-desc">Посмотреть свою статистику</div>
+                            </div>
+                            <button class="settings-action task-checkbox" onclick="toggleTask(2)">
+                                <i class="fa-regular fa-square" id="taskIcon2"></i>
+                            </button>
                         </div>
-                    </div>
-                </div>
-
-<!-- ===== ЗАДАНИЯ ===== -->
-<div class="section-block" id="tasks-block">
-    <div class="section-header">
-        <h2 class="section-title">Задания</h2>
-        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="section-body">
-        <div class="settings-block">
-            <!-- Задание 1: Первая тренировка -->
-            <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-dumbbell"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Первый шаг</div>
-                    <div class="settings-desc">Пройти свою первую тренировку</div>
-                </div>
-                <button class="settings-action task-checkbox" onclick="toggleTask(1)">
-                    <i class="fa-regular fa-square" id="taskIcon1"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 2: Статистика -->
-            <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-chart-bar"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Статистика</div>
-                    <div class="settings-desc">Посмотреть свою статистику</div>
-                </div>
-                <button class="settings-action task-checkbox" onclick="toggleTask(2)">
-                    <i class="fa-regular fa-square" id="taskIcon2"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 3: Создать тренировку -->
-            <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-drafting-compass"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Индивидуальность</div>
-                    <div class="settings-desc">Создать свою тренировку</div>
-                </div>
-                <button class="settings-action task-checkbox" onclick="toggleTask(3)">
-                    <i class="fa-regular fa-square" id="taskIcon3"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 4: Добавить друга -->
-            <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-user-plus"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Новые знакомства</div>
-                    <div class="settings-desc">Добавить друга в друзья</div>
-                </div>
-                <button class="settings-action task-checkbox" onclick="toggleTask(4)">
-                    <i class="fa-regular fa-square" id="taskIcon4"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 5: Настройки -->
-            <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Оформление</div>
-                    <div class="settings-desc">Настроить стили в SportApp</div>
-                </div>
-                <button class="settings-action task-checkbox" onclick="toggleTask(5)">
-                    <i class="fa-regular fa-square" id="taskIcon5"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (БЛОК) ===== -->
-<div class="section-block" id="daily-tasks-block" style="cursor: pointer;">
-    <div class="section-header">
-        <h2 class="section-title">Ежедневные задания</h2>
-        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="section-body">
-        <div class="settings-block">
-            <!-- Задание 1 -->
-            <div class="settings-item"  onclick="openDailyTasksModal()">
-                <div class="settings-icon"><i class="fa-solid fa-walking"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Прогулка</div>
-                    <div class="settings-desc">Пройти 5000 шагов сегодня</div>
-                </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square" id="dailyTaskIcon1"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 2 -->
-            <div class="settings-item"  onclick="openDailyTasksModal()">
-                <div class="settings-icon"><i class="fa-solid fa-water"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Водный баланс</div>
-                    <div class="settings-desc">Выпить 2 литра воды</div>
-                </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square" id="dailyTaskIcon2"></i>
-                </button>
-            </div>
-            
-            <!-- Задание 3 -->
-            <div class="settings-item" onclick="openDailyTasksModal()">
-                <div class="settings-icon"><i class="fa-solid fa-brain"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Мозговой штурм</div>
-                    <div class="settings-desc">Решить 3 логические задачи</div>
-                </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square" id="dailyTaskIcon3"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-                <!-- Дополнительные настройки -->
-                <div class="section-block" id="settings-block-main">
-                    <div class="section-header">
-                        <h2 class="section-title">Дополнительные настройки</h2>
-                        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <div class="section-body">
-                        <div class="settings-block">
-                            <div class="settings-item" onclick="handlePremiumClick()">
-                                <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">PREMIUM</div>
-                                    <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        
+                        <!-- Задание 3: Создать тренировку -->
+                        <div class="settings-item" style="cursor: default;">
+                            <div class="settings-icon"><i class="fa-solid fa-drafting-compass"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Индивидуальность</div>
+                                <div class="settings-desc">Создать свою тренировку</div>
                             </div>
-                            
-                            <div class="settings-item" onclick="openColorModal()">
-                                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Акцентный цвет</div>
-                                    <div class="settings-desc" id="colorStatus">Красный</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-
-<div class="settings-item" onclick="toggleThemeModal()">
-    <div class="settings-icon" id="themeIcon">
-        <i class="fa-solid fa-sun"></i>
-    </div>
-    <div class="settings-info">
-        <div class="settings-title">Тема приложения</div>
-        <div class="settings-desc" id="themeStatus">Светлая</div>
-    </div>
-    <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-</div>
-                            
-                            <div class="settings-item" onclick="startTutorial()">
-                                <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Обучение</div>
-                                    <div class="settings-desc">По использованию приложения</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-
-<div class="settings-item" onclick="toggleAchievementsVisibility()">
-    <div class="settings-icon" id="achievementsIcon">
-        <i class="fa-solid fa-star"></i>
-    </div>
-    <div class="settings-info">
-        <div class="settings-title">Достижения</div>
-        <div class="settings-desc" id="achievementsStatus">Показаны</div>
-    </div>
-    <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-</div>
-                            
-                            <div class="settings-item" onclick="toggleEditPages()">
-                                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Редактирование страниц</div>
-                                    <div class="settings-desc" id="editPagesStatus">Включено</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-                            
-                            <div class="settings-item" onclick="toggleEditWorkout()">
-                                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Редактирование тренировок</div>
-                                    <div class="settings-desc" id="editWorkoutStatus">Включено</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
+                            <button class="settings-action task-checkbox" onclick="toggleTask(3)">
+                                <i class="fa-regular fa-square" id="taskIcon3"></i>
+                            </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Невозвратные настройки -->
-                <div class="section-block" id="dangerSettings">
-                    <div class="section-header">
-                        <h2 class="section-title">Невозвратные настройки</h2>
-                        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <div class="section-body">
-                        <div class="settings-block">
-                            <div class="settings-item" onclick="confirmResetProgress()">
-                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-arrow-rotate-left"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Сбросить прогресс</div>
-                                    <div class="settings-desc">Удалить статистику и обнулить прогресс</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        
+                        <!-- Задание 4: Добавить друга -->
+                        <div class="settings-item" style="cursor: default;">
+                            <div class="settings-icon"><i class="fa-solid fa-user-plus"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Новые знакомства</div>
+                                <div class="settings-desc">Добавить друга в друзья</div>
                             </div>
-                            
-                            <div class="settings-item" onclick="logout()">
-                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-sign-out-alt"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Выйти из аккаунта</div>
-                                    <div class="settings-desc">Выйти из текущего аккаунта</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="settings-action task-checkbox" onclick="toggleTask(4)">
+                                <i class="fa-regular fa-square" id="taskIcon4"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Задание 5: Настройки -->
+                        <div class="settings-item" style="cursor: default;">
+                            <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Оформление</div>
+                                <div class="settings-desc">Настроить стили в SportApp</div>
                             </div>
-                            
-                            <div class="settings-item" onclick="confirmDeleteAccount()">
-                                <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-user-slash"></i></div>
-                                <div class="settings-info">
-                                    <div class="settings-title">Удалить аккаунт</div>
-                                    <div class="settings-desc">Удалить профиль и все данные</div>
-                                </div>
-                                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
+                            <button class="settings-action task-checkbox" onclick="toggleTask(5)">
+                                <i class="fa-regular fa-square" id="taskIcon5"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-<!-- Вкладка: Друзья -->
-<div id="profileTab-friends" class="profile-tab-content">
-    <!-- Блок 1: Поиск -->
-    <div class="section-blockFriend" data-block-id="friends-search">
-        <div class="friends-list-block">
-<div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
-    <button class="btn btn-primary search-btn" id="searchFriendBtn">
-        <i class="fa-solid fa-magnifying-glass"></i>
-    </button>
-</div>
-            <div id="searchResults" class="item-grid"></div>
-        </div>
-    </div>
+            <!-- ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (БЛОК) ===== -->
+            <div class="section-block" id="daily-tasks-block" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Ежедневные задания</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="section-body">
+                    <div class="settings-block" id="dailyTasksContainer">
+                        <!-- Сюда будет рендериться список заданий -->
+                    </div>
+                </div>
+            </div>
 
-    <!-- Блок 2: Друзья -->
-    <div class="section-block" data-block-id="friends-list">
-        <div class="section-header">
-            <h2 class="section-title">Друзья</h2>
-            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-            <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
-        </div>
-        <div class="scroll-wrapper" style="border-radius: 16px;">
-            <div id="friendsList" class="item-grid"></div>
-        </div>
-    </div>
+            <!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ===== -->
+            <div class="section-block" id="settings-block-main">
+                <div class="section-header">
+                    <h2 class="section-title">Дополнительные настройки</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="section-body">
+                    <div class="settings-block">
+                        <div class="settings-item" onclick="handlePremiumClick()">
+                            <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">PREMIUM</div>
+                                <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="openColorModal()">
+                            <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Акцентный цвет</div>
+                                <div class="settings-desc" id="colorStatus">Красный</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
 
-    <!-- Блок 3: Заявки -->
-    <div class="section-block" data-block-id="friend-requests">
-        <div class="section-header">
-            <h2 class="section-title">Заявки</h2>
-            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-            <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+                        <div class="settings-item" onclick="toggleThemeModal()">
+                            <div class="settings-icon" id="themeIcon">
+                                <i class="fa-solid fa-sun"></i>
+                            </div>
+                            <div class="settings-info">
+                                <div class="settings-title">Тема приложения</div>
+                                <div class="settings-desc" id="themeStatus">Светлая</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="startTutorial()">
+                            <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Обучение</div>
+                                <div class="settings-desc">По использованию приложения</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+
+                        <div class="settings-item" onclick="toggleAchievementsVisibility()">
+                            <div class="settings-icon" id="achievementsIcon">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <div class="settings-info">
+                                <div class="settings-title">Достижения</div>
+                                <div class="settings-desc" id="achievementsStatus">Показаны</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="toggleEditPages()">
+                            <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Редактирование страниц</div>
+                                <div class="settings-desc" id="editPagesStatus">Включено</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="toggleEditWorkout()">
+                            <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Редактирование тренировок</div>
+                                <div class="settings-desc" id="editWorkoutStatus">Включено</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== НЕВОЗВРАТНЫЕ НАСТРОЙКИ ===== -->
+            <div class="section-block" id="dangerSettings">
+                <div class="section-header">
+                    <h2 class="section-title">Невозвратные настройки</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="section-body">
+                    <div class="settings-block">
+                        <div class="settings-item" onclick="confirmResetProgress()">
+                            <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Сбросить прогресс</div>
+                                <div class="settings-desc">Удалить статистику и обнулить прогресс</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="logout()">
+                            <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-sign-out-alt"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Выйти из аккаунта</div>
+                                <div class="settings-desc">Выйти из текущего аккаунта</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="settings-item" onclick="confirmDeleteAccount()">
+                            <div class="settings-icon settings-icon-danger"><i class="fa-solid fa-user-slash"></i></div>
+                            <div class="settings-info">
+                                <div class="settings-title">Удалить аккаунт</div>
+                                <div class="settings-desc">Удалить профиль и все данные</div>
+                            </div>
+                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="scroll-wrapper" style="border-radius: 16px;">
-            <div id="friendRequests" class="item-grid"></div>
+
+        <!-- ★★★ ВКЛАДКА: ДРУЗЬЯ ★★★ -->
+        <div id="profileTab-friends" class="profile-tab-content">
+            <!-- Блок 1: Поиск -->
+            <div class="section-blockFriend" data-block-id="friends-search">
+                <div class="friends-list-block">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
+                        <button class="btn btn-primary search-btn" id="searchFriendBtn">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                    <div id="searchResults" class="item-grid"></div>
+                </div>
+            </div>
+
+            <!-- Блок 2: Друзья -->
+            <div class="section-block" data-block-id="friends-list">
+                <div class="section-header">
+                    <h2 class="section-title">Друзья</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+                </div>
+                <div class="scroll-wrapper" style="border-radius: 16px;">
+                    <div id="friendsList" class="item-grid"></div>
+                </div>
+            </div>
+
+            <!-- Блок 3: Заявки -->
+            <div class="section-block" data-block-id="friend-requests">
+                <div class="section-header">
+                    <h2 class="section-title">Заявки</h2>
+                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+                </div>
+                <div class="scroll-wrapper" style="border-radius: 16px;">
+                    <div id="friendRequests" class="item-grid"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-        </div>
-    </div>
 
 <!-- ===== СТРАНИЦА: ПРИВЕТСТВИЕ ===== -->
 <div id="page-hero" class="page">
@@ -1495,35 +1461,159 @@
         </div>
     </div>
 
-    <!-- ===== МОДАЛКА: PREMIUM ===== -->
-    <div id="premiumModal" class="modal-overlay premium-modal" style="display:none;">
-        <div class="modal-content premium">
+<!-- ===== МОДАЛКА: PREMIUM ===== -->
+<div id="premiumModal" class="modal-overlay premium-modal" style="display:none;">
+    <div class="modal-content premium-content">
+        <div class="premium-header">
             <div class="premium-icon"><i class="fa-solid fa-crown"></i></div>
-            <div class="premium-price">299 ₽</div>
-            <div class="modal-title" style="font-size:1.5rem; color: var(--accent);">PREMIUM</div>
-            <ul class="premium-features">
-<li>PREMIUM тренировки!</li>
-<li>PREMIUM упражнения!</li>
-<li>Совместные тренировки до 3 друзей!</li>
-<li>Поддержка разработчика!</li>
-            </ul>
-            <p class="premium-sub">Разовый платёж · Доступ навсегда</p>
-            <button class="btn btn-primary" style="margin-bottom: 0.5rem;" onclick="buyPremium()">
-                <i class="fa-solid fa-crown"></i> Купить PREMIUM
-            </button>
+            <div class="premium-title">PREMIUM</div>
+        </div>
+        
+        <!-- Таблица сравнения -->
+        <div class="premium-table">
+            <!-- Заголовки -->
+            <div class="premium-table-header">
+                <div class="premium-table-cell premium-table-cell-left">КРИТЕРИИ</div>
+                <div class="premium-table-cell premium-table-cell-center">FREE</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-premium">PREMIUM</div>
+            </div>
+            
+            <!-- Строка 1: Тренировки -->
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Тренировки</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+            
+            <!-- Строка 2: Упражнения -->
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Упражнения</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+            
+            <!-- Строка 3: Статистика -->
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Статистика</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовая</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенная</div>
+            </div>
+            
+            <!-- Строка 4: Совместные тренировки -->
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
+                <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
+            </div>
+            
+            <!-- Строка 5: Ежедневные задания -->
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Ежедневные задания</div>
+                <div class="premium-table-cell premium-table-cell-center">3 задания</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 заданий</div>
+            </div>
+            
+            <!-- Строка 6: Акцентные цвета -->
+            <div class="premium-table-row premium-table-row-last">
+                <div class="premium-table-cell premium-table-cell-left">Акцентные цвета</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+        </div>
+        
+<!-- Цены -->
+<div class="premium-prices">
+    <div class="premium-price-card premium-price-card-monthly">
+        <div class="premium-price-label">Ежемесячный</div>
+        <div class="premium-price-row">
+            <div class="premium-price-value">90 ₽</div>
+            <div class="premium-price-period">/ месяц</div>
+        </div>
+    </div>
+    <div class="premium-price-card premium-price-card-yearly">
+        <div class="premium-price-label">Годовой</div>
+        <div class="premium-price-row">
+            <div class="premium-price-value">890 ₽</div>
+            <div class="premium-price-period">/ год</div>
+        </div>
+        <div class="premium-price-period">скидка 17,6% · 74 ₽/мес</div>
+    </div>
+</div>
+        
+        <!-- Кнопки -->
+        <div class="premium-buttons">
             <button class="btn btn-secondary" onclick="closeModal('premiumModal')">Закрыть</button>
+            <button class="btn btn-primary" onclick="buyPremium()">
+                <i class="fa-solid fa-crown"></i> Купить
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- ===== МОДАЛКА: PREMIUM АКТИВИРОВАН ===== -->
-    <div id="premiumActiveModal" class="modal-overlay premium-modal" style="display:none;">
-        <div class="modal-content premium">
+<!-- ===== МОДАЛКА: PREMIUM АКТИВИРОВАН ===== -->
+<div id="premiumActiveModal" class="modal-overlay premium-modal" style="display:none;">
+    <div class="modal-content premium-content">
+        <div class="premium-header">
             <div class="premium-icon"><i class="fa-solid fa-crown"></i></div>
-            <div class="modal-title" style="font-size:1.5rem; color: var(--accent);">PREMIUM АКТИВИРОВАН</div>
-            <p class="item-desc" style="margin-bottom: 1rem;">У вас есть доступ ко всем особым тренировкам.</p>
-            <button class="btn btn-primary" onclick="closeModal('premiumActiveModal')">Отлично!</button>
+            <div class="premium-title">PREMIUM АКТИВИРОВАН</div>
         </div>
+        
+        <!-- Таблица сравнения -->
+        <div class="premium-table">
+            <!-- Заголовки -->
+            <div class="premium-table-header">
+                <div class="premium-table-cell premium-table-cell-left">КРИТЕРИИ</div>
+                <div class="premium-table-cell premium-table-cell-center">FREE</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-premium">PREMIUM</div>
+            </div>
+            
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Тренировки</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+            
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Упражнения</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+            
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Статистика</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовая</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенная</div>
+            </div>
+            
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
+                <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
+            </div>
+            
+            <div class="premium-table-row">
+                <div class="premium-table-cell premium-table-cell-left">Ежедневные задания</div>
+                <div class="premium-table-cell premium-table-cell-center">3 задания</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 заданий</div>
+            </div>
+            
+            <div class="premium-table-row premium-table-row-last">
+                <div class="premium-table-cell premium-table-cell-left">Акцентные цвета</div>
+                <div class="premium-table-cell premium-table-cell-center">Базовые</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
+            </div>
+        </div>
+        
+        <!-- Текст "У вас есть PREMIUM" -->
+        <div style="text-align: center; padding: 0.5rem 0 1rem 0;">
+            <div style="font-size: 1rem; font-weight: 700; color: var(--accent);">У вас есть PREMIUM!</div>
+            <div style="font-size: 0.7rem; color: var(--slate); margin-top: 0.2rem;">Все преимущества уже доступны</div>
+        </div>
+        
+        <!-- Кнопка -->
+        <button class="btn btn-primary" onclick="closeModal('premiumActiveModal')">Закрыть</button>
     </div>
+</div>
 
 <!-- ===== МОДАЛКА: ВЫБОР ЦВЕТА ===== -->
 <div id="colorModal" class="modal-overlay" style="display:none;">
@@ -1651,7 +1741,7 @@
         <i class="fa-solid fa-stopwatch"></i>
     </div>
     <div class="achievement-icon locked" data-achievement="masterOfStyles">
-        <i class="fa-solid fa-star"></i>
+        <i class="fa-solid fa-award"></i>
     </div>
 </div>
             </div>
@@ -1713,7 +1803,7 @@
         <i class="fa-solid fa-stopwatch"></i>
     </div>
     <div class="achievement-icon locked" data-achievement="masterOfStyles">
-        <i class="fa-solid fa-star"></i>
+        <i class="fa-solid fa-award"></i>
     </div>
 </div>
         </div>

@@ -1329,6 +1329,22 @@ function showCoopFinishPage() {
     }
     
     console.log('✅ [showCoopFinishPage] ЗАВЕРШЕНА');
+    
+    // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (СОВМЕСТНАЯ ТРЕНИРОВКА) ★★★
+    if (sessionData && sessionData.exercises) {
+        const completedCount = sessionCompleted ? sessionCompleted.size : 0;
+        if (completedCount > 0) {
+            const workoutData = {
+                exercises: sessionData.exercises.map((ex, index) => ({
+                    ...ex,
+                    completed: sessionCompleted ? sessionCompleted.has(index) : false
+                })),
+                durationSeconds: sessionSeconds || 0,
+                category: sessionCategory || 'Совместная'
+            };
+            checkDailyTasksAfterCoopWorkout(workoutData);
+        }
+    }
 }
 
 function renderFinishPageData(data) {
@@ -1803,6 +1819,19 @@ finishTrainingSession = async function() {
             addTaskXp();
         }
         
+        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+        if (completed > 0) {
+            const workoutData = {
+                exercises: sessionExercises.map((ex, index) => ({
+                    ...ex,
+                    completed: sessionCompleted.has(index)
+                })),
+                durationSeconds: sessionSeconds,
+                category: sessionCategory || ''
+            };
+            checkDailyTasksAfterWorkout(workoutData);
+        }
+        
         return;
     }
 
@@ -1886,12 +1915,25 @@ finishTrainingSession = async function() {
         tasks[1] = true;
         saveTasks();
         updateTasksUI();
+        showToast('✅ Задание "Первый шаг" выполнено!');
         addTaskXp();
+    }
+
+    // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (СОВМЕСТНАЯ) ★★★
+    if (completedCount > 0) {
+        const workoutData = {
+            exercises: coopExercises.map((ex, index) => ({
+                ...ex,
+                completed: index < completedCount
+            })),
+            durationSeconds: sessionSeconds,
+            category: sessionCategory || ''
+        };
+        checkDailyTasksAfterCoopWorkout(workoutData);
     }
 };
 
 // =================== СТРАНИЦА ОЖИДАНИЯ ОСТАЛЬНЫХ ===================
-
 function showCoopWaitingPage() {
     console.log('🔥🔥🔥 [showCoopWaitingPage] НАЧАЛО');
     
@@ -2270,10 +2312,14 @@ let editLevel = '1 LVL';
 
 window.statsEditor = null;
 window.workoutsEditor = null;
-window.worldStatsEditor = null;  // ← ДОБАВИТЬ
+window.worldStatsEditor = null;
 
 let isEditingWorkout = false;
 let isEditingProfile = false;
+
+let dailyTasksList = [];
+let dailyTasksCompleted = {};
+let dailyTasksDate = '';
 
 // ===================СИСТЕМА УВЕДОМЛЕНИЙ ===================
 const NOTIFICATIONS_KEY = 'notificationsSeen';
@@ -2296,17 +2342,23 @@ notificationContainer.style.display = 'block';
 function showNotification(icon, text, actionCallback, autoClose = true, okAction = null) {
     // ★★★ РАСПОЗНАЁМ ПРИГЛАШЕНИЕ ★★★
     const isInvite = text.includes('приглашает') || text.includes('пригласил');
+    const isFriendRequest = text.includes('заявка в друзья');
+    const isFriendAccepted = text.includes('новый друг');
     
-    if (isInvite) {
-        const uniqueId = 'invite_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    // ★★★ ЕСЛИ ЭТО УВЕДОМЛЕНИЕ ОТ ДРУГОГО ПОЛЬЗОВАТЕЛЯ — ПОКАЗЫВАЕМ ВСЕГДА ★★★
+    if (isInvite || isFriendRequest || isFriendAccepted) {
+        const uniqueId = 'user_action_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
         notificationQueue.push({ 
             icon, 
             text, 
             actionCallback, 
             id: uniqueId, 
             isInvite: true,
+            isFriendRequest: isFriendRequest,
+            isFriendAccepted: isFriendAccepted,
             autoClose: false,
-            okAction: null
+            okAction: okAction,
+            forceShow: true  // ★★★ ФЛАГ ДЛЯ ПРИНУДИТЕЛЬНОГО ПОКАЗА ★★★
         });
         if (!isNotificationShowing) {
             processNotificationQueue();
@@ -2314,6 +2366,7 @@ function showNotification(icon, text, actionCallback, autoClose = true, okAction
         return;
     }
     
+    // ★★★ ОБЫЧНЫЕ УВЕДОМЛЕНИЯ (СИСТЕМНЫЕ) — ПРОВЕРЯЕМ НА ПОВТОР ★★★
     const notificationId = text + icon;
     const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
     if (seen.includes(notificationId)) {
@@ -2327,7 +2380,8 @@ function showNotification(icon, text, actionCallback, autoClose = true, okAction
         actionCallback, 
         id: notificationId,
         autoClose: autoClose,
-        okAction: okAction
+        okAction: okAction,
+        forceShow: false
     });
     if (!isNotificationShowing) {
         processNotificationQueue();
@@ -2370,7 +2424,8 @@ function processNotificationQueue() {
             }
             hideNotification();
             
-            if (!notification.isInvite && notification.id) {
+            // ★★★ ДЛЯ ПРИНУДИТЕЛЬНЫХ УВЕДОМЛЕНИЙ НЕ СОХРАНЯЕМ ★★★
+            if (!notification.forceShow && !notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
@@ -2380,7 +2435,6 @@ function processNotificationQueue() {
         okBtn.onclick = function() {
             console.log('🔵 Кнопка "ОК" нажата');
             
-            // ★★★ ВЫЗЫВАЕМ okAction ЕСЛИ ЕСТЬ ★★★
             if (notification.okAction) {
                 try {
                     notification.okAction();
@@ -2401,7 +2455,8 @@ function processNotificationQueue() {
                 shownThisSession.delete(notification.requestId);
             }
             
-            if (!notification.isInvite && notification.id) {
+            // ★★★ ДЛЯ ПРИНУДИТЕЛЬНЫХ УВЕДОМЛЕНИЙ НЕ СОХРАНЯЕМ ★★★
+            if (!notification.forceShow && !notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
@@ -2425,7 +2480,7 @@ function processNotificationQueue() {
                     console.log('⏰ Авто-закрытие уведомления');
                     hideNotification();
                     
-                    if (!notification.isInvite && notification.id) {
+                    if (!notification.forceShow && !notification.isInvite && notification.id) {
                         markNotificationSeen(notification.id);
                     }
                 }
@@ -2454,11 +2509,6 @@ function markNotificationSeen(id) {
         seen.push(id);
         localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(seen));
     }
-}
-
-function isNotificationSeen(id) {
-    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-    return seen.includes(id);
 }
 
 function clearSeenNotifications() {
@@ -2917,6 +2967,7 @@ async function getUserWorkoutsFromFirestore(userId) {
             .where('userId', '==', userId)
             .orderBy('date', 'desc')
             .get();
+        
         const workouts = [];
         snapshot.forEach(doc => {
             workouts.push({ id: doc.id, ...doc.data() });
@@ -2924,6 +2975,32 @@ async function getUserWorkoutsFromFirestore(userId) {
         return { success: true, data: workouts };
     } catch (error) {
         console.error('Ошибка получения тренировок:', error);
+        
+        // ★★★ ЕСЛИ ОШИБКА ИЗ-ЗА ОТСУТСТВИЯ ИНДЕКСА ★★★
+        if (error.code === 'failed-precondition' && error.message.includes('index')) {
+            console.warn('⚠️ Требуется создать индекс в Firebase Console');
+            showToast('⚠️ Требуется создать индекс для сортировки тренировок');
+            
+            // ★★★ ПЫТАЕМСЯ ПОЛУЧИТЬ БЕЗ СОРТИРОВКИ ★★★
+            try {
+                const fallbackSnapshot = await firebase.firestore()
+                    .collection('workouts')
+                    .where('userId', '==', userId)
+                    .get();
+                
+                const workouts = [];
+                fallbackSnapshot.forEach(doc => {
+                    workouts.push({ id: doc.id, ...doc.data() });
+                });
+                // Сортируем вручную
+                workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                return { success: true, data: workouts };
+            } catch (fallbackError) {
+                console.error('❌ Ошибка fallback запроса:', fallbackError);
+                return { success: false, error: fallbackError.message };
+            }
+        }
+        
         showToast('❌ Не удалось загрузить тренировки. Проверьте интернет.');
         return { success: false, error: error.message };
     }
@@ -3894,6 +3971,19 @@ function finishTrainingSession() {
     const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
     const xpEarned = calculateWorkoutXp(completedExercises);
     showFinishPage(total, completed, sessionSeconds, xpEarned);
+    
+    // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+    if (completed > 0) {
+        const workoutData = {
+            exercises: sessionExercises.map((ex, index) => ({
+                ...ex,
+                completed: sessionCompleted.has(index)
+            })),
+            durationSeconds: sessionSeconds,
+            category: sessionCategory || ''
+        };
+        checkDailyTasksAfterWorkout(workoutData);
+    }
 }
 
 // ===================ТАЙМЕР ===================
@@ -4136,6 +4226,15 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
             const workouts = getMyWorkouts();
             workouts.push(newWorkout);
             saveMyWorkouts(workouts);
+            
+            // ★★★ ЗАДАНИЕ 3: ИНДИВИДУАЛЬНОСТЬ — ВЫПОЛНЯЕТСЯ ПОСЛЕ СОЗДАНИЯ ТРЕНИРОВКИ ★★★
+            if (!tasks[3]) {
+                tasks[3] = true;
+                saveTasks();
+                updateTasksUI();
+                showToast('✅ Задание "Индивидуальность" выполнено!');
+                addTaskXp();
+            }
             
             // ★★★ ОЧИЩАЕМ ВРЕМЕННЫЕ ДАННЫЕ ★★★
             localStorage.removeItem('temp_edit_name');
@@ -4959,14 +5058,6 @@ window.deleteCustomWorkout = function(id) {
 };
 
 function createNewWorkout() {
-    if (!tasks[3]) {
-        tasks[3] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Индивидуальность" выполнено!');
-        addTaskXp();
-    }
-    
     window.navigateTo('workout-edit', { category: 'Новая тренировка', isCustom: true, id: 'new' });
 };
 
@@ -6215,10 +6306,6 @@ async function getFriendRequests() {
     const user = await getFirebaseUser();
     if (!user) return { success: false, error: 'Не авторизован' };
     try {
-        // ★★★ УДАЛЯЕМ disableNetwork/enableNetwork — ОНИ ВЫЗЫВАЮТ КОНФЛИКТЫ ★★★
-        // await firebase.firestore().disableNetwork();
-        // await firebase.firestore().enableNetwork();
-        
         const snapshot = await firebase.firestore()
             .collection('friendRequests')
             .where('to', '==', user.uid)
@@ -6242,65 +6329,81 @@ async function acceptFriendRequest(requestId, fromUserId) {
     const user = await getFirebaseUser();
     if (!user) return { success: false, error: 'Не авторизован' };
     try {
+        // ★★★ ПРОВЕРЯЕМ, СУЩЕСТВУЕТ ЛИ ЗАЯВКА ★★★
+        const requestDoc = await firebase.firestore().collection('friendRequests').doc(requestId).get();
+        if (!requestDoc.exists) {
+            showToast('❌ Заявка уже обработана или удалена');
+            return { success: false, error: 'Заявка не найдена' };
+        }
+        
         await firebase.firestore().collection('friendRequests').doc(requestId).update({ status: 'accepted' });
-        await firebase.firestore().collection('users').doc(user.uid).update({ friends: firebase.firestore.FieldValue.arrayUnion(fromUserId) });
-        await firebase.firestore().collection('users').doc(fromUserId).update({ friends: firebase.firestore.FieldValue.arrayUnion(user.uid) });
+        await firebase.firestore().collection('users').doc(user.uid).update({ 
+            friends: firebase.firestore.FieldValue.arrayUnion(fromUserId) 
+        });
+        await firebase.firestore().collection('users').doc(fromUserId).update({ 
+            friends: firebase.firestore.FieldValue.arrayUnion(user.uid) 
+        });
         
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const updated = shownRequests.filter(id => id !== requestId);
         localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
         
-        // ★★★ ПОЛУЧАЕМ ИМЕНА ОБОИХ ПОЛЬЗОВАТЕЛЕЙ ★★★
         const currentUserProfile = await getUserProfile(user.uid);
         const currentUserName = currentUserProfile.success ? currentUserProfile.data.displayName : 'Пользователь';
         
         const friendProfile = await getUserProfile(fromUserId);
         const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
         
-        // ★★★ УВЕДОМЛЕНИЕ ДЛЯ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ (кто принял) ★★★
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
         if (!shownFriendNotifications.includes(fromUserId)) {
-            showNotification(
-                '👥',
-                `У вас новый друг — ${friendName}!`,
-                null
-            );
+            showNotification('👥', `У вас новый друг — ${friendName}!`, null);
             shownFriendNotifications.push(fromUserId);
             localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
         }
-
+        
         await updateAchievementsAfterWorkout();
-        
-        // ★★★ УВЕДОМЛЕНИЕ ДЛЯ ИНИЦИАТОРА ЗАЯВКИ (через Firestore) ★★★
-        try {
-            await firebase.firestore().collection('notifications').add({
-                to: fromUserId,
-                from: user.uid,
-                fromName: currentUserName,
-                type: 'friend_accepted',
-                message: `${currentUserName} принял(а) вашу заявку в друзья! Теперь вы друзья!`,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false
-            });
-            console.log('✅ Уведомление отправлено инициатору заявки');
-        } catch (notifyError) {
-            console.error('Ошибка отправки уведомления инициатору:', notifyError);
-        }
-        
         await renderFriendsInProfile();
         
         // ★★★ ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА ★★★
-    if (!tasks[4]) {
-        tasks[4] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Новые знакомства" выполнено!');
-        addTaskXp();
-    }
+        if (!tasks[4]) {
+            tasks[4] = true;
+            saveTasks();
+            updateTasksUI();
+            showToast('✅ Задание "Новые знакомства" выполнено!');
+            addTaskXp();
+        }
+        
+        // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ ★★★
+        if (checkAllTasksCompleted()) {
+            showNotification(
+                '🎉',
+                'Все задания выполнены! Теперь вам доступны ежедневные задания!',
+                null,
+                true,
+                function() {
+                    window.navigateTo('profile');
+                    TabManager.profile('my');
+                    setTimeout(() => {
+                        showDailyTasks();
+                    }, 300);
+                }
+            );
+        }
+        
+        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ДОБАВЛЕНИЕ ДРУГА) ★★★
+        checkDailyTasksAfterAddFriend();
         
         return { success: true };
     } catch (error) {
         console.error('Ошибка принятия заявки:', error);
+        
+        if (error.code === 'not-found') {
+            showToast('❌ Заявка уже была обработана');
+            await renderFriendsInProfile();
+            return { success: false, error: 'Заявка не найдена' };
+        }
+        
+        showToast('❌ Ошибка при принятии заявки');
         return { success: false, error: error.message };
     }
 }
@@ -6401,22 +6504,21 @@ async function getFriendsList() {
 
 // ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
 async function renderFriendsInProfile() {
-    const searchBtn = document.getElementById('searchFriendBtn');
+    const searchBtn = document.getElementById('searchFriendBtn') || document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('searchResults');
     const requestsDiv = document.getElementById('friendRequests');
     const friendsDiv = document.getElementById('friendsList');
     
-    // ★★★ НАСТРАИВАЕМ КНОПКУ ПОИСКА ДРУЗЕЙ ★★★
+    // ★★★ ПОИСК ДРУЗЕЙ ★★★
     if (searchBtn) {
-        searchBtn.onclick = async function() {
+        searchBtn.onclick = async () => {
             const query = searchInput.value.trim();
             resultsDiv.innerHTML = '';
             if (!query) {
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Введите имя для поиска</p>';
                 return;
             }
-            
             const result = await searchUsers(query);
             if (!result.success) { 
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Ошибка поиска</p>'; 
@@ -6426,7 +6528,6 @@ async function renderFriendsInProfile() {
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Пользователи не найдены</p>'; 
                 return; 
             }
-            
             resultsDiv.innerHTML = result.data.map(u => {
                 const initial = (u.displayName || 'П')[0].toUpperCase();
                 let buttonHtml = '';
@@ -6450,21 +6551,20 @@ async function renderFriendsInProfile() {
             }).join('');
         };
         
-        // ★★★ ПОИСК ПО НАЖАТИЮ ENTER ★★★
         if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) { 
-                if (e.key === 'Enter') {
-                    searchBtn.click();
-                }
+            searchInput.addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') searchBtn.click(); 
             });
         }
     }
 
-    // Загружаем заявки
+    // ★★★ ЗАГРУЖАЕМ ЗАЯВКИ ★★★
     const requests = await getFriendRequests();
     if (requests.success && requests.data.length > 0) {
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const newRequests = requests.data.filter(r => !shownRequests.includes(r.id));
+        
+        // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ ДЛЯ НОВЫХ ЗАЯВОК ★★★
         newRequests.forEach(r => {
             const fromUser = r.fromUser || {};
             const name = fromUser.displayName || 'Пользователь';
@@ -6474,6 +6574,12 @@ async function renderFriendsInProfile() {
                 setTimeout(() => renderFriendsInProfile(), 300);
             });
         });
+        
+        // ★★★ СОХРАНЯЕМ ВСЕ ПОКАЗАННЫЕ ЗАЯВКИ ★★★
+        const updatedShown = [...shownRequests, ...newRequests.map(r => r.id)];
+        localStorage.setItem('shownFriendRequests', JSON.stringify(updatedShown));
+        
+        // ★★★ РЕНДЕРИМ ЗАЯВКИ ★★★
         let requestsHtml = requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
@@ -6491,13 +6597,14 @@ async function renderFriendsInProfile() {
         if (requestsDiv) requestsDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки.</p></div>';
     }
     
-    // Загружаем друзей
+    // ★★★ ЗАГРУЖАЕМ ДРУЗЕЙ ★★★
     const friends = await getFriendsList();
     let friendsHtml = '';
     if (friends.success && friends.data.length > 0) {
         const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
         const prevFriendIds = prevFriends.map(f => f.id);
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        
         friends.data.forEach(f => {
             const friendId = f.id;
             const friendName = f.displayName || 'Пользователь';
@@ -6541,30 +6648,33 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         
         const userData = result.data;
         
-        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ПОЛЬЗОВАТЕЛЯ ★★★
+        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ★★★
         const achievements = userData.achievements || {};
         updateAchievementsUI('friendRequestAchievements', achievements);
         
-        // ★★★ УЧИТЫВАЕМ ВИДИМОСТЬ ДОСТИЖЕНИЙ ★★★
         const visible = getAchievementsVisibility();
         const container = document.getElementById('friendRequestAchievements');
         if (container) {
             container.classList.toggle('hidden', !visible);
         }
         
-        // Загружаем тренировки
-        const workoutsResult = await getUserWorkoutsFromFirestore(fromUserId);
+        // ★★★ ЗАГРУЖАЕМ ТРЕНИРОВКИ С ОБРАБОТКОЙ ОШИБКИ ★★★
         let workouts = [];
         let totalSeconds = 0;
         let totalExercises = 0;
         
-        if (workoutsResult.success) {
-            workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
-            totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
-            totalExercises = workouts.reduce((sum, w) => {
-                const completed = w.exercises?.filter(e => e.completed === true).length || 0;
-                return sum + completed;
-            }, 0);
+        try {
+            const workoutsResult = await getUserWorkoutsFromFirestore(fromUserId);
+            if (workoutsResult.success) {
+                workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
+                totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+                totalExercises = workouts.reduce((sum, w) => {
+                    const completed = w.exercises?.filter(e => e.completed === true).length || 0;
+                    return sum + completed;
+                }, 0);
+            }
+        } catch (error) {
+            console.warn('⚠️ Ошибка загрузки тренировок друга:', error);
         }
         
         const name = userData.displayName || 'Пользователь';
@@ -6593,6 +6703,9 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         document.getElementById('friendRequestRejectBtn').dataset.requestId = requestId;
         
         openModal('friendRequestProfileModal');
+        
+        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ПРОФИЛЬ ДРУГА) ★★★
+        checkDailyTasksAfterFriendProfile(fromUserId);
         
     } catch (error) {
         console.error('Ошибка загрузки профиля:', error);
@@ -7198,7 +7311,7 @@ container.innerHTML = users.map((userData, index) => {
         { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
         { id: 'unstoppable', icon: 'fa-solid fa-fire' },
         { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
-        { id: 'masterOfStyles', icon: 'fa-solid fa-star' }
+        { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
     ];
     
     let achievementsHtml = achievementIcons.map(a => {
@@ -7285,7 +7398,7 @@ let html = allUsers.map((userData, index) => {
         { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
         { id: 'unstoppable', icon: 'fa-solid fa-fire' },
         { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
-        { id: 'masterOfStyles', icon: 'fa-solid fa-star' }
+        { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
     ];
     
     let achievementsHtml = achievementIcons.map(a => {
@@ -7873,7 +7986,7 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         const color = this.dataset.color;
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('color-btn-active'));
         this.classList.add('color-btn-active');
-        setTheme(color);
+        selectColor(color);  // ← ИСПРАВЛЕНО
         updateColorStatus(color);
     });
 });
@@ -8019,6 +8132,12 @@ loadAchievementsVisibility();
 
     // Загружаем задания
     loadTasks();
+    loadDailyTasks();
+
+        // Инициализация ежедневных заданий
+    setTimeout(async () => {
+        await initDailyTasks();
+    }, 2000);
 
     setTimeout(() => {
         listenForInvites();
@@ -8839,29 +8958,32 @@ async function openFriendProfile(friendId) {
         
         currentFriendData = result.data;
         
-        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ДРУГА ★★★
         const achievements = currentFriendData.achievements || {};
         updateAchievementsUI('friendAchievements', achievements);
         
-        // ★★★ УЧИТЫВАЕМ ВИДИМОСТЬ ДОСТИЖЕНИЙ ★★★
         const visible = getAchievementsVisibility();
         const container = document.getElementById('friendAchievements');
         if (container) {
             container.classList.toggle('hidden', !visible);
         }
         
-        const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
+        // ★★★ ЗАГРУЖАЕМ ТРЕНИРОВКИ С ОБРАБОТКОЙ ОШИБКИ ★★★
         let workouts = [];
         let totalSeconds = 0;
         let totalExercises = 0;
         
-        if (workoutsResult.success) {
-            workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
-            totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
-            totalExercises = workouts.reduce((sum, w) => {
-                const completed = w.exercises?.filter(e => e.completed === true).length || 0;
-                return sum + completed;
-            }, 0);
+        try {
+            const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
+            if (workoutsResult.success) {
+                workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
+                totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+                totalExercises = workouts.reduce((sum, w) => {
+                    const completed = w.exercises?.filter(e => e.completed === true).length || 0;
+                    return sum + completed;
+                }, 0);
+            }
+        } catch (error) {
+            console.warn('⚠️ Ошибка загрузки тренировок друга:', error);
         }
         
         const name = currentFriendData.displayName || 'Пользователь';
@@ -8884,6 +9006,9 @@ async function openFriendProfile(friendId) {
         document.getElementById('friendTotalExercises').textContent = totalExercises;
         
         openModal('friendProfileModal');
+        
+        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ПРОФИЛЬ ДРУГА) ★★★
+        checkDailyTasksAfterFriendProfile(friendId);
         
     } catch (error) {
         console.error('Ошибка загрузки профиля друга:', error);
@@ -8933,8 +9058,15 @@ async function removeFriendFromList(friendId) {
         const friendProfile = await getUserProfile(friendId);
         const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
         
+        // ★★★ ПРОВЕРЯЕМ, ЕСТЬ ЛИ ДРУГ В СПИСКЕ ★★★
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const currentFriends = userDoc.data()?.friends || [];
+        
+        if (!currentFriends.includes(friendId)) {
+            showToast('⚠️ Этот пользователь уже не в друзьях');
+            return false;
+        }
+        
         const updatedFriends = currentFriends.filter(id => id !== friendId);
         await firebase.firestore().collection('users').doc(user.uid).update({ friends: updatedFriends });
         
@@ -8954,8 +9086,16 @@ async function removeFriendFromList(friendId) {
         return { success: true, friendName: friendName };
     } catch (error) {
         console.error('Ошибка удаления друга:', error);
+        
+        // ★★★ ЕСЛИ ДРУГ УЖЕ УДАЛЁН ★★★
+        if (error.code === 'not-found') {
+            showToast('⚠️ Этот пользователь уже не в друзьях');
+            await renderFriendsInProfile();
+            return false;
+        }
+        
         showToast('❌ Ошибка при удалении друга');
-        return { success: false };
+        return false;
     }
 }
 
@@ -9671,7 +9811,7 @@ const ACHIEVEMENTS_CONFIG = [
     },
     {
         id: 'masterOfStyles',
-        icon: 'fa-solid fa-star',
+        icon: 'fa-solid fa-award',
         name: 'Мастер всех стилей',
         description: 'Выполнить по 10 тренировок в каждой категорий',
         check: async (userId, profile, workouts) => {
@@ -9997,28 +10137,36 @@ function closeDailyTasksModal() {
 function toggleDailyTask(taskId) {
     event.stopPropagation();
     dailyTasks[taskId] = !dailyTasks[taskId];
+    saveDailyTasks();
+    updateDailyUI();
     
-    // Обновляем иконки в блоке
-    const blockIcon = document.getElementById('dailyTaskIcon' + taskId);
     if (dailyTasks[taskId]) {
-        blockIcon.className = 'fa-regular fa-square-check';
-        blockIcon.style.color = '#22c55e';
-    } else {
-        blockIcon.className = 'fa-regular fa-square';
-        blockIcon.style.color = 'var(--slate)';
+        showToast('✅ Ежедневное задание выполнено! +10 XP');
+        addTaskXp();
     }
-    
-    // Обновляем иконки в модалке
-    const modalIcon = document.getElementById('modalDailyIcon' + taskId);
-    if (modalIcon) {
-        if (dailyTasks[taskId]) {
-            modalIcon.className = 'fa-regular fa-square-check';
-            modalIcon.style.color = '#22c55e';
-        } else {
-            modalIcon.className = 'fa-regular fa-square';
-            modalIcon.style.color = 'var(--slate)';
+}
+
+// Сохранить состояние ежедневных заданий в localStorage
+function saveDailyTasks() {
+    localStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(dailyTasks));
+}
+
+// Загрузить состояние ежедневных заданий из localStorage
+function loadDailyTasks() {
+    const saved = localStorage.getItem(DAILY_TASKS_KEY);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            for (const key in parsed) {
+                if (dailyTasks.hasOwnProperty(key)) {
+                    dailyTasks[key] = parsed[key];
+                }
+            }
+        } catch (e) {
+            console.warn('Ошибка загрузки ежедневных заданий:', e);
         }
     }
+    updateDailyUI();
 }
 
 function updateDailyModalIcons() {
@@ -10027,18 +10175,14 @@ function updateDailyModalIcons() {
         if (icon) {
             if (dailyTasks[i]) {
                 icon.className = 'fa-regular fa-square-check';
-                icon.style.color = '#22c55e';
+                icon.style.color = 'var(--accent)';
             } else {
                 icon.className = 'fa-regular fa-square';
-                icon.style.color = 'var(--slate)';
+                icon.style.color = 'var(--light-grey)';
             }
         }
     }
 }
-
-
-
-
 
 // ===== ПЕРВЫЕ ЗАДАНИЯ =====
 const tasks = {
@@ -10052,6 +10196,7 @@ const tasks = {
 // Ключ для localStorage
 const TASKS_STORAGE_KEY = 'sportapp_tasks';
 
+// Загрузить состояние заданий из localStorage
 // Загрузить состояние заданий из localStorage
 function loadTasks() {
     const saved = localStorage.getItem(TASKS_STORAGE_KEY);
@@ -10068,6 +10213,23 @@ function loadTasks() {
         }
     }
     updateTasksUI();
+    
+    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ ★★★
+    if (checkAllTasksCompleted()) {
+        // Сразу показываем ежедневные задания
+        showDailyTasks();
+    } else {
+        // Показываем обычные задания, скрываем ежедневные
+        const tasksBlock = document.getElementById('tasks-block');
+        const dailyTasksBlock = document.getElementById('daily-tasks-block');
+        
+        if (tasksBlock) {
+            tasksBlock.style.display = 'block';
+        }
+        if (dailyTasksBlock) {
+            dailyTasksBlock.style.display = 'none';
+        }
+    }
 }
 
 // Сохранить состояние заданий в localStorage
@@ -10085,8 +10247,64 @@ function toggleTask(taskId) {
     // Показываем уведомление
     if (tasks[taskId]) {
         showToast('✅ Задание выполнено!');
-        // Можно добавить начисление XP
         addTaskXp();
+    }
+    
+    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ ★★★
+    if (checkAllTasksCompleted()) {
+        // Показываем уведомление с кнопкой "ОК"
+        showNotification(
+            '🎉',
+            'Все задания выполнены! Теперь вам доступны ежедневные задания!',
+            null,
+            true,
+            function() {
+                // Переходим на страницу профиля
+                window.navigateTo('profile');
+                TabManager.profile('my');
+                // Скрываем задания и показываем ежедневные
+                setTimeout(() => {
+                    showDailyTasks();
+                }, 300);
+            }
+        );
+    }
+}
+
+// Показать ежедневные задания и скрыть обычные
+function showDailyTasks() {
+    const tasksBlock = document.getElementById('tasks-block');
+    const dailyTasksBlock = document.getElementById('daily-tasks-block');
+    
+    console.log('📋 Показываем ежедневные задания');
+    
+    if (tasksBlock) {
+        tasksBlock.style.display = 'none';
+    }
+    
+    if (dailyTasksBlock) {
+        dailyTasksBlock.style.display = 'block';
+        dailyTasksBlock.classList.add('open');
+        saveBlocksState();
+    }
+    
+    // ★★★ РЕНДЕРИМ ЗАДАНИЯ ★★★
+    renderDailyTasks();
+}
+
+// Обновить интерфейс ежедневных заданий
+function updateDailyUI() {
+    for (let i = 1; i <= 3; i++) {
+        const icon = document.getElementById('dailyTaskIcon' + i);
+        if (icon) {
+            if (dailyTasks[i]) {
+                icon.className = 'fa-regular fa-square-check';
+                icon.style.color = 'var(--accent)';
+            } else {
+                icon.className = 'fa-regular fa-square';
+                icon.style.color = 'var(--light-grey)';
+            }
+        }
     }
 }
 
@@ -10100,7 +10318,7 @@ function updateTasksUI() {
                 icon.style.color = 'var(--accent)';
             } else {
                 icon.className = 'fa-regular fa-square';
-                icon.style.color = 'var(--slate)';
+                icon.style.color = 'var(--light-grey)';
             }
         }
     }
@@ -10129,3 +10347,790 @@ function checkAllTasksCompleted() {
 
 // Загружаем задания при инициализации
 loadTasks();
+
+
+// ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ =====
+// Конфигурация блоков заданий
+const DAILY_TASKS_CONFIG = {
+    // Блок 1: Упражнения (физические)
+    exercise: {
+        items: [
+            { id: 'exercise_1', name: 'Приседания', baseValue: 15, unit: 'раз', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_2', name: 'Отжимания', baseValue: 10, unit: 'раз', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_3', name: 'Подтягивания', baseValue: 5, unit: 'раз', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_4', name: 'Скручивания', baseValue: 20, unit: 'раз', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_5', name: 'Выпады', baseValue: 10, unit: 'на каждую ногу', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_6', name: 'Бёрпи', baseValue: 8, unit: 'раз', icon: 'fa-solid fa-dumbbell' },
+            { id: 'exercise_7', name: 'Планка', baseValue: 30, unit: 'сек', icon: 'fa-solid fa-dumbbell' }
+        ],
+        maxPerDay: null
+    },
+    // Блок 2: Друзья
+    friends: {
+        items: [
+            { id: 'friends_1', name: 'Дружный', description: 'Выполнить совместную тренировку', icon: 'fa-solid fa-user-group' },
+            { id: 'friends_2', name: 'Дружелюбный', description: 'Посмотреть профиль друга', icon: 'fa-solid fa-user-group' },
+            { id: 'friends_3', name: 'Общительный', description: 'Добавить друга в друзья', icon: 'fa-solid fa-user-plus' }
+        ],
+        maxPerDay: 1
+    },
+    // Блок 3: Статистика
+    stats: {
+        exercises: {
+            items: [
+                { id: 'stats_ex_1', name: 'Спортсмен', target: 15, icon: 'fa-solid fa-chart-bar' },
+                { id: 'stats_ex_2', name: 'Спортсмен', target: 20, icon: 'fa-solid fa-chart-bar' },
+                { id: 'stats_ex_3', name: 'Спортсмен', target: 25, icon: 'fa-solid fa-chart-bar' },
+                { id: 'stats_ex_4', name: 'Спортсмен', target: 30, icon: 'fa-solid fa-chart-bar' }
+            ],
+            maxPerDay: 1
+        },
+        time: {
+            items: [
+                { id: 'stats_time_1', name: 'Атлет', target: 30, icon: 'fa-solid fa-stopwatch' },
+                { id: 'stats_time_2', name: 'Атлет', target: 45, icon: 'fa-solid fa-stopwatch' },
+                { id: 'stats_time_3', name: 'Атлет', target: 60, icon: 'fa-solid fa-stopwatch' }
+            ],
+            maxPerDay: 1
+        }
+    },
+    // Блок 4: Умная статистика
+    smartStats: {
+        items: [
+            { id: 'smart_1', name: 'Упражнения на {category}', description: 'Выполнить {count} упражнений на {category}', icon: 'fa-solid fa-trophy' },
+            { id: 'smart_2', name: 'Тренировка {category}', description: 'Выполнить тренировку {category}', icon: 'fa-solid fa-trophy' }
+        ],
+        maxPerDay: 1
+    }
+};
+
+// Ключи для localStorage
+const DAILY_TASKS_KEY = 'sportapp_daily_tasks';
+const DAILY_DATE_KEY = 'sportapp_daily_date';
+
+
+// ===== ФУНКЦИИ ДЛЯ ЕЖЕДНЕВНЫХ ЗАДАНИЙ =====
+
+// Получить уровень пользователя
+function getUserLevel() {
+    const xp = parseFloat(localStorage.getItem('userXp')) || 0;
+    const level = getCurrentLevel(xp);
+    return level.id || 1;
+}
+
+// Рассчитать целевое значение для упражнения
+function calculateExerciseTarget(baseValue, userLevel) {
+    const result = (baseValue * (1 + userLevel)) / 2;
+    return Math.ceil(result);
+}
+
+// Получить категорию с наименьшим количеством тренировок
+function getLeastTrainedCategory(statsData) {
+    if (!statsData || !statsData.categoryCounts) {
+        const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+        return categories[Math.floor(Math.random() * categories.length)];
+    }
+    
+    // ★★★ НАХОДИМ МИНИМАЛЬНОЕ ЗНАЧЕНИЕ ★★★
+    let minCount = Infinity;
+    for (const [category, count] of Object.entries(statsData.categoryCounts)) {
+        if (count < minCount) {
+            minCount = count;
+        }
+    }
+    
+    // ★★★ СОБИРАЕМ ВСЕ КАТЕГОРИИ С МИНИМАЛЬНЫМ ЗНАЧЕНИЕМ ★★★
+    const minCategories = [];
+    for (const [category, count] of Object.entries(statsData.categoryCounts)) {
+        if (count === minCount) {
+            minCategories.push(category);
+        }
+    }
+    
+    // ★★★ ДОБАВЛЯЕМ КАТЕГОРИИ, КОТОРЫХ НЕТ В СТАТИСТИКЕ (ТОЖЕ 0) ★★★
+    const allCategories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+    for (const cat of allCategories) {
+        if (!statsData.categoryCounts[cat]) {
+            minCategories.push(cat);
+        }
+    }
+    
+    // ★★★ ВЫБИРАЕМ СЛУЧАЙНУЮ ИЗ ВСЕХ С МИНИМАЛЬНЫМ ЗНАЧЕНИЕМ ★★★
+    const randomIndex = Math.floor(Math.random() * minCategories.length);
+    const result = minCategories[randomIndex];
+    
+    console.log('📊 getLeastTrainedCategory:');
+    console.log('  - minCount:', minCount);
+    console.log('  - minCategories:', minCategories);
+    console.log('  - выбрано:', result);
+    
+    return result || 'Ноги';
+}
+
+// Получить категорию с наименьшим количеством упражнений
+function getLeastExercisedCategory(statsData) {
+    if (!statsData || !statsData.exerciseCounts) {
+        const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+        return categories[Math.floor(Math.random() * categories.length)];
+    }
+    
+    // ★★★ НАХОДИМ МИНИМАЛЬНОЕ ЗНАЧЕНИЕ ★★★
+    let minCount = Infinity;
+    for (const [category, count] of Object.entries(statsData.exerciseCounts)) {
+        if (count < minCount) {
+            minCount = count;
+        }
+    }
+    
+    // ★★★ СОБИРАЕМ ВСЕ КАТЕГОРИИ С МИНИМАЛЬНЫМ ЗНАЧЕНИЕМ ★★★
+    const minCategories = [];
+    for (const [category, count] of Object.entries(statsData.exerciseCounts)) {
+        if (count === minCount) {
+            minCategories.push(category);
+        }
+    }
+    
+    // ★★★ ДОБАВЛЯЕМ КАТЕГОРИИ, КОТОРЫХ НЕТ В СТАТИСТИКЕ (ТОЖЕ 0) ★★★
+    const allCategories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+    for (const cat of allCategories) {
+        if (!statsData.exerciseCounts[cat]) {
+            minCategories.push(cat);
+        }
+    }
+    
+    // ★★★ ВЫБИРАЕМ СЛУЧАЙНУЮ ИЗ ВСЕХ С МИНИМАЛЬНЫМ ЗНАЧЕНИЕМ ★★★
+    const randomIndex = Math.floor(Math.random() * minCategories.length);
+    const result = minCategories[randomIndex];
+    
+    console.log('📊 getLeastExercisedCategory:');
+    console.log('  - minCount:', minCount);
+    console.log('  - minCategories:', minCategories);
+    console.log('  - выбрано:', result);
+    
+    return result || 'Руки';
+}
+
+function collectAvailableTasks(userLevel, statsData) {
+    const tasks = [];
+    const userLevelNum = userLevel || 1;
+    
+    // 1. Блок Упражнения — берём иконки из конфига
+    DAILY_TASKS_CONFIG.exercise.items.forEach(item => {
+        const target = calculateExerciseTarget(item.baseValue, userLevelNum);
+        tasks.push({
+            id: item.id,
+            type: 'exercise',
+            block: 'exercise',
+            name: item.name,
+            description: `${target} ${item.unit}`,
+            target: target,
+            icon: item.icon, // ← БЕРЁМ ИЗ КОНФИГА
+            completed: false,
+            baseValue: item.baseValue,
+            unit: item.unit
+        });
+    });
+    
+    // 2. Блок Друзья — берём иконки из конфига
+    DAILY_TASKS_CONFIG.friends.items.forEach(item => {
+        tasks.push({
+            id: item.id,
+            type: 'friends',
+            block: 'friends',
+            name: item.name,
+            description: item.description,
+            target: null,
+            icon: item.icon, // ← БЕРЁМ ИЗ КОНФИГА
+            completed: false
+        });
+    });
+    
+    // 3. Блок Статистика - Упражнения — берём иконки из конфига
+    const statsExercises = DAILY_TASKS_CONFIG.stats.exercises.items;
+    const randomExercise = statsExercises[Math.floor(Math.random() * statsExercises.length)];
+    tasks.push({
+        id: randomExercise.id,
+        type: 'stats_exercise',
+        block: 'stats_exercise',
+        name: randomExercise.name,
+        description: `Выполнить ${randomExercise.target} упражнений`,
+        target: randomExercise.target,
+        icon: randomExercise.icon, // ← БЕРЁМ ИЗ КОНФИГА
+        completed: false
+    });
+    
+    // 4. Блок Статистика - Время — берём иконки из конфига
+    const statsTime = DAILY_TASKS_CONFIG.stats.time.items;
+    const randomTime = statsTime[Math.floor(Math.random() * statsTime.length)];
+    tasks.push({
+        id: randomTime.id,
+        type: 'stats_time',
+        block: 'stats_time',
+        name: randomTime.name,
+        description: `Тренироваться ${randomTime.target} минут`,
+        target: randomTime.target,
+        icon: randomTime.icon, // ← БЕРЁМ ИЗ КОНФИГА
+        completed: false
+    });
+    
+    // 5. Блок Умная статистика — берём иконки из конфига
+    const smartTasks = [];
+    
+    const leastExercisedCategory = getLeastExercisedCategory(statsData);
+    const exerciseCounts = [5, 10, 15];
+    const randomCount = exerciseCounts[Math.floor(Math.random() * exerciseCounts.length)];
+    smartTasks.push({
+        id: 'smart_exercise_' + Date.now(),
+        type: 'smart_exercise',
+        block: 'smart_stats',
+        name: `${randomCount} упражнений на ${leastExercisedCategory}`,
+        description: `Выполнить ${randomCount} упражнений на ${leastExercisedCategory}`,
+        target: randomCount,
+        category: leastExercisedCategory,
+        icon: DAILY_TASKS_CONFIG.smartStats.items[0].icon,
+        completed: false
+    });
+    
+    const leastTrainedCategory = getLeastTrainedCategory(statsData);
+    smartTasks.push({
+        id: 'smart_workout_' + Date.now(),
+        type: 'smart_workout',
+        block: 'smart_stats',
+        name: `Тренировка ${leastTrainedCategory}`,
+        description: `Выполнить тренировку ${leastTrainedCategory}`,
+        target: null,
+        category: leastTrainedCategory,
+        icon: DAILY_TASKS_CONFIG.smartStats.items[1].icon,
+        completed: false
+    });
+    
+    const randomSmart = smartTasks[Math.floor(Math.random() * smartTasks.length)];
+    tasks.push(randomSmart);
+    
+    return tasks;
+}
+
+// Выбрать финальный набор заданий
+function selectDailyTasks(tasks, hasPremium) {
+    const count = hasPremium ? 5 : 3;
+    const selected = [];
+    const usedBlocks = {
+        friends: false,
+        smart_stats: false,
+        stats_exercise: false,
+        stats_time: false,
+        exercise: 0  // ★★★ СЧЁТЧИК УПРАЖНЕНИЙ ★★★
+    };
+    
+    // Максимальное количество упражнений
+    const maxExercise = hasPremium ? 2 : 1;  // ★★★ БЕЗ PREMIUM — 1, С PREMIUM — 2 ★★★
+    
+    // Перемешиваем задания
+    const shuffled = [...tasks].sort(() => Math.random() - 0.5);
+    
+    for (const task of shuffled) {
+        // Проверяем ограничения по блокам
+        if (task.block === 'friends' && usedBlocks.friends) continue;
+        if (task.block === 'smart_stats' && usedBlocks.smart_stats) continue;
+        if (task.block === 'stats_exercise' && usedBlocks.stats_exercise) continue;
+        if (task.block === 'stats_time' && usedBlocks.stats_time) continue;
+        
+        // ★★★ ПРОВЕРКА ДЛЯ УПРАЖНЕНИЙ ★★★
+        if (task.block === 'exercise' && usedBlocks.exercise >= maxExercise) continue;
+        
+        selected.push(task);
+        
+        // Отмечаем использованные блоки
+        if (task.block === 'friends') usedBlocks.friends = true;
+        if (task.block === 'smart_stats') usedBlocks.smart_stats = true;
+        if (task.block === 'stats_exercise') usedBlocks.stats_exercise = true;
+        if (task.block === 'stats_time') usedBlocks.stats_time = true;
+        if (task.block === 'exercise') usedBlocks.exercise++;  // ★★★ УВЕЛИЧИВАЕМ СЧЁТЧИК ★★★
+        
+        if (selected.length >= count) break;
+    }
+    
+    // Если не хватило заданий - добираем из оставшихся
+    if (selected.length < count) {
+        for (const task of shuffled) {
+            if (!selected.includes(task)) {
+                // Проверяем ограничения и для добирания
+                if (task.block === 'exercise' && usedBlocks.exercise >= maxExercise) continue;
+                if (task.block === 'friends' && usedBlocks.friends) continue;
+                if (task.block === 'smart_stats' && usedBlocks.smart_stats) continue;
+                if (task.block === 'stats_exercise' && usedBlocks.stats_exercise) continue;
+                if (task.block === 'stats_time' && usedBlocks.stats_time) continue;
+                
+                selected.push(task);
+                if (task.block === 'exercise') usedBlocks.exercise++;
+                if (selected.length >= count) break;
+            }
+        }
+    }
+    
+    return selected;
+}
+
+// Генерировать ежедневные задания
+async function generateDailyTasks() {
+    try {
+        console.log('🔄 Генерация ежедневных заданий...');
+        
+        // Получаем уровень пользователя
+        const user = await getFirebaseUser();
+        let userLevel = 1;
+        let statsData = null;
+        
+        if (user) {
+            const profileResult = await getUserProfile(user.uid);
+            if (profileResult.success) {
+                const xp = profileResult.data.totalXp || 0;
+                userLevel = getCurrentLevel(xp).id || 1;
+                console.log('👤 Уровень пользователя:', userLevel);
+            }
+            
+            // Получаем статистику для умной статистики
+            const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
+            if (workoutsResult.success) {
+                statsData = {
+                    categoryCounts: {},
+                    exerciseCounts: {}
+                };
+                
+                const workouts = workoutsResult.data.filter(w => getWorkoutIcon(w) !== 'charging');
+                workouts.forEach(w => {
+                    const icon = getWorkoutIcon(w);
+                    const category = getCategoryByIcon(icon);
+                    if (category && category !== 'Зарядка') {
+                        statsData.categoryCounts[category] = (statsData.categoryCounts[category] || 0) + 1;
+                    }
+                    (w.exercises || []).forEach(ex => {
+                        if (ex.completed) {
+                            const exIcon = ex.icon || getExerciseIcon(ex.name);
+                            const exCategory = getCategoryByIcon(exIcon);
+                            if (exCategory && exCategory !== 'Зарядка') {
+                                statsData.exerciseCounts[exCategory] = (statsData.exerciseCounts[exCategory] || 0) + 1;
+                            }
+                        }
+                    });
+                });
+                console.log('📊 Статистика загружена');
+            }
+        }
+        
+        const hasPremium = localStorage.getItem(PREMIUM_KEY) === 'true';
+        console.log('👑 Premium:', hasPremium);
+        
+        // Собираем все доступные задания
+        const allTasks = collectAvailableTasks(userLevel, statsData);
+        console.log('📋 Всего доступных заданий:', allTasks.length);
+        
+        // Выбираем финальный набор
+        const selectedTasks = selectDailyTasks(allTasks, hasPremium);
+        console.log('✅ Выбрано заданий:', selectedTasks.length);
+        
+        // Сохраняем
+        dailyTasksList = selectedTasks.map(task => ({
+            ...task,
+            completed: false
+        }));
+        
+        // Создаём объект для быстрого доступа к статусу
+        dailyTasksCompleted = {};
+        dailyTasksList.forEach(task => {
+            dailyTasksCompleted[task.id] = false;
+        });
+        
+        const today = new Date().toISOString().split('T')[0];
+        dailyTasksDate = today;
+        
+        // Сохраняем в localStorage
+        saveDailyTasksToStorage();
+        
+        // Обновляем UI
+        renderDailyTasks();
+        
+        console.log('✅ Ежедневные задания сгенерированы:', dailyTasksList.length);
+        
+    } catch (error) {
+        console.error('❌ Ошибка генерации ежедневных заданий:', error);
+    }
+}
+
+// Сохранить ежедневные задания в localStorage
+function saveDailyTasksToStorage() {
+    const data = {
+        tasks: dailyTasksList,
+        completed: dailyTasksCompleted,
+        date: dailyTasksDate
+    };
+    localStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(data));
+    localStorage.setItem(DAILY_DATE_KEY, dailyTasksDate);
+}
+
+// Загрузить ежедневные задания из localStorage
+function loadDailyTasksFromStorage() {
+    const saved = localStorage.getItem(DAILY_TASKS_KEY);
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            dailyTasksList = data.tasks || [];
+            dailyTasksCompleted = data.completed || {};
+            dailyTasksDate = data.date || '';
+            
+            // Восстанавливаем completed из объекта
+            dailyTasksList.forEach(task => {
+                if (dailyTasksCompleted[task.id] !== undefined) {
+                    task.completed = dailyTasksCompleted[task.id];
+                }
+            });
+            
+            return true;
+        } catch (e) {
+            console.warn('Ошибка загрузки ежедневных заданий:', e);
+        }
+    }
+    return false;
+}
+
+// Проверить, нужно ли обновить задания
+function shouldRefreshDailyTasks() {
+    const today = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem(DAILY_DATE_KEY);
+    
+    if (!savedDate || savedDate !== today) {
+        return true;
+    }
+    
+    // Проверяем, есть ли задания
+    const saved = localStorage.getItem(DAILY_TASKS_KEY);
+    if (!saved) {
+        return true;
+    }
+    
+    try {
+        const data = JSON.parse(saved);
+        return !data.tasks || data.tasks.length === 0;
+    } catch (e) {
+        return true;
+    }
+}
+
+// Инициализация ежедневных заданий
+async function initDailyTasks() {
+    console.log('🔄 Инициализация ежедневных заданий...');
+    
+    if (shouldRefreshDailyTasks()) {
+        console.log('📅 Требуется обновление заданий');
+        await generateDailyTasks();
+    } else {
+        console.log('📂 Загружаем задания из localStorage');
+        loadDailyTasksFromStorage();
+        renderDailyTasks();
+    }
+}
+
+// Рендерить ежедневные задания в интерфейсе
+function renderDailyTasks() {
+    const container = document.getElementById('dailyTasksContainer');
+    if (!container) {
+        console.warn('⚠️ Контейнер dailyTasksContainer не найден');
+        return;
+    }
+    
+    if (!dailyTasksList || dailyTasksList.length === 0) {
+        console.log('ℹ️ Нет ежедневных заданий для отображения');
+        container.innerHTML = `
+            <div class="empty-state" style="box-shadow: none;">
+                <span class="empty-icon">📋</span>
+                <h3 class="empty-title">Нет заданий</h3>
+                <p class="empty-text">Задания не сгенерированы</p>
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('📊 Рендерим ежедневные задания, всего:', dailyTasksList.length);
+    
+    let html = '';
+    dailyTasksList.forEach((task, index) => {
+        const isCompleted = task.completed || false;
+        const iconClass = isCompleted ? 'fa-regular fa-square-check' : 'fa-regular fa-square';
+        const iconColor = isCompleted ? 'var(--accent)' : 'var(--light-grey)';
+        
+        let displayName = task.name;
+        let displayDesc = task.description;
+        
+        // ★★★ ДЛЯ УМНОЙ СТАТИСТИКИ — ПОДСТАВЛЯЕМ ЗНАЧЕНИЯ ИЗ КОНФИГА ★★★
+        if (task.type === 'smart_exercise') {
+            // Берём шаблон из конфига
+            const template = DAILY_TASKS_CONFIG.smartStats.items[0];
+            if (template) {
+                displayName = template.name.replace('{category}', task.category);
+                displayDesc = template.description
+                    .replace('{count}', task.target)
+                    .replace('{category}', task.category);
+            }
+        }
+        else if (task.type === 'smart_workout') {
+            // Берём шаблон из конфига
+            const template = DAILY_TASKS_CONFIG.smartStats.items[1];
+            if (template) {
+                displayName = template.name.replace('{category}', task.category);
+                displayDesc = template.description.replace('{category}', task.category);
+            }
+        }
+        // ★★★ ОСТАЛЬНЫЕ ТИПЫ — КАК БЫЛИ ★★★
+        else if (task.type === 'exercise') {
+            // Упражнения: "Приседания" → "Выполнить 15 раз"
+            displayName = task.name;
+            displayDesc = `Выполнить ${task.target} ${task.unit}`;
+        }
+        else if (task.type === 'friends') {
+            // Друзья — берём из конфига
+            const configItem = DAILY_TASKS_CONFIG.friends.items.find(item => item.id === task.id);
+            if (configItem) {
+                displayName = configItem.name;
+                displayDesc = configItem.description;
+            }
+        }
+        else if (task.type === 'stats_exercise') {
+            // Статистика упражнения — "Спортсмен" → "Выполнить 25 упражнений"
+            const configItem = DAILY_TASKS_CONFIG.stats.exercises.items.find(item => item.id === task.id);
+            if (configItem) {
+                displayName = configItem.name;
+                displayDesc = `Выполнить ${task.target} упражнений`;
+            }
+        }
+        else if (task.type === 'stats_time') {
+            // Статистика время — "Атлет" → "Тренироваться 60 минут"
+            const configItem = DAILY_TASKS_CONFIG.stats.time.items.find(item => item.id === task.id);
+            if (configItem) {
+                displayName = configItem.name;
+                displayDesc = `Тренироваться ${task.target} минут`;
+            }
+        }
+        
+        html += `
+            <div class="settings-item" style="cursor: default;" data-task-id="${task.id}">
+                <div class="settings-icon"><i class="${task.icon || 'fa-solid fa-tasks'}"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">${displayName}</div>
+                    <div class="settings-desc">${displayDesc}</div>
+                </div>
+                <button class="settings-action task-checkbox" onclick="toggleDailyTaskStatus('${task.id}')" style="cursor: pointer;">
+                    <i class="${iconClass}" id="dailyTaskStatus_${task.id}" style="color: ${iconColor};"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    console.log('✅ Ежедневные задания отрендерены');
+}
+
+// Переключить статус ежедневного задания
+async function toggleDailyTaskStatus(taskId) {
+    event.stopPropagation();
+    
+    console.log('🔄 Переключение задания:', taskId);
+    
+    const task = dailyTasksList.find(t => t.id === taskId);
+    if (!task) {
+        showToast('⚠️ Задание не найдено');
+        return;
+    }
+    
+    if (task.completed) {
+        showToast('ℹ️ Задание уже выполнено');
+        return;
+    }
+    
+    // Отмечаем как выполненное
+    task.completed = true;
+    dailyTasksCompleted[task.id] = true;
+    
+    // Сохраняем
+    saveDailyTasksToStorage();
+    
+    // Обновляем UI
+    renderDailyTasks();
+    
+    // Начисляем XP
+    await addDailyTaskXp();
+    
+    showToast('✅ Ежедневное задание выполнено!');
+    
+    // Проверяем, все ли задания выполнены
+    const allCompleted = dailyTasksList.every(t => t.completed);
+    if (allCompleted) {
+        showNotification(
+            '🎉',
+            'Все ежедневные задания выполнены! Отличная работа!',
+            null,
+            true,
+            function() {
+                window.navigateTo('profile');
+                TabManager.profile('my');
+            }
+        );
+    }
+}
+
+// Начисление XP за ежедневное задание
+async function addDailyTaskXp() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        const profileResult = await getUserProfile(user.uid);
+        if (profileResult.success) {
+            const currentXp = profileResult.data.totalXp || 0;
+            await updateUserProfile(user.uid, { totalXp: currentXp + 10 });
+        }
+    } catch (error) {
+        console.error('Ошибка начисления XP:', error);
+    }
+}
+
+// ===== ТРИГГЕРЫ ДЛЯ ВЫПОЛНЕНИЯ ЗАДАНИЙ =====
+
+// Проверить и выполнить задание по ID
+function completeDailyTaskIfExists(taskId) {
+    if (!dailyTasksList || dailyTasksList.length === 0) return false;
+    
+    const task = dailyTasksList.find(t => t.id === taskId);
+    if (!task || task.completed) return false;
+    
+    task.completed = true;
+    dailyTasksCompleted[task.id] = true;
+    saveDailyTasksToStorage();
+    renderDailyTasks();
+    addDailyTaskXp();
+    showToast('✅ Ежедневное задание выполнено!');
+    
+    // Проверяем все ли задания выполнены
+    const allCompleted = dailyTasksList.every(t => t.completed);
+    if (allCompleted) {
+        showNotification(
+            '🎉',
+            'Все ежедневные задания выполнены! Отличная работа!',
+            null,
+            true,
+            function() {
+                window.navigateTo('profile');
+                TabManager.profile('my');
+            }
+        );
+    }
+    
+    return true;
+}
+
+// Триггер: завершение тренировки
+function checkDailyTasksAfterWorkout(workoutData) {
+    if (!dailyTasksList || dailyTasksList.length === 0) return;
+    
+    const completedExercises = workoutData.exercises?.filter(e => e.completed).length || 0;
+    const durationMinutes = Math.floor((workoutData.durationSeconds || 0) / 60);
+    const workoutCategory = workoutData.category || '';
+    
+    // Проверяем задания по упражнениям
+    dailyTasksList.forEach(task => {
+        if (task.completed) return;
+        
+        // ★★★ УПРАЖНЕНИЯ (ФИЗИЧЕСКИЕ) — СЧИТАЕМ ОБЩЕЕ КОЛИЧЕСТВО ★★★
+        if (task.type === 'exercise') {
+            // Находим все выполненные упражнения с таким названием
+            const matchingExercises = workoutData.exercises?.filter(e => 
+                e.name.toLowerCase().includes(task.name.toLowerCase()) && e.completed
+            );
+            
+            if (matchingExercises && matchingExercises.length > 0) {
+                // ★★★ СЧИТАЕМ ОБЩЕЕ КОЛИЧЕСТВО: подход × повторения ★★★
+                let totalReps = 0;
+                matchingExercises.forEach(ex => {
+                    const sets = parseInt(ex.sets) || 0;
+                    const reps = parseInt(ex.reps) || 0;
+                    totalReps += sets * reps;
+                });
+                
+                console.log(`📊 ${task.name}: totalReps = ${totalReps}, нужно = ${task.target}`);
+                
+                if (totalReps >= task.target) {
+                    completeDailyTaskIfExists(task.id);
+                }
+            }
+        }
+        
+        // Статистика - упражнения
+        if (task.type === 'stats_exercise') {
+            if (completedExercises >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Статистика - время
+        if (task.type === 'stats_time') {
+            if (durationMinutes >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Умная статистика - упражнения на категорию
+        if (task.type === 'smart_exercise') {
+            const categoryExercises = workoutData.exercises?.filter(e => 
+                e.completed && getCategoryByIcon(e.icon) === task.category
+            ).length || 0;
+            if (categoryExercises >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Умная статистика - тренировка категории
+        if (task.type === 'smart_workout') {
+            if (workoutCategory.toLowerCase().includes(task.category.toLowerCase())) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+    });
+}
+
+// Триггер: завершение совместной тренировки
+function checkDailyTasksAfterCoopWorkout(workoutData) {
+    if (!dailyTasksList || dailyTasksList.length === 0) return;
+    
+    dailyTasksList.forEach(task => {
+        if (task.completed) return;
+        
+        if (task.id === 'friends_1' || task.name.includes('Совместная тренировка')) {
+            completeDailyTaskIfExists(task.id);
+        }
+    });
+}
+
+// Триггер: открытие профиля друга
+function checkDailyTasksAfterFriendProfile(friendId) {
+    if (!dailyTasksList || dailyTasksList.length === 0) return;
+    
+    dailyTasksList.forEach(task => {
+        if (task.completed) return;
+        
+        if (task.id === 'friends_2' || task.name.includes('Профиль друга')) {
+            completeDailyTaskIfExists(task.id);
+        }
+    });
+}
+
+// Триггер: добавление друга
+function checkDailyTasksAfterAddFriend() {
+    if (!dailyTasksList || dailyTasksList.length === 0) return;
+    
+    dailyTasksList.forEach(task => {
+        if (task.completed) return;
+        
+        if (task.id === 'friends_3' || task.name.includes('Новый друг')) {
+            completeDailyTaskIfExists(task.id);
+        }
+    });
+}
