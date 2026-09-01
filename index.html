@@ -462,12 +462,12 @@
                 <h1 class="dashboard-title">УПРАЖНЕНИЯ</h1>
             </header>
             <div class="exercise-search-block">
-                <div class="search-container">
-                    <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Поиск по названию..." />
-                        <button class="btn btn-primary search-btn" id="searchBtn">
+<div class="search-container">
+    <input type="text" id="exerciseSearchInput" class="search-input" placeholder="Поиск по названию..." />
+    <button class="btn btn-primary search-btn" id="searchExerciseBtn">
         <i class="fa-solid fa-magnifying-glass"></i>
     </button>
-                </div>
+</div>
                 <div class="category-filter-header">
                     <span class="section-title">Категории</span>
                 </div>
@@ -837,13 +837,13 @@
         <div class="settings-block">
             <!-- Задание 1: Первая тренировка -->
             <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-play"></i></div>
+                <div class="settings-icon"><i class="fa-solid fa-dumbbell"></i></div>
                 <div class="settings-info">
                     <div class="settings-title">Первый шаг</div>
                     <div class="settings-desc">Пройти свою первую тренировку</div>
                 </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square"></i>
+                <button class="settings-action task-checkbox" onclick="toggleTask(1)">
+                    <i class="fa-regular fa-square" id="taskIcon1"></i>
                 </button>
             </div>
             
@@ -854,20 +854,20 @@
                     <div class="settings-title">Статистика</div>
                     <div class="settings-desc">Посмотреть свою статистику</div>
                 </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square"></i>
+                <button class="settings-action task-checkbox" onclick="toggleTask(2)">
+                    <i class="fa-regular fa-square" id="taskIcon2"></i>
                 </button>
             </div>
             
             <!-- Задание 3: Создать тренировку -->
             <div class="settings-item" style="cursor: default;">
-                <div class="settings-icon"><i class="fa-solid fa-pen-ruler"></i></div>
+                <div class="settings-icon"><i class="fa-solid fa-drafting-compass"></i></div>
                 <div class="settings-info">
                     <div class="settings-title">Индивидуальность</div>
                     <div class="settings-desc">Создать свою тренировку</div>
                 </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square"></i>
+                <button class="settings-action task-checkbox" onclick="toggleTask(3)">
+                    <i class="fa-regular fa-square" id="taskIcon3"></i>
                 </button>
             </div>
             
@@ -878,8 +878,8 @@
                     <div class="settings-title">Новые знакомства</div>
                     <div class="settings-desc">Добавить друга в друзья</div>
                 </div>
-                <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square"></i>
+                <button class="settings-action task-checkbox" onclick="toggleTask(4)">
+                    <i class="fa-regular fa-square" id="taskIcon4"></i>
                 </button>
             </div>
             
@@ -890,8 +890,55 @@
                     <div class="settings-title">Оформление</div>
                     <div class="settings-desc">Настроить стили в SportApp</div>
                 </div>
+                <button class="settings-action task-checkbox" onclick="toggleTask(5)">
+                    <i class="fa-regular fa-square" id="taskIcon5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (БЛОК) ===== -->
+<div class="section-block" id="daily-tasks-block" style="cursor: pointer;">
+    <div class="section-header">
+        <h2 class="section-title">Ежедневные задания</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="section-body">
+        <div class="settings-block">
+            <!-- Задание 1 -->
+            <div class="settings-item"  onclick="openDailyTasksModal()">
+                <div class="settings-icon"><i class="fa-solid fa-walking"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Прогулка</div>
+                    <div class="settings-desc">Пройти 5000 шагов сегодня</div>
+                </div>
                 <button class="settings-action task-checkbox">
-                    <i class="fa-regular fa-square"></i>
+                    <i class="fa-regular fa-square" id="dailyTaskIcon1"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 2 -->
+            <div class="settings-item"  onclick="openDailyTasksModal()">
+                <div class="settings-icon"><i class="fa-solid fa-water"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Водный баланс</div>
+                    <div class="settings-desc">Выпить 2 литра воды</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square" id="dailyTaskIcon2"></i>
+                </button>
+            </div>
+            
+            <!-- Задание 3 -->
+            <div class="settings-item" onclick="openDailyTasksModal()">
+                <div class="settings-icon"><i class="fa-solid fa-brain"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Мозговой штурм</div>
+                    <div class="settings-desc">Решить 3 логические задачи</div>
+                </div>
+                <button class="settings-action task-checkbox">
+                    <i class="fa-regular fa-square" id="dailyTaskIcon3"></i>
                 </button>
             </div>
         </div>
@@ -1022,7 +1069,7 @@
         <div class="friends-list-block">
 <div class="search-container">
     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
-    <button class="btn btn-primary search-btn" id="searchBtn">
+    <button class="btn btn-primary search-btn" id="searchFriendBtn">
         <i class="fa-solid fa-magnifying-glass"></i>
     </button>
 </div>
@@ -1266,6 +1313,51 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ===== -->
+<div id="dailyTasksModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 420px; width: 95%;">
+        <div class="modal-title">Ежедневные задания</div>
+        
+        <p class="modal-text">За каждое выполненное задание вы получите +10 XP</p>
+        
+        <!-- Список заданий -->
+        <div class="settings-block-task">
+            <!-- Задание 1 -->
+            <div class="settings-item-task" style="cursor: default;" data-task="1">
+                <div class="settings-icon"><i class="fa-solid fa-walking"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Прогулка</div>
+                    <div class="settings-desc">Пройти 5000 шагов сегодня</div>
+                </div>
+<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <!-- Задание 2 -->
+            <div class="settings-item-task" style="cursor: default;" data-task="2">
+                <div class="settings-icon"><i class="fa-solid fa-water"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Водный баланс</div>
+                    <div class="settings-desc">Выпить 2 литра воды</div>
+                </div>
+<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <!-- Задание 3 -->
+            <div class="settings-item-task" style="cursor: default;" data-task="3">
+                <div class="settings-icon"><i class="fa-solid fa-brain"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Мозговой штурм</div>
+                    <div class="settings-desc">Решить 3 логические задачи</div>
+                </div>
+<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        
+        <!-- Кнопка закрытия -->
+        <button class="btn btn-primary" onclick="closeDailyTasksModal()">Закрыть</button>
+    </div>
+</div>
 
     <!-- ===== МОДАЛКА: ИНФОРМАЦИЯ ОБ УРОВНЕ ===== -->
 <div id="levelInfoModal" class="modal-overlay" style="display:none;">

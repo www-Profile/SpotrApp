@@ -15,12 +15,21 @@ const firebaseConfig = {
 // Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Включаем офлайн-персистентность (кеширование)
-// synchronizeTabs: false — отключаем синхронизацию между вкладками,
-// чтобы избежать проблем с обновлением слушателей
-firebase.firestore().enablePersistence({ synchronizeTabs: false })
-  .catch((err) => {
-    console.warn('Офлайн-режим не включён:', err.code);
-  });
+// ★★★ ВКЛЮЧАЕМ ПЕРСИСТЕНТНОСТЬ С ОБРАБОТКОЙ ОШИБОК ★★★
+firebase.firestore().enablePersistence({ 
+    synchronizeTabs: false 
+})
+.then(() => {
+    console.log('✅ Офлайн-режим включён');
+})
+.catch((err) => {
+    if (err.code === 'failed-precondition') {
+        console.warn('⚠️ Офлайн-режим не включён (уже открыто в другой вкладке)');
+    } else if (err.code === 'unimplemented') {
+        console.warn('⚠️ Офлайн-режим не поддерживается этим браузером');
+    } else {
+        console.error('❌ Ошибка включения офлайн-режима:', err);
+    }
+});
 
 console.log('✅ Firebase подключен!');

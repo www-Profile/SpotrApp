@@ -781,6 +781,12 @@ window.cancelInvite = async function() {
 
 function listenForInvites() {
     firebase.auth().onAuthStateChanged(async (user) => {
+        // ★★★ ОТПИСЫВАЕМСЯ ОТ СТАРОГО СЛУШАТЕЛЯ ★★★
+        if (inviteListener) {
+            inviteListener();
+            inviteListener = null;
+        }
+        
         if (!user) {
             if (inviteListener) {
                 inviteListener();
@@ -788,10 +794,7 @@ function listenForInvites() {
             }
             return;
         }
-        if (inviteListener) {
-            inviteListener();
-            inviteListener = null;
-        }
+        
         inviteListener = firebase.firestore()
             .collection('notifications')
             .where('to', '==', user.uid)
@@ -1790,6 +1793,16 @@ finishTrainingSession = async function() {
         console.log('📊 [finishTrainingSession] Обычная тренировка: total=' + total + ', completed=' + completed + ', xp=' + xpEarned);
         showFinishPage(total, completed, sessionSeconds, xpEarned);
         console.log('✅ [finishTrainingSession] Обычная тренировка завершена');
+        
+        // ★★★ ЗАДАНИЕ 1: ПЕРВЫЙ ШАГ ★★★
+        if (completed > 0 && !tasks[1]) {
+            tasks[1] = true;
+            saveTasks();
+            updateTasksUI();
+            showToast('✅ Задание "Первый шаг" выполнено!');
+            addTaskXp();
+        }
+        
         return;
     }
 
@@ -1867,6 +1880,14 @@ finishTrainingSession = async function() {
     console.log('🔄 [finishTrainingSession] Вызов showCoopFinishPage()');
     showCoopFinishPage();
     console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА');
+
+    // ★★★ ЗАДАНИЕ 1: ПЕРВЫЙ ШАГ ★★★
+    if (completedCount > 0 && !tasks[1]) {
+        tasks[1] = true;
+        saveTasks();
+        updateTasksUI();
+        addTaskXp();
+    }
 };
 
 // =================== СТРАНИЦА ОЖИДАНИЯ ОСТАЛЬНЫХ ===================
@@ -2962,6 +2983,15 @@ function applyColor() {
                 'darkblue': 'Синий', 'purple': 'Фиолетовый', 'pink': 'Розовый', 'gray': 'Серый'
             };
             showToast(`✅ Акцентный цвет изменён на ${colorNames[tempColor] || tempColor}`);
+            
+            // ★★★ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
+    if (!tasks[5]) {
+        tasks[5] = true;
+        saveTasks();
+        updateTasksUI();
+        showToast('✅ Задание "Оформление" выполнено!');
+        addTaskXp();
+    }
         }
     }
     
@@ -3101,6 +3131,13 @@ function closeModal(modalId) {
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
 window.switchStatsTab = function(tab) {
+    if (!tasks[2]) {
+        tasks[2] = true;
+        saveTasks();
+        updateTasksUI();
+        showToast('✅ Задание "Статистика" выполнено!');
+        addTaskXp();
+    }
     
     // Переключаем UI
     applyStatsTab(tab);
@@ -4921,7 +4958,15 @@ window.deleteCustomWorkout = function(id) {
     );
 };
 
-window.createNewWorkout = function() {
+function createNewWorkout() {
+    if (!tasks[3]) {
+        tasks[3] = true;
+        saveTasks();
+        updateTasksUI();
+        showToast('✅ Задание "Индивидуальность" выполнено!');
+        addTaskXp();
+    }
+    
     window.navigateTo('workout-edit', { category: 'Новая тренировка', isCustom: true, id: 'new' });
 };
 
@@ -6028,6 +6073,20 @@ async function logout() {
         'Выйти из аккаунта?',
         'Введите пароль для подтверждения выхода из аккаунта.',
         function() {
+            // ★★★ ОТПИСЫВАЕМСЯ ОТ ВСЕХ СЛУШАТЕЛЕЙ ★★★
+            if (inviteListener) {
+                inviteListener();
+                inviteListener = null;
+            }
+            if (window._friendAcceptedListener) {
+                window._friendAcceptedListener();
+                window._friendAcceptedListener = null;
+            }
+            if (sessionListener) {
+                sessionListener();
+                sessionListener = null;
+            }
+            
             firebase.auth().signOut();
         },
         'Выйти'
@@ -6156,9 +6215,9 @@ async function getFriendRequests() {
     const user = await getFirebaseUser();
     if (!user) return { success: false, error: 'Не авторизован' };
     try {
-        // ПРИНУДИТЕЛЬНО ОБНОВЛЯЕМ ДАННЫЕ ИЗ FIRESTORE
-        await firebase.firestore().disableNetwork();
-        await firebase.firestore().enableNetwork();
+        // ★★★ УДАЛЯЕМ disableNetwork/enableNetwork — ОНИ ВЫЗЫВАЮТ КОНФЛИКТЫ ★★★
+        // await firebase.firestore().disableNetwork();
+        // await firebase.firestore().enableNetwork();
         
         const snapshot = await firebase.firestore()
             .collection('friendRequests')
@@ -6230,6 +6289,15 @@ async function acceptFriendRequest(requestId, fromUserId) {
         
         await renderFriendsInProfile();
         
+        // ★★★ ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА ★★★
+    if (!tasks[4]) {
+        tasks[4] = true;
+        saveTasks();
+        updateTasksUI();
+        showToast('✅ Задание "Новые знакомства" выполнено!');
+        addTaskXp();
+    }
+        
         return { success: true };
     } catch (error) {
         console.error('Ошибка принятия заявки:', error);
@@ -6237,13 +6305,17 @@ async function acceptFriendRequest(requestId, fromUserId) {
     }
 }
 
-// Добавьте этот код в функцию listenForInvites или создайте отдельную функцию
 function listenForFriendAcceptedNotifications() {
     firebase.auth().onAuthStateChanged(async (user) => {
+        // ★★★ ОТПИСЫВАЕМСЯ ОТ СТАРОГО СЛУШАТЕЛЯ ★★★
+        if (window._friendAcceptedListener) {
+            window._friendAcceptedListener();
+            window._friendAcceptedListener = null;
+        }
+        
         if (!user) return;
         
-        // Слушаем уведомления о принятии заявок
-        firebase.firestore()
+        window._friendAcceptedListener = firebase.firestore()
             .collection('notifications')
             .where('to', '==', user.uid)
             .where('type', '==', 'friend_accepted')
@@ -6329,17 +6401,22 @@ async function getFriendsList() {
 
 // ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
 async function renderFriendsInProfile() {
-    const searchBtn = document.getElementById('searchBtn');
+    const searchBtn = document.getElementById('searchFriendBtn');
     const searchInput = document.getElementById('searchInput');
     const resultsDiv = document.getElementById('searchResults');
     const requestsDiv = document.getElementById('friendRequests');
     const friendsDiv = document.getElementById('friendsList');
     
+    // ★★★ НАСТРАИВАЕМ КНОПКУ ПОИСКА ДРУЗЕЙ ★★★
     if (searchBtn) {
-        searchBtn.onclick = async () => {
+        searchBtn.onclick = async function() {
             const query = searchInput.value.trim();
             resultsDiv.innerHTML = '';
-            if (!query) return;
+            if (!query) {
+                resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Введите имя для поиска</p>';
+                return;
+            }
+            
             const result = await searchUsers(query);
             if (!result.success) { 
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Ошибка поиска</p>'; 
@@ -6349,6 +6426,7 @@ async function renderFriendsInProfile() {
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Пользователи не найдены</p>'; 
                 return; 
             }
+            
             resultsDiv.innerHTML = result.data.map(u => {
                 const initial = (u.displayName || 'П')[0].toUpperCase();
                 let buttonHtml = '';
@@ -6372,9 +6450,12 @@ async function renderFriendsInProfile() {
             }).join('');
         };
         
+        // ★★★ ПОИСК ПО НАЖАТИЮ ENTER ★★★
         if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') searchBtn.click(); 
+            searchInput.addEventListener('keypress', function(e) { 
+                if (e.key === 'Enter') {
+                    searchBtn.click();
+                }
             });
         }
     }
@@ -6387,14 +6468,13 @@ async function renderFriendsInProfile() {
         newRequests.forEach(r => {
             const fromUser = r.fromUser || {};
             const name = fromUser.displayName || 'Пользователь';
-            // Уведомление покажется в ЛЮБОМ случае, даже если вкладка "Друзья" не активна
-showNotification('📧', `У вас новая заявка в друзья от ${name}`, null, true, function() {
-    // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
-    TabManager.profile('friends');
-    window.navigateTo('profile');
-    setTimeout(() => renderFriendsInProfile(), 300);
-});        });
-        requestsHtml = requests.data.map(r => {
+            showNotification('📧', `У вас новая заявка в друзья от ${name}`, null, true, function() {
+                TabManager.profile('friends');
+                window.navigateTo('profile');
+                setTimeout(() => renderFriendsInProfile(), 300);
+            });
+        });
+        let requestsHtml = requests.data.map(r => {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
             return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
@@ -6406,10 +6486,10 @@ showNotification('📧', `У вас новая заявка в друзья от
                 <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>`;
         }).join('');
+        if (requestsDiv) requestsDiv.innerHTML = requestsHtml;
     } else {
-        requestsHtml = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки.</p></div>';
+        if (requestsDiv) requestsDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки.</p></div>';
     }
-    if (requestsDiv) requestsDiv.innerHTML = requestsHtml;
     
     // Загружаем друзей
     const friends = await getFriendsList();
@@ -6418,20 +6498,19 @@ showNotification('📧', `У вас новая заявка в друзья от
         const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
         const prevFriendIds = prevFriends.map(f => f.id);
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
-friends.data.forEach(f => {
-    const friendId = f.id;
-    const friendName = f.displayName || 'Пользователь';
-    if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
-        showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
-            // ★★★ ОТКРЫВАЕМ СТРАНИЦУ ДРУЗЕЙ ★★★
-            TabManager.profile('friends');
-            window.navigateTo('profile');
-            setTimeout(() => renderFriendsInProfile(), 300);
+        friends.data.forEach(f => {
+            const friendId = f.id;
+            const friendName = f.displayName || 'Пользователь';
+            if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
+                showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
+                    TabManager.profile('friends');
+                    window.navigateTo('profile');
+                    setTimeout(() => renderFriendsInProfile(), 300);
+                });
+                shownFriendNotifications.push(friendId);
+                localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
+            }
         });
-        shownFriendNotifications.push(friendId);
-        localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
-    }
-});
         localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
         friendsHtml = friends.data.map(f => {
             const initial = (f.displayName || 'П')[0].toUpperCase();
@@ -6697,10 +6776,25 @@ function renderExerciseListPage() {
             renderExerciseListPageContent();
         };
     });
-    document.getElementById('exerciseSearchInput').oninput = function() {
-        currentSearchQuery = this.value.trim().toLowerCase();
-        renderExerciseListPageContent();
-    };
+    
+    // ★★★ НАСТРАИВАЕМ ПОИСК УПРАЖНЕНИЙ ★★★
+    const searchInput = document.getElementById('exerciseSearchInput');
+    const searchBtn = document.getElementById('searchExerciseBtn');
+    
+    if (searchBtn) {
+        searchBtn.onclick = function() {
+            currentSearchQuery = searchInput.value.trim().toLowerCase();
+            renderExerciseListPageContent();
+        };
+    }
+    
+    if (searchInput) {
+        searchInput.oninput = function() {
+            currentSearchQuery = this.value.trim().toLowerCase();
+            renderExerciseListPageContent();
+        };
+    }
+    
     renderExerciseListPageContent();
 }
 
@@ -7922,6 +8016,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Загрузка настройки видимости достижений
 loadAchievementsVisibility();
+
+    // Загружаем задания
+    loadTasks();
 
     setTimeout(() => {
         listenForInvites();
@@ -9878,3 +9975,157 @@ document.getElementById('levelInfoOkBtn')?.addEventListener('click', function() 
     closeModal('levelInfoModal');
     openAchievementsModal();
 });
+
+// ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ =====
+let dailyTasks = { 1: false, 2: false, 3: false };
+
+function openDailyTasksModal() {
+    const modal = document.getElementById('dailyTasksModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        updateDailyModalIcons();
+    }
+}
+
+function closeDailyTasksModal() {
+    const modal = document.getElementById('dailyTasksModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function toggleDailyTask(taskId) {
+    event.stopPropagation();
+    dailyTasks[taskId] = !dailyTasks[taskId];
+    
+    // Обновляем иконки в блоке
+    const blockIcon = document.getElementById('dailyTaskIcon' + taskId);
+    if (dailyTasks[taskId]) {
+        blockIcon.className = 'fa-regular fa-square-check';
+        blockIcon.style.color = '#22c55e';
+    } else {
+        blockIcon.className = 'fa-regular fa-square';
+        blockIcon.style.color = 'var(--slate)';
+    }
+    
+    // Обновляем иконки в модалке
+    const modalIcon = document.getElementById('modalDailyIcon' + taskId);
+    if (modalIcon) {
+        if (dailyTasks[taskId]) {
+            modalIcon.className = 'fa-regular fa-square-check';
+            modalIcon.style.color = '#22c55e';
+        } else {
+            modalIcon.className = 'fa-regular fa-square';
+            modalIcon.style.color = 'var(--slate)';
+        }
+    }
+}
+
+function updateDailyModalIcons() {
+    for (let i = 1; i <= 3; i++) {
+        const icon = document.getElementById('modalDailyIcon' + i);
+        if (icon) {
+            if (dailyTasks[i]) {
+                icon.className = 'fa-regular fa-square-check';
+                icon.style.color = '#22c55e';
+            } else {
+                icon.className = 'fa-regular fa-square';
+                icon.style.color = 'var(--slate)';
+            }
+        }
+    }
+}
+
+
+
+
+
+// ===== ПЕРВЫЕ ЗАДАНИЯ =====
+const tasks = {
+    1: false,  // Первый шаг
+    2: false,  // Статистика
+    3: false,  // Индивидуальность
+    4: false,  // Новые знакомства
+    5: false   // Оформление
+};
+
+// Ключ для localStorage
+const TASKS_STORAGE_KEY = 'sportapp_tasks';
+
+// Загрузить состояние заданий из localStorage
+function loadTasks() {
+    const saved = localStorage.getItem(TASKS_STORAGE_KEY);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            for (const key in parsed) {
+                if (tasks.hasOwnProperty(key)) {
+                    tasks[key] = parsed[key];
+                }
+            }
+        } catch (e) {
+            console.warn('Ошибка загрузки заданий:', e);
+        }
+    }
+    updateTasksUI();
+}
+
+// Сохранить состояние заданий в localStorage
+function saveTasks() {
+    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+}
+
+// Переключить задание
+function toggleTask(taskId) {
+    event.stopPropagation();
+    tasks[taskId] = !tasks[taskId];
+    saveTasks();
+    updateTasksUI();
+    
+    // Показываем уведомление
+    if (tasks[taskId]) {
+        showToast('✅ Задание выполнено!');
+        // Можно добавить начисление XP
+        addTaskXp();
+    }
+}
+
+// Обновить интерфейс заданий
+function updateTasksUI() {
+    for (let i = 1; i <= 5; i++) {
+        const icon = document.getElementById('taskIcon' + i);
+        if (icon) {
+            if (tasks[i]) {
+                icon.className = 'fa-regular fa-square-check';
+                icon.style.color = 'var(--accent)';
+            } else {
+                icon.className = 'fa-regular fa-square';
+                icon.style.color = 'var(--slate)';
+            }
+        }
+    }
+}
+
+// Начисление XP за задание
+async function addTaskXp() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        const profileResult = await getUserProfile(user.uid);
+        if (profileResult.success) {
+            const currentXp = profileResult.data.totalXp || 0;
+            await updateUserProfile(user.uid, { totalXp: currentXp + 10 });
+        }
+    } catch (error) {
+        console.error('Ошибка начисления XP:', error);
+    }
+}
+
+// Проверка всех заданий (для отладки)
+function checkAllTasksCompleted() {
+    return Object.values(tasks).every(v => v === true);
+}
+
+// Загружаем задания при инициализации
+loadTasks();
