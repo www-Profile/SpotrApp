@@ -1441,7 +1441,7 @@ function renderFinishPageData(data) {
                     </div>
                     <div class="finish-stat-item">
                         <span class="finish-stat-label">XP</span>
-                        <span class="finish-stat-value">+${Math.round(xp)}</span>
+                        <span class="finish-stat-value">+${(isNaN(xp) ? 0 : xp).toFixed(1)}</span>
                     </div>
                 </div>
             </div>
@@ -1951,8 +1951,7 @@ function showCoopWaitingPage() {
     
     document.getElementById('coopMyExercises').textContent = `${myExercises}/${total}`;
     document.getElementById('coopMyTime').textContent = formatTime(myTime);
-    document.getElementById('coopMyXp').textContent = `+${Math.round(myXpValue)}`;
-    
+document.getElementById('coopMyXp').textContent = '+${(isNaN(myXpValue) ? 0 : myXpValue).toFixed(1)}';    
     // Рендерим статусы друзей
     renderCoopFriendsStatus();
     
@@ -2824,20 +2823,66 @@ function getXpProgress(xp) {
     return Math.min(100, Math.round((earned / total) * 100));
 }
 
+// =================== НОВАЯ СИСТЕМА РАСЧЁТА XP ===================
+
+// Глобальная переменная для веса (кг)
+let userKg = 0;
+
+function isTimeBased(reps) {
+    const repsStr = String(reps || '');
+    return repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд');
+}
+
+function calculateExerciseXP(exercise, kg = 0) {
+    const sets = parseInt(exercise?.sets) || 0;
+    const repsStr = String(exercise?.reps || '');
+    const isTime = isTimeBased(repsStr);
+    const value = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
+    const kgNum = parseFloat(kg) || 0;
+    let xp = 0;
+    if (isTime) {
+        xp = (sets * value * (1 + kgNum / 20)) / 20;
+    } else {
+        xp = (sets * value * (1 + kgNum / 20)) / 10;
+    }
+    return isNaN(xp) ? 0 : Math.round(xp * 10) / 10;
+}
+
 function calculateWorkoutXp(exercises) {
-    let totalXp = 0;
+    if (!exercises || !Array.isArray(exercises) || exercises.length === 0) return 0;
+    let total = 0;
+    exercises.forEach(ex => { total += calculateExerciseXP(ex, userKg); });
+    return isNaN(total) ? 0 : Math.round(total * 10) / 10;
+}
+
+// Обновлённая функция calculateWorkoutXp
+function calculateWorkoutXp(exercises) {
+    let totalXP = 0;
     exercises.forEach(ex => {
-        const sets = parseInt(ex.sets) || 0;
-        const repsStr = String(ex.reps || '');
-        if (repsStr.includes('сек') || repsStr.includes('с')) {
-            const secs = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
-            totalXp += (sets * secs) / 20;
-        } else {
-            const reps = parseFloat(repsStr) || 0;
-            totalXp += (sets * reps) / 10;
-        }
+        const category = ex.category || 'Всё тело';
+        totalXP += calculateExerciseXP(ex, category, userKg);
     });
-    return totalXp;
+    return Math.round(totalXP * 10) / 10;
+}
+
+// Функция загрузки веса пользователя из профиля
+async function loadUserKg() {
+    const user = await getFirebaseUser();
+    if (!user) { userKg = 0; return; }
+    const profileResult = await getUserProfile(user.uid);
+    userKg = (profileResult.success && profileResult.data.kg !== undefined) ? parseFloat(profileResult.data.kg) || 0 : 0;
+}
+
+// Функция сохранения веса пользователя
+async function saveUserKg(kg) {
+    const user = await getFirebaseUser();
+    if (!user) return false;
+    const result = await updateUserProfile(user.uid, { kg: kg });
+    if (result.success) {
+        userKg = kg;
+        return true;
+    }
+    return false;
 }
 
 function resolveWorkoutCategory(category, parentCategory, isPremium) {
@@ -3855,13 +3900,13 @@ function renderSessionExercise() {
     const isSeconds = repsStr.includes('сек') || repsStr.includes('с');
     const repsValue = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
     let details = '';
-    if (isSeconds) {
-        const mins = String(Math.floor(repsValue / 60)).padStart(2, '0');
-        const secs = String(repsValue % 60).padStart(2, '0');
-        details = `${mins}:${secs}`;
-    } else {
-        details = `${ex.sets} × ${repsValue}`;
-    }
+if (isSeconds) {
+    const mins = String(Math.floor(repsValue / 60)).padStart(2, '0');
+    const secs = String(repsValue % 60).padStart(2, '0');
+    details = `${ex.sets} × ${mins}:${secs}`;
+} else {
+    details = `${ex.sets} × ${repsValue}`;
+}
     document.getElementById('sessionExerciseDetails').textContent = details;
     // Показываем кнопку редактирования (если не отдых)
     document.getElementById('sessionEditBtn').style.display = 'block';
@@ -4101,8 +4146,7 @@ document.getElementById('sessionCloseBtn')?.addEventListener('click', function()
     document.getElementById('sessionExitTitle').textContent = 'ТРЕНИРОВКА';
     document.getElementById('exitExercises').textContent = `${completed}/${total}`;
     document.getElementById('exitMinutes').textContent = `${mins}:${secs}`;
-    document.getElementById('exitXp').textContent = `+${Math.round(xpEarned)} XP`;
-    openModal('sessionExitModal');
+document.getElementById('exitXp').textContent = '+${(isNaN(xpEarned) ? 0 : xpEarned).toFixed(1)} XP';    openModal('sessionExitModal');
 });
 
 document.getElementById('exitContinueBtn')?.addEventListener('click', function() {
@@ -5224,6 +5268,7 @@ async function loadStats() {
     }
     applyStatsTab(activeStatsTab);
     initAccordion();
+    loadPremiumStats();
 }
 
 // ===================КАЛЕНДАРЬ ===================
@@ -5373,6 +5418,7 @@ if (currentLevel.id > prevLevel) {
     switchProfileTab(activeProfileTab);
 
     // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ★★★
+    await loadUserKg(); //загрузка кг
     // Отображаем текущие достижения в интерфейсе
     renderAchievements();
     // ★★★ ЗАГРУЖАЕМ НАСТРОЙКУ ВИДИМОСТИ ДОСТИЖЕНИЙ ★★★
@@ -6587,27 +6633,29 @@ async function renderFriendsInProfile() {
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Пользователи не найдены</p>'; 
                 return; 
             }
-            resultsDiv.innerHTML = result.data.map(u => {
-                const initial = (u.displayName || 'П')[0].toUpperCase();
-                let buttonHtml = '';
-                if (u.friendshipStatus === 'none') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
-                } else if (u.friendshipStatus === 'pending_sent') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
-                } else if (u.friendshipStatus === 'pending_received') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
-                } else if (u.friendshipStatus === 'friends') {
-                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
-                }
-                return `<div class="friend-result-item">
-                    <div class="friend-avatar">${initial}</div>
-                    <div class="friend-result-info">
-                        <strong>${u.displayName || 'Пользователь'}</strong>
-                        <span>${u.email || ''}</span>
-                    </div>
-                    ${buttonHtml}
-                </div>`;
-            }).join('');
+resultsDiv.innerHTML = result.data.map(u => {
+    const initial = (u.displayName || 'П')[0].toUpperCase();
+    const level = getCurrentLevel(u.totalXp || 0).id;
+    const xp = (u.totalXp || 0).toFixed(1);
+    let buttonHtml = '';
+    if (u.friendshipStatus === 'none') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
+    } else if (u.friendshipStatus === 'pending_sent') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
+    } else if (u.friendshipStatus === 'pending_received') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
+    } else if (u.friendshipStatus === 'friends') {
+        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
+    }
+    return `<div class="friend-result-item">
+        <div class="friend-avatar">${initial}</div>
+        <div class="friend-result-info">
+            <strong>${u.displayName || 'Пользователь'}</strong>
+            <span>Уровень ${level} · ${xp} XP</span>
+        </div>
+        ${buttonHtml}
+    </div>`;
+}).join('');
         };
         
         if (searchInput) {
@@ -6639,18 +6687,20 @@ async function renderFriendsInProfile() {
         localStorage.setItem('shownFriendRequests', JSON.stringify(updatedShown));
         
         // ★★★ РЕНДЕРИМ ЗАЯВКИ ★★★
-        let requestsHtml = requests.data.map(r => {
-            const fromUser = r.fromUser || {};
-            const initial = (fromUser.displayName || 'П')[0].toUpperCase();
-            return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
-                <div class="friend-avatar">${initial}</div>
-                <div class="friend-result-info">
-                    <strong>${fromUser.displayName || 'Пользователь'}</strong>
-                    <span>${fromUser.email || ''}</span>
-                </div>
-                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>`;
-        }).join('');
+let requestsHtml = requests.data.map(r => {
+    const fromUser = r.fromUser || {};
+    const initial = (fromUser.displayName || 'П')[0].toUpperCase();
+    const level = getCurrentLevel(fromUser.totalXp || 0).id;
+    const xp = (fromUser.totalXp || 0).toFixed(1);
+    return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
+        <div class="friend-avatar">${initial}</div>
+        <div class="friend-result-info">
+            <strong>${fromUser.displayName || 'Пользователь'}</strong>
+            <span>Уровень ${level} · ${xp} XP</span>
+        </div>
+        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>`;
+}).join('');
         if (requestsDiv) requestsDiv.innerHTML = requestsHtml;
     } else {
         if (requestsDiv) requestsDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки.</p></div>';
@@ -6678,18 +6728,19 @@ async function renderFriendsInProfile() {
             }
         });
         localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
-        friendsHtml = friends.data.map(f => {
-            const initial = (f.displayName || 'П')[0].toUpperCase();
-            const level = getCurrentLevel(f.totalXp || 0).id;
-            return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
-                <div class="friend-avatar">${initial}</div>
-                <div class="friend-info">
-                    <strong>${f.displayName || 'Пользователь'}</strong>
-                    <span>Уровень ${level} · ${(f.totalXp || 0).toFixed(1)} XP</span>
-                </div>
-                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>`;
-        }).join('');
+friendsHtml = friends.data.map(f => {
+    const initial = (f.displayName || 'П')[0].toUpperCase();
+    const level = getCurrentLevel(f.totalXp || 0).id;
+    const xp = (f.totalXp || 0).toFixed(1);
+    return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
+        <div class="friend-avatar">${initial}</div>
+        <div class="friend-info">
+            <strong>${f.displayName || 'Пользователь'}</strong>
+            <span>Уровень ${level} · ${xp} XP</span>
+        </div>
+        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>`;
+}).join('');
     } else {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
@@ -7359,36 +7410,42 @@ async function loadWorldLeaderboard() {
             checkRankNotification(currentRank, 'world');
         }
         
-container.innerHTML = users.map((userData, index) => {
-    const position = index + 1;
-    const achievements = userData.achievements || {};
-    const isCurrentUser = userData.id === user.uid;
-    
-    // Смайлики достижений
-    const achievementIcons = [
-        { id: 'friendly', icon: 'fa-solid fa-user-group' },
-        { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
-        { id: 'unstoppable', icon: 'fa-solid fa-fire' },
-        { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
-        { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
-    ];
-    
-    let achievementsHtml = achievementIcons.map(a => {
-        const unlocked = achievements[a.id] === true;
-        return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
-    }).join('');
-    
-    return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-        <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-            <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
-        </div>
-        <div class="item-info">
-            <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
-            <p class="item-desc">${achievementsHtml}</p>
-        </div>
-        <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
-    </div>`;
-}).join('');
+        const visible = getAchievementsVisibility();
+        
+        container.innerHTML = users.map((userData, index) => {
+            const position = index + 1;
+            const achievements = userData.achievements || {};
+            const isCurrentUser = userData.id === user.uid;
+            const level = getCurrentLevel(userData.totalXp || 0).id;
+            
+            let infoHtml = '';
+            if (visible) {
+                const achievementIcons = [
+                    { id: 'friendly', icon: 'fa-solid fa-user-group' },
+                    { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
+                    { id: 'unstoppable', icon: 'fa-solid fa-fire' },
+                    { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
+                    { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
+                ];
+                infoHtml = achievementIcons.map(a => {
+                    const unlocked = achievements[a.id] === true;
+                    return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
+                }).join('');
+            } else {
+                infoHtml = `<span style="font-size:0.6rem; color:var(--slate);">Уровень ${level}</span>`;
+            }
+            
+            return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+                <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
+                </div>
+                <div class="item-info">
+                    <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
+                    <p class="item-desc">${infoHtml}</p>
+                </div>
+                <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+            </div>`;
+        }).join('');
     } catch (error) {
         console.error('Ошибка загрузки рейтинга:', error);
         let message = 'Ошибка загрузки. Проверьте интернет.';
@@ -7445,37 +7502,43 @@ async function loadFriendsLeaderboard() {
             checkRankNotification(currentRank, 'friends');
         }
 
-let html = allUsers.map((userData, index) => {
-    const position = index + 1;
-    const isCurrentUser = userData.isCurrentUser;
-    const name = userData.displayName || 'Пользователь';
-    const achievements = userData.achievements || {};
-    
-    // Смайлики достижений
-    const achievementIcons = [
-        { id: 'friendly', icon: 'fa-solid fa-user-group' },
-        { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
-        { id: 'unstoppable', icon: 'fa-solid fa-fire' },
-        { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
-        { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
-    ];
-    
-    let achievementsHtml = achievementIcons.map(a => {
-        const unlocked = achievements[a.id] === true;
-        return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
-    }).join('');
-    
-    return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-        <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-            <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
-        </div>
-        <div class="item-info">
-            <h3 class="item-title">${name}</h3>
-            <p class="item-desc">${achievementsHtml}</p>
-        </div>
-        <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
-    </div>`;
-}).join('');
+        const visible = getAchievementsVisibility();
+
+        let html = allUsers.map((userData, index) => {
+            const position = index + 1;
+            const isCurrentUser = userData.isCurrentUser;
+            const name = userData.displayName || 'Пользователь';
+            const achievements = userData.achievements || {};
+            const level = getCurrentLevel(userData.totalXp || 0).id;
+            
+            let infoHtml = '';
+            if (visible) {
+                const achievementIcons = [
+                    { id: 'friendly', icon: 'fa-solid fa-user-group' },
+                    { id: 'marathoner', icon: 'fa-solid fa-dumbbell' },
+                    { id: 'unstoppable', icon: 'fa-solid fa-fire' },
+                    { id: 'ironEndurance', icon: 'fa-solid fa-stopwatch' },
+                    { id: 'masterOfStyles', icon: 'fa-solid fa-award' }
+                ];
+                infoHtml = achievementIcons.map(a => {
+                    const unlocked = achievements[a.id] === true;
+                    return `<span class="achievement-icon-top ${unlocked ? 'unlocked' : 'locked'}"><i class="${a.icon}"></i></span>`;
+                }).join('');
+            } else {
+                infoHtml = `<span style="font-size:0.6rem; color:var(--slate);">Уровень ${level}</span>`;
+            }
+            
+            return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
+                <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
+                </div>
+                <div class="item-info">
+                    <h3 class="item-title">${name}</h3>
+                    <p class="item-desc">${infoHtml}</p>
+                </div>
+                <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+            </div>`;
+        }).join('');
 
         if (friends.length === 0) {
             html += `<div class="empty-state">
@@ -8836,8 +8899,7 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
     const secs = String(seconds % 60).padStart(2, '0');
     document.getElementById('finishMinutes').textContent = `${mins}:${secs}`;
-    document.getElementById('finishXp').textContent = `+${Math.round(xpEarned)} XP`;
-    
+document.getElementById('finishXp').textContent = '+' + (isNaN(xpEarned) ? 0 : xpEarned).toFixed(1) + ' XP';    
     document.querySelectorAll('#finishStars i').forEach(star => star.classList.remove('active'));
     
     window.navigateTo('finish');
@@ -11300,4 +11362,175 @@ function openPaletteWithPremiumCheck() {
     } else {
         openModal('premiumModal');
     }
+}
+
+// =================== ПРЕМИУМ СТАТИСТИКА: НАГРУЗОЧНЫЙ ИНДЕКС ПО НЕДЕЛЯМ ===================
+
+let weeklyLoadStartDate = new Date();
+weeklyLoadStartDate.setDate(1);
+weeklyLoadStartDate.setMonth(weeklyLoadStartDate.getMonth() - 1);
+
+// Расчёт нагрузочного индекса
+function calculateTrainingLoad(workout) {
+    let totalLoad = 0;
+    if (workout.exercises) {
+        workout.exercises.forEach(ex => {
+            const sets = parseInt(ex.sets) || 0;
+            const repsStr = String(ex.reps || '');
+            if (repsStr.includes('сек') || repsStr.includes('с')) {
+                const secs = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
+                totalLoad += sets * (secs / 10);
+            } else {
+                const reps = parseFloat(repsStr) || 0;
+                totalLoad += sets * reps;
+            }
+        });
+    }
+    const durationBonus = (workout.durationSeconds || 0) / 60;
+    totalLoad += durationBonus * 0.5;
+    return Math.round(totalLoad);
+}
+
+// Получить недели за период
+function getWeeksInRange(startDate, endDate) {
+    const weeks = [];
+    let current = new Date(startDate);
+    // Сдвигаем к понедельнику
+    const day = current.getDay();
+    const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+    current.setDate(diff);
+    
+    while (current <= endDate) {
+        const weekEnd = new Date(current);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        weeks.push({
+            start: new Date(current),
+            end: weekEnd,
+            key: current.toISOString().split('T')[0]
+        });
+        current.setDate(current.getDate() + 7);
+    }
+    return weeks;
+}
+
+// Форматирование даты
+function formatWeekDate(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${d}.${m}`;
+}
+
+function renderWeeklyLoadChart(weeklyData, weeks) {
+    const container = document.getElementById('weeklyLoadChart');
+    if (!container) return;
+    
+    const maxLoad = Math.max(1, ...Object.values(weeklyData));
+    const chartHeight = 180;
+    
+    let html = `<div style="position:relative; padding:0.5rem 0.3rem; background-image: 
+        linear-gradient(rgba(200,200,200,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,200,200,0.15) 1px, transparent 1px);
+        background-size: 20px 20px; border-radius:12px; min-height:${chartHeight + 60}px;">`;
+    
+    html += `<div style="display:flex; align-items:flex-end; gap:0.5rem; height:${chartHeight}px; padding-top:0.5rem;">`;
+    
+    weeks.forEach((week, index) => {
+        const load = weeklyData[week.key] || 0;
+        const percent = maxLoad > 0 ? (load / maxLoad) * 100 : 0;
+        const barHeight = Math.max(4, (percent / 100) * (chartHeight - 20));
+        const label = `${formatWeekDate(week.start)}-${formatWeekDate(week.end)}`;
+        const percentDisplay = Math.round((load / maxLoad) * 100);
+        const showInside = barHeight > 30;
+        
+        html += `
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
+                <span style="font-size:0.7rem; font-weight:700; color:var(--accent);">${load > 0 ? load : ''}</span>
+                <div style="width:100%; height:${barHeight}px; background:var(--accent-light); border-radius:4px 4px 0 0; min-height:4px; position:relative; border:1px solid var(--accent); border-bottom:none;">
+                    <div style="position:absolute; bottom:0; left:0; right:0; height:${(load / maxLoad) * 100}%; background:var(--accent); border-radius:4px 4px 0 0; transition:height 0.3s ease; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
+                        ${load > 0 ? `<span style="font-size:0.6rem; font-weight:700; color:var(--white); ${showInside ? '' : 'display:none;'}">${percentDisplay}%</span>` : ''}
+                    </div>
+                    ${!showInside && load > 0 ? `<span style="position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:0.6rem; font-weight:700; color:var(--accent);">${percentDisplay}%</span>` : ''}
+                </div>
+                <span style="font-size:0.55rem; color:var(--slate); text-align:center; line-height:1.2;">${label}</span>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    
+    const values = Object.values(weeklyData).filter(v => v > 0);
+    const avg = values.length > 0 ? Math.round(values.reduce((a,b) => a+b, 0) / values.length) : 0;
+    const total = values.reduce((a,b) => a+b, 0);
+    
+    html += `
+        <div style="display:flex; justify-content:space-between; margin-top:0.5rem; padding:0.3rem 0.5rem; font-size:0.6rem; color:var(--slate); background:rgba(255,255,255,0.5); border-radius:8px;">
+            <span>Всего: ${total}</span>
+            <span>Средний: ${avg}</span>
+            <span>Макс: ${maxLoad}</span>
+            <span>Минимум: ${Math.min(...values) || 0}</span>
+        </div>
+    `;
+    
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+async function loadPremiumStats() {
+    if (!hasPremium()) {
+        const container = document.getElementById('weeklyLoadChart');
+        if (container) container.innerHTML = '';
+        const block = document.getElementById('weekly-load-block');
+        if (block) block.style.display = 'none';
+        return;
+    }
+    
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    const result = await getUserWorkoutsFromFirestore(user.uid);
+    if (!result.success) return;
+    
+    const workouts = result.data.filter(w => getWorkoutIcon(w) !== 'charging');
+    
+    const workoutLoads = {};
+    workouts.forEach(w => {
+        const date = new Date(w.date);
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(date);
+        monday.setDate(diff);
+        const weekKey = monday.toISOString().split('T')[0];
+        const load = calculateTrainingLoad(w);
+        if (workoutLoads[weekKey]) {
+            workoutLoads[weekKey] += load;
+        } else {
+            workoutLoads[weekKey] = load;
+        }
+    });
+    
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 2);
+    startDate.setDate(1);
+    
+    const weeks = getWeeksInRange(startDate, endDate);
+    renderWeeklyLoadChart(workoutLoads, weeks);
+    
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    const startMonth = monthNames[startDate.getMonth()];
+    const endMonth = monthNames[endDate.getMonth()];
+    const titleEl = document.getElementById('weeklyLoadTitle');
+    if (titleEl) {
+        titleEl.textContent = `${startMonth} — ${endMonth}`;
+    }
+    
+    const block = document.getElementById('weekly-load-block');
+    if (block) block.style.display = 'block';
+}
+
+// Переключение месяцев
+function changeWeeklyLoadMonth(delta) {
+    const currentStart = weeklyLoadStartDate;
+    currentStart.setMonth(currentStart.getMonth() + delta);
+    loadPremiumStats();
 }

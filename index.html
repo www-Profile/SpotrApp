@@ -714,6 +714,26 @@
                             </div>
                         </div>
                     </div>
+
+<!-- Блок: Нагрузочный индекс по неделям -->
+<div class="section-block" data-block-id="weekly-load" id="weekly-load-block" style="display:none;">
+    <div class="section-header">
+        <h2 class="section-title">Нагрузочный индекс</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
+    </div>
+    <div class="section-body">
+        <!-- Навигация по месяцам -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; padding:0 0.3rem;">
+            <button onclick="changeWeeklyLoadMonth(-1)" style="background:none; border:none; color:var(--slate); font-size:1.2rem; cursor:pointer;">‹</button>
+            <span id="weeklyLoadTitle" style="font-weight:600; font-size:0.9rem; color:var(--dark);">Январь — Февраль</span>
+            <button onclick="changeWeeklyLoadMonth(1)" style="background:none; border:none; color:var(--slate); font-size:1.2rem; cursor:pointer;">›</button>
+        </div>
+        <!-- Диаграмма -->
+        <div id="weeklyLoadChart" style="padding:0.2rem 0;"></div>
+    </div>
+</div>
+
                 </div>
             </div>
             <div id="statsEditButtons" style="margin-top: 0.5rem; width: 100%;">
@@ -1043,27 +1063,23 @@
                 </div>
             </div>
 
-            <!-- Блок 2: Друзья -->
-            <div class="section-block" data-block-id="friends-list">
-                <div class="section-header">
-                    <h2 class="section-title">Друзья</h2>
-                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                    <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
-                </div>
-                <div class="scroll-wrapper" style="border-radius: 16px;">
-                    <div id="friendsList" class="item-grid"></div>
-                </div>
-            </div>
-
-            <!-- Блок 3: Заявки -->
-            <div class="section-block" data-block-id="friend-requests">
+                        <!-- Блок 3: Заявки -->
+            <div class="section-block" data-block-id="friend-requests" style="padding: 0rem 0.2rem;">
                 <div class="section-header">
                     <h2 class="section-title">Заявки</h2>
-                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                    <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
                 </div>
                 <div class="scroll-wrapper" style="border-radius: 16px;">
                     <div id="friendRequests" class="item-grid"></div>
+                </div>
+            </div>
+
+            <!-- Блок 2: Друзья -->
+            <div class="section-block" data-block-id="friends-list" style="padding: 0rem 0.2rem;">
+                <div class="section-header">
+                    <h2 class="section-title">Друзья</h2>
+                </div>
+                <div class="scroll-wrapper" style="border-radius: 16px;">
+                    <div id="friendsList" class="item-grid"></div>
                 </div>
             </div>
         </div>
@@ -1501,7 +1517,7 @@
             
             <!-- Строка 4: Совместные тренировки -->
             <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
+                <div class="premium-table-cell premium-table-cell-left">Совместные трени</div>
                 <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
             </div>
