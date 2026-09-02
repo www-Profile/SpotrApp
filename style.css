@@ -1206,15 +1206,15 @@ body {
 }
 
 .level-lvl {
-    font-size: 0.65rem;
-    font-weight: 700;
+    font-size: 0.6rem;
+    font-weight: 600;
     color: var(--slate);
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
 .level-title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--dark);
     text-transform: uppercase;
@@ -1222,7 +1222,7 @@ body {
 }
 
 .level-progress-text {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 600;
     color: var(--slate);
 }

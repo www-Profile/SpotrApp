@@ -3152,23 +3152,30 @@ function openColorModal() {
 }
 
 function selectColor(color) {
+    // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
     tempColor = color;
     
-    // ★★★ ПРИ ВЫБОРЕ ГОТОВОГО ЦВЕТА СРАЗУ ПРИМЕНЯЕМ ЕГО ★★★
-    applySelectedColor(color);
+    // ★★★ ПРИМЕНЯЕМ ВИЗУАЛЬНО (НО НЕ СОХРАНЯЕМ) ★★★
+    document.body.style.removeProperty('--accent');
+    document.body.style.removeProperty('--accent-dark');
+    document.body.style.removeProperty('--accent-light');
     
+    const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
+                      localStorage.getItem('appThemeMode') === 'dark' ||
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    document.body.className = 'theme-' + color;
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ АКТИВНУЮ КНОПКУ ★★★
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('color-btn-active', btn.dataset.color === color);
     });
     
-    // ★★★ ПРОВЕРЯЕМ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
-    if (!tasks[5]) {
-        tasks[5] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Оформление" выполнено!');
-        addTaskXp();
-    }
+    // ★★★ ОБНОВЛЯЕМ СТАТУС (НО НЕ СОХРАНЯЕМ) ★★★
+    updateColorStatus(color);
 }
 
 function applySelectedColor(color) {
@@ -3198,30 +3205,59 @@ function applySelectedColor(color) {
 }
 
 function applyColor() {
-    if (tempColor) {
-        const currentColor = localStorage.getItem('themeColor') || 'red';
-        
-        if (tempColor !== currentColor) {
-            // ★★★ ИСПОЛЬЗУЕМ applySelectedColor ДЛЯ ПРИМЕНЕНИЯ ★★★
-            applySelectedColor(tempColor);
-            
-            const colorNames = {
-                'red': 'Красный', 'orange': 'Оранжевый', 'yellow': 'Желтый',
-                'green': 'Зеленый', 'darkgreen': 'Темно-зеленый', 'blue': 'Голубой',
-                'darkblue': 'Синий', 'purple': 'Фиолетовый', 'pink': 'Розовый', 'gray': 'Серый'
-            };
-            showToast(`✅ Акцентный цвет изменён на ${colorNames[tempColor] || tempColor}`);
-            
-            // ★★★ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
-            if (!tasks[5]) {
-                tasks[5] = true;
-                saveTasks();
-                updateTasksUI();
-                showToast('✅ Задание "Оформление" выполнено!');
-                addTaskXp();
-            }
-        }
+    if (!tempColor) {
+        showToast('⚠️ Выберите цвет');
+        return;
     }
+    
+    const currentColor = localStorage.getItem('themeColor') || 'red';
+    const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+    
+    // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛСЯ ЛИ ЦВЕТ ★★★
+    const colorChanged = tempColor !== currentColor;
+    
+    if (colorChanged) {
+        // ★★★ ПРИМЕНЯЕМ ЦВЕТ ★★★
+        localStorage.setItem('themeColor', tempColor);
+        localStorage.removeItem('themeColorCustom');
+        
+        // ★★★ ПРИМЕНЯЕМ ВИЗУАЛЬНО ★★★
+        document.body.style.removeProperty('--accent');
+        document.body.style.removeProperty('--accent-dark');
+        document.body.style.removeProperty('--accent-light');
+        
+        const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
+                          localStorage.getItem('appThemeMode') === 'dark' ||
+                          (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        document.body.className = 'theme-' + tempColor;
+        if (isDarkMode) {
+            document.body.classList.add('theme-dark-mode');
+        }
+        
+        // ★★★ ПОКАЗЫВАЕМ ТОСТ ★★★
+        const colorNames = {
+            'red': 'Красный', 'orange': 'Оранжевый', 'yellow': 'Желтый',
+            'green': 'Зеленый', 'darkgreen': 'Темно-зеленый', 'blue': 'Голубой',
+            'darkblue': 'Синий', 'purple': 'Фиолетовый', 'pink': 'Розовый', 'gray': 'Серый'
+        };
+        showToast(`✅ Акцентный цвет изменён на ${colorNames[tempColor] || tempColor}`);
+        
+        // ★★★ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
+        if (!tasks[5]) {
+            tasks[5] = true;
+            saveTasks();
+            updateTasksUI();
+            showToast('✅ Задание "Оформление" выполнено!');
+            addTaskXp();
+        }
+    } else {
+        // ★★★ ЦВЕТ НЕ ИЗМЕНИЛСЯ ★★★
+        showToast('ℹ️ Цвет не изменён');
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ СТАТУС ★★★
+    updateColorStatus(tempColor);
     
     closeModal('colorModal');
 }
@@ -3253,8 +3289,17 @@ if (isCustom && savedColor && savedColor.startsWith('#')) {
     applyColorToTheme(savedColor);
 } else {
     // Стандартный цвет — применяем через класс
+    const isDarkMode = localStorage.getItem('appThemeMode') === 'dark' || 
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
     document.body.className = 'theme-' + savedColor;
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
 }
+
+// ★★★ ОБНОВЛЯЕМ СТАТУС ★★★
+updateColorStatus(savedColor);
 
 // ★★★ ДОПОЛНИТЕЛЬНО: ОБНОВЛЯЕМ ПРИ ЗАГРУЗКЕ ★★★
 document.addEventListener('DOMContentLoaded', function() {
@@ -5690,7 +5735,10 @@ async function loadProfile() {
     const currentLevel = getCurrentLevel(xp);
     const progress = getXpProgress(xp);
     const nextLevel = getNextLevel(xp);
-    let progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+    
+    // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+    const xpRounded = Math.round(xp);
+    let progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
     
     const profileName = document.getElementById('profileName');
     const profileInitials = document.getElementById('profileInitials');
@@ -5715,23 +5763,21 @@ async function loadProfile() {
     if (levelProgressText) levelProgressText.textContent = progressText;
     if (levelFill) levelFill.style.width = progress + '%';
     
-// В функции loadProfile() (примерно строка 5130)
-const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
-if (currentLevel.id > prevLevel) {
-    // ★★★ НЕ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ДЛЯ 1-ГО УРОВНЯ ★★★
-    if (currentLevel.id > 1) {
-        const id = 'new_level_' + currentLevel.id;
-        if (!isNotificationSeen(id)) {
-            showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null, true, function() {
-                TabManager.profile('my');
-                window.navigateTo('profile');
-                setTimeout(() => loadProfile(), 300);
-            });
-            markNotificationSeen(id);
+    const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
+    if (currentLevel.id > prevLevel) {
+        if (currentLevel.id > 1) {
+            const id = 'new_level_' + currentLevel.id;
+            if (!isNotificationSeen(id)) {
+                showNotification('🎉', `Поздравляем! Вы достигли ${currentLevel.id} уровня!`, null, true, function() {
+                    TabManager.profile('my');
+                    window.navigateTo('profile');
+                    setTimeout(() => loadProfile(), 300);
+                });
+                markNotificationSeen(id);
+            }
         }
+        localStorage.setItem('prevLevel', String(currentLevel.id));
     }
-    localStorage.setItem('prevLevel', String(currentLevel.id));
-}
     
     const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
     if (lastVisit) {
@@ -5747,18 +5793,13 @@ if (currentLevel.id > prevLevel) {
     initProfileBlocks();
     switchProfileTab(activeProfileTab);
 
-    // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ★★★
-    // Отображаем текущие достижения в интерфейсе
     renderAchievements();
-    // ★★★ ЗАГРУЖАЕМ НАСТРОЙКУ ВИДИМОСТИ ДОСТИЖЕНИЙ ★★★
-loadAchievementsVisibility();
-document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
+    loadAchievementsVisibility();
+    document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
     
-    // Проверяем достижения в фоне и обновляем, если что-то изменилось
     try {
         const results = await checkAllAchievements(user.uid);
         if (results) {
-            // Если достижения обновились, перерисовываем иконки
             renderAchievements();
         }
     } catch (error) {
@@ -7087,7 +7128,6 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         
         const userData = result.data;
         
-        // ★★★ ОБНОВЛЯЕМ ДОСТИЖЕНИЯ ★★★
         const achievements = userData.achievements || {};
         updateAchievementsUI('friendRequestAchievements', achievements);
         
@@ -7097,7 +7137,6 @@ async function openFriendRequestProfile(requestId, fromUserId) {
             container.classList.toggle('hidden', !visible);
         }
         
-        // ★★★ ЗАГРУЖАЕМ ТРЕНИРОВКИ С ОБРАБОТКОЙ ОШИБКИ ★★★
         let workouts = [];
         let totalSeconds = 0;
         let totalExercises = 0;
@@ -7125,7 +7164,10 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         const currentLevel = getCurrentLevel(xp);
         const progress = getXpProgress(xp);
         const nextLevel = getNextLevel(xp);
-        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+        
+        // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+        const xpRounded = Math.round(xp);
+        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
         
         document.getElementById('friendRequestLevelLvl').textContent = currentLevel.id + ' LVL';
         document.getElementById('friendRequestLevelTitle').textContent = currentLevel.name;
@@ -7136,14 +7178,12 @@ async function openFriendRequestProfile(requestId, fromUserId) {
         document.getElementById('friendRequestTotalMinutes').textContent = Math.floor(totalSeconds / 60);
         document.getElementById('friendRequestTotalExercises').textContent = totalExercises;
         
-        // Сохраняем ID заявки и пользователя для кнопок
         document.getElementById('friendRequestAcceptBtn').dataset.requestId = requestId;
         document.getElementById('friendRequestAcceptBtn').dataset.userId = fromUserId;
         document.getElementById('friendRequestRejectBtn').dataset.requestId = requestId;
         
         openModal('friendRequestProfileModal');
         
-        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ПРОФИЛЬ ДРУГА) ★★★
         checkDailyTasksAfterFriendProfile(fromUserId);
         
     } catch (error) {
@@ -7613,6 +7653,9 @@ async function loadWorldLeaderboard() {
             const isCurrentUser = userData.id === user.uid;
             const level = getCurrentLevel(userData.totalXp || 0).id;
             
+            // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+            const xpRounded = Math.round(userData.totalXp || 0);
+            
             let infoHtml = '';
             if (visible) {
                 const achievementIcons = [
@@ -7638,7 +7681,7 @@ async function loadWorldLeaderboard() {
                     <h3 class="item-title">${userData.displayName || 'Пользователь'}</h3>
                     <p class="item-desc">${infoHtml}</p>
                 </div>
-                <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+                <div class="item-xp">${xpRounded} XP</div>
             </div>`;
         }).join('');
     } catch (error) {
@@ -7706,6 +7749,9 @@ async function loadFriendsLeaderboard() {
             const achievements = userData.achievements || {};
             const level = getCurrentLevel(userData.totalXp || 0).id;
             
+            // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+            const xpRounded = Math.round(userData.totalXp || 0);
+            
             let infoHtml = '';
             if (visible) {
                 const achievementIcons = [
@@ -7731,7 +7777,7 @@ async function loadFriendsLeaderboard() {
                     <h3 class="item-title">${name}</h3>
                     <p class="item-desc">${infoHtml}</p>
                 </div>
-                <div class="item-xp">${(userData.totalXp || 0).toFixed(1)} XP</div>
+                <div class="item-xp">${xpRounded} XP</div>
             </div>`;
         }).join('');
 
@@ -8288,9 +8334,42 @@ function handlePremiumClick() {
 // ===================ВЫБОР ЦВЕТА ЧЕРЕЗ МОДАЛЬНОЕ ОКНО ===================
 function openColorModal() {
     const currentColor = localStorage.getItem('themeColor') || 'red';
+    const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+    
+    // ★★★ СОХРАНЯЕМ ТЕКУЩИЙ ЦВЕТ КАК ВРЕМЕННЫЙ ★★★
+    tempColor = currentColor;
+    
+    // ★★★ УБИРАЕМ КАСТОМНЫЕ CSS-ПЕРЕМЕННЫЕ ★★★
+    document.body.style.removeProperty('--accent');
+    document.body.style.removeProperty('--accent-dark');
+    document.body.style.removeProperty('--accent-light');
+    
+    // ★★★ ПРИМЕНЯЕМ СТАНДАРТНЫЙ ЦВЕТ ЧЕРЕЗ КЛАСС ★★★
+    if (!isCustom) {
+        document.body.className = 'theme-' + currentColor;
+    } else {
+        // Если кастомный цвет - показываем его через переменные
+        applyColorToTheme(currentColor);
+    }
+    
+    const isDarkMode = localStorage.getItem('appThemeMode') === 'dark' || 
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDarkMode) {
+        document.body.classList.add('theme-dark-mode');
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ АКТИВНУЮ КНОПКУ ★★★
     document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.classList.toggle('color-btn-active', btn.dataset.color === currentColor);
+        const isActive = btn.dataset.color === currentColor;
+        btn.classList.toggle('color-btn-active', isActive);
     });
+    
+    // ★★★ ОБНОВЛЯЕМ ПАЛИТРУ ★★★
+    const picker = document.getElementById('customColorPicker');
+    if (picker) {
+        picker.value = currentColor.startsWith('#') ? currentColor : '#DC143C';
+    }
+    
     openModal('colorModal');
 }
 
@@ -9296,7 +9375,6 @@ async function openFriendProfile(friendId) {
             container.classList.toggle('hidden', !visible);
         }
         
-        // ★★★ ЗАГРУЖАЕМ ТРЕНИРОВКИ С ОБРАБОТКОЙ ОШИБКИ ★★★
         let workouts = [];
         let totalSeconds = 0;
         let totalExercises = 0;
@@ -9323,7 +9401,10 @@ async function openFriendProfile(friendId) {
         const currentLevel = getCurrentLevel(xp);
         const progress = getXpProgress(xp);
         const nextLevel = getNextLevel(xp);
-        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+        
+        // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+        const xpRounded = Math.round(xp);
+        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
         
         document.getElementById('friendLevelLvl').textContent = currentLevel.id + ' LVL';
         document.getElementById('friendLevelTitle').textContent = currentLevel.name;
@@ -9336,7 +9417,6 @@ async function openFriendProfile(friendId) {
         
         openModal('friendProfileModal');
         
-        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ПРОФИЛЬ ДРУГА) ★★★
         checkDailyTasksAfterFriendProfile(friendId);
         
     } catch (error) {
@@ -10429,7 +10509,10 @@ function openLevelInfoModal() {
         const currentLevel = getCurrentLevel(xp);
         const progress = getXpProgress(xp);
         const nextLevel = getNextLevel(xp);
-        const progressText = nextLevel ? `${xp.toFixed(1)}/${nextLevel.minXp} XP` : `${xp.toFixed(1)}+ XP`;
+        
+        // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
+        const xpRounded = Math.round(xp);
+        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
 
         document.getElementById('levelInfoLvl').textContent = currentLevel.id + ' LVL';
         document.getElementById('levelInfoTitle').textContent = currentLevel.name;
@@ -11462,12 +11545,14 @@ function applyCustomColor() {
 }
 
 function applyColorToTheme(color) {
-    const isDarkMode = document.body.classList.contains('theme-dark-mode');
+    const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
+                      localStorage.getItem('appThemeMode') === 'dark' ||
+                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     
-    // Убираем все классы тем
+    // ★★★ УБИРАЕМ ВСЕ КЛАССЫ ТЕМ ★★★
     document.body.className = '';
     
-    // Добавляем кастомный цвет как CSS переменную
+    // ★★★ ДОБАВЛЯЕМ КАСТОМНЫЙ ЦВЕТ КАК CSS ПЕРЕМЕННУЮ ★★★
     document.body.style.setProperty('--accent', color);
     document.body.style.setProperty('--accent-dark', darkenColor(color, 30));
     document.body.style.setProperty('--accent-light', lightenColor(color, 85));
@@ -11512,31 +11597,42 @@ function applyPaletteColor() {
     const colorPicker = document.getElementById('customColorPicker');
     const color = colorPicker.value;
     
-    tempColor = color;
+    // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛСЯ ЛИ ЦВЕТ ★★★
+    const currentColor = localStorage.getItem('themeColor') || '#DC143C';
+    const colorChanged = color !== currentColor;
     
-    localStorage.setItem('themeColor', color);
-    localStorage.setItem('themeColorCustom', 'true');
+    if (colorChanged) {
+        // ★★★ СОХРАНЯЕМ КАК КАСТОМНЫЙ ЦВЕТ ★★★
+        localStorage.setItem('themeColor', color);
+        localStorage.setItem('themeColorCustom', 'true');
+        
+        // ★★★ ПРИМЕНЯЕМ ★★★
+        applyColorToTheme(color);
+        
+        // ★★★ ПОКАЗЫВАЕМ ТОСТ ★★★
+        showToast(`✅ Цвет изменён`);
+        
+        // ★★★ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
+        if (!tasks[5]) {
+            tasks[5] = true;
+            saveTasks();
+            updateTasksUI();
+            showToast('✅ Задание "Оформление" выполнено!');
+            addTaskXp();
+        }
+    } else {
+        showToast('ℹ️ Цвет не изменён');
+    }
     
-    applyColorToTheme(color);
+    // ★★★ ОБНОВЛЯЕМ СТАТУС ★★★
+    updateColorStatus(color);
     
-    closeModal('paletteModal');
-    
+    // ★★★ ОБНОВЛЯЕМ АКТИВНЫЕ КНОПКИ ★★★
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('color-btn-active', btn.dataset.color === color);
     });
     
-    updateColorStatus(color);
-    
-    // ★★★ ДОБАВЛЯЕМ ПРОВЕРКУ ЗАДАНИЯ ★★★
-    if (!tasks[5]) {
-        tasks[5] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Оформление" выполнено!');
-        addTaskXp();
-    }
-    
-    showToast(`✅ Цвет изменён`);
+    closeModal('paletteModal');
 }
 
 function openPaletteWithPremiumCheck() {
