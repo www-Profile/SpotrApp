@@ -1196,11 +1196,9 @@ function startCoopTraining(data) {
     finishPageShown = false;
     coopStarted = true;
     
-    // ★★★ ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ★★★
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
     
-    // ★★★ ВСЕ ИСПОЛЬЗУЮТ ОДИНАКОВЫЕ УПРАЖНЕНИЯ ★★★
     coopExercises = data.exercises || [];
     console.log('📊 Используем базовые упражнения для всех');
     
@@ -1227,6 +1225,7 @@ function startCoopTraining(data) {
     }));
     sessionCurrentIndex = myProgress;
     sessionCompleted = new Set();
+    sessionCompletedSets = {}; // ★★★ ИНИЦИАЛИЗИРУЕМ ★★★
     for (let i = 0; i < myProgress; i++) {
         sessionCompleted.add(i);
     }
@@ -1337,9 +1336,6 @@ function updateCoopUI() {
 
 function showCoopFinishPage() {
     console.log('🔥🔥🔥 [showCoopFinishPage] НАЧАЛО');
-    
-    // ★★★ УБИРАЕМ ПРОВЕРКУ finishPageShown ★★★
-    // if (finishPageShown) return;
     
     // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ ★★★
     if (sessionData) {
@@ -1462,11 +1458,14 @@ function renderFinishPageData(data) {
         const accentColor = isMe ? 'var(--accent)' : 'var(--slate)';
         const icon = isMe ? 'fa-solid fa-user' : 'fa-solid fa-user';
         
+        // ★★★ XP С ОДНИМ ЗНАКОМ ПОСЛЕ ЗАПЯТОЙ ★★★
+        const xpDisplay = (isNaN(xp) ? 0 : xp).toFixed(1);
+        
         html += `
             <div style="width:100%;">
-<div class="item-title" style="color:var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
-    <i class="${icon}"></i> ${isMe ? 'Вы' : name}
-</div>
+                <div class="item-title" style="color:var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
+                    <i class="${icon}"></i> ${isMe ? 'Вы' : name}
+                </div>
                 <div class="finish-stats" style="margin-bottom: 0rem;">
                     <div class="finish-stat-item">
                         <span class="finish-stat-label">Упражнений</span>
@@ -1478,12 +1477,12 @@ function renderFinishPageData(data) {
                     </div>
                     <div class="finish-stat-item">
                         <span class="finish-stat-label">XP</span>
-                        <span class="finish-stat-value">+${(isNaN(xp) ? 0 : xp).toFixed(1)}</span>
+                        <span class="finish-stat-value">+${xpDisplay}</span>
                     </div>
                 </div>
             </div>
         `;
-        console.log('📊 [renderFinishPageData] Участник ' + name + ': ' + progress + '/' + total + ', time=' + time + ', xp=' + xp);
+        console.log('📊 [renderFinishPageData] Участник ' + name + ': ' + progress + '/' + total + ', time=' + time + ', xp=' + xpDisplay);
     });
 
     container.innerHTML = html;
@@ -1534,10 +1533,8 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             update[`participantFinished.${userId}`] = true;
             update[`participantFinishedSeconds.${userId}`] = currentTime;
             
-            // ★★★ СЧИТАЕМ XP ПО ТЕКУЩИМ ДАННЫМ УЧАСТНИКА ★★★
-            // Используем sessionExercises (в которых уже есть изменения участника)
-            const completedExercises = sessionExercises.filter((_, index) => index < completedCount);
-            const xpEarned = calculateWorkoutXp(completedExercises);
+            // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+            const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
             update[`participantXp.${userId}`] = xpEarned;
             
             console.log('📊 XP для участника:', xpEarned);
@@ -1553,8 +1550,8 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             if (isFinishing || completedCount >= total) {
                 sessionData.participantFinished[userId] = true;
                 sessionData.participantFinishedSeconds[userId] = currentTime;
-                const completedExercises = sessionExercises.filter((_, index) => index < completedCount);
-                sessionData.participantXp[userId] = calculateWorkoutXp(completedExercises);
+                // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+                sessionData.participantXp[userId] = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
             }
         }
 
@@ -1842,7 +1839,7 @@ finishTrainingSession = async function() {
         const total = sessionExercises.length;
         const completed = sessionCompleted.size;
         const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
-        const xpEarned = calculateWorkoutXp(completedExercises);
+        const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
         console.log('📊 [finishTrainingSession] Обычная тренировка: total=' + total + ', completed=' + completed + ', xp=' + xpEarned);
         showFinishPage(total, completed, sessionSeconds, xpEarned);
         console.log('✅ [finishTrainingSession] Обычная тренировка завершена');
@@ -2171,21 +2168,22 @@ await updateAchievementsAfterWorkout();
             }
         }
 
-        // 5. Сбрасываем все глобальные переменные
-        console.log('🔄 [coopFinishDoneBtn] Сбрасываем все флаги');
-        sessionExercises = [];
-        sessionCompleted = new Set();
-        sessionSeconds = 0;
-        sessionWorkoutTitle = '';
-        sessionCategory = '';
-        sessionWorkoutIcon = 'bodybuilding';
-        currentSessionId = null;
-        isHost = false;
-        sessionData = null;
-        coopExercises = [];
-        coopStarted = false;
-        finishPageShown = false;
-        console.log('✅ [coopFinishDoneBtn] Все флаги сброшены');
+ // 5. Сбрасываем все глобальные переменные
+    console.log('🔄 [coopFinishDoneBtn] Сбрасываем все флаги');
+    sessionExercises = [];
+    sessionCompleted = new Set();
+    sessionCompletedSets = {}; // ★★★ СБРАСЫВАЕМ ★★★
+    sessionSeconds = 0;
+    sessionWorkoutTitle = '';
+    sessionCategory = '';
+    sessionWorkoutIcon = 'bodybuilding';
+    currentSessionId = null;
+    isHost = false;
+    sessionData = null;
+    coopExercises = [];
+    coopStarted = false;
+    finishPageShown = false;
+    console.log('✅ [coopFinishDoneBtn] Все флаги сброшены');
 
         // 6. Отключаем слушатель, если есть
         if (sessionListener) {
@@ -2371,6 +2369,8 @@ let isExerciseTimerRunning = false;
 let exerciseCurrentSet = 0;
 let exerciseTotalSets = 0;
 let isTimedExercise = false;
+// Хранит количество выполненных подходов для каждого упражнения
+let sessionCompletedSets = {};
 
 // ===================СИСТЕМА УВЕДОМЛЕНИЙ ===================
 const NOTIFICATIONS_KEY = 'notificationsSeen';
@@ -2876,31 +2876,73 @@ function getXpProgress(xp) {
 }
 
 // =================== НОВАЯ СИСТЕМА РАСЧЁТА XP ===================
+// =================== ИСПРАВЛЕННАЯ СИСТЕМА РАСЧЁТА XP ===================
+
 function isTimeBased(reps) {
     const repsStr = String(reps || '');
     return repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд');
 }
 
-function calculateExerciseXP(exercise) { // убрали kg
-    const sets = parseInt(exercise?.sets) || 0;
+function hasWeight(exercise) {
+    if (!exercise) return false;
+    const weight = exercise.weight;
+    return weight !== undefined && weight !== null && !isNaN(parseFloat(weight)) && parseFloat(weight) > 0;
+}
+
+function getWeightValue(exercise) {
+    if (!hasWeight(exercise)) return 0;
+    return parseFloat(exercise.weight) || 0;
+}
+
+function getRepsValue(exercise) {
+    const repsStr = String(exercise?.reps || '');
+    return parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
+}
+
+function getSetsValue(exercise) {
+    return parseInt(exercise?.sets) || 0;
+}
+
+function calculateExerciseXP(exercise, completedSets) {
+    const sets = getSetsValue(exercise);
     const repsStr = String(exercise?.reps || '');
     const isTime = isTimeBased(repsStr);
-    const value = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
-    const weight = hasWeight(exercise) ? exercise.weight : 0;
+    const value = getRepsValue(exercise);
+    const weight = getWeightValue(exercise);
+    
+    // Используем переданное количество подходов или все, если не указано
+    const actualSets = (completedSets !== undefined && completedSets > 0) ? Math.min(completedSets, sets) : sets;
+    
+    if (actualSets === 0 || value === 0) return 0;
+    
     let xp = 0;
     if (isTime) {
-        xp = (sets * value * (1 + weight / 20)) / 20;
+        // Для временных упражнений: (подходы × секунды × (1 + вес/20)) / 20
+        xp = (actualSets * value * (1 + weight / 20)) / 20;
     } else {
-        xp = (sets * value * (1 + weight / 20)) / 10;
+        // Для упражнений с повторениями: (подходы × повторения × (1 + вес/20)) / 10
+        xp = (actualSets * value * (1 + weight / 20)) / 10;
     }
+    
+    // Округление до 0.1
     return isNaN(xp) ? 0 : Math.round(xp * 10) / 10;
 }
 
-function calculateWorkoutXp(exercises) {
+function calculateWorkoutXp(exercises, completedSetsMap) {
     if (!exercises || !Array.isArray(exercises) || exercises.length === 0) return 0;
     let total = 0;
-    exercises.forEach(ex => { 
-        total += calculateExerciseXP(ex); // без kg
+    exercises.forEach((ex, index) => {
+        let completedSets = 0;
+        
+        // Проверяем, есть ли данные о выполненных подходах
+        if (completedSetsMap && completedSetsMap[index] !== undefined && completedSetsMap[index] > 0) {
+            completedSets = completedSetsMap[index];
+        } else {
+            // Если данных нет — используем все подходы упражнения
+            completedSets = getSetsValue(ex);
+        }
+        
+        total += calculateExerciseXP(ex, completedSets);
     });
     return isNaN(total) ? 0 : Math.round(total * 10) / 10;
 }
@@ -3118,6 +3160,15 @@ function selectColor(color) {
     document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('color-btn-active', btn.dataset.color === color);
     });
+    
+    // ★★★ ПРОВЕРЯЕМ ЗАДАНИЕ 5: ОФОРМЛЕНИЕ ★★★
+    if (!tasks[5]) {
+        tasks[5] = true;
+        saveTasks();
+        updateTasksUI();
+        showToast('✅ Задание "Оформление" выполнено!');
+        addTaskXp();
+    }
 }
 
 function applySelectedColor(color) {
@@ -3945,23 +3996,21 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
     }));
     sessionCurrentIndex = 0;
     sessionCompleted = new Set();
+    sessionCompletedSets = {}; // ★★★ ИНИЦИАЛИЗИРУЕМ ★★★
     sessionSeconds = 0;
     sessionWorkoutTitle = title;
     sessionCategory = category || 'Без категории';
     sessionWorkoutIcon = workoutIcon || 'bodybuilding';
 
     // ★★★ ЗАГРУЖАЕМ ВРЕМЯ ОТДЫХА ★★★
-    let savedRestTime = 30; // по умолчанию
+    let savedRestTime = 30;
 
-    // Определяем, откуда берём время отдыха
     if (currentWorkoutId && currentIsCustom) {
-        // Если это личная тренировка (myCustomWorkouts)
         const workout = getWorkoutById(currentWorkoutId);
         if (workout && workout.restTime) {
             savedRestTime = workout.restTime;
         }
     } else {
-        // Если это готовая тренировка — ищем в exercisesData
         let found = false;
         for (const parent in exercisesData) {
             if (exercisesData[parent] && exercisesData[parent][currentCategory]) {
@@ -3973,7 +4022,6 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
                 }
             }
         }
-        // Если не нашли через parent, пробуем напрямую
         if (!found && exercisesData[currentCategory] && exercisesData[currentCategory][currentLevel]) {
             const levelData = exercisesData[currentCategory][currentLevel];
             if (levelData && levelData._restTime) {
@@ -4024,7 +4072,12 @@ function renderSessionExercise() {
         timerDisplay = `${mins}:${secs}`;
         
         exerciseTotalSets = parseInt(ex.sets) || 1;
-        exerciseCurrentSet = exerciseTotalSets;
+        
+        // ★★★ ВОССТАНАВЛИВАЕМ КОЛИЧЕСТВО ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+        const key = sessionCurrentIndex;
+        const completedSets = sessionCompletedSets[key] || 0;
+        exerciseCurrentSet = exerciseTotalSets - completedSets;
+        
         exerciseTotalTime = repsValue;
         exerciseTimeLeft = repsValue;
         isExerciseTimerRunning = false;
@@ -4034,14 +4087,12 @@ function renderSessionExercise() {
             exerciseTimerInterval = null;
         }
         
-        // Показываем таймер
         const timerEl = document.getElementById('sessionExerciseTimer');
         if (timerEl) {
             timerEl.style.display = 'block';
             timerEl.textContent = timerDisplay;
         }
         
-        // ★★★ ПОКАЗЫВАЕМ СЧЁТЧИК ПОДХОДОВ ★★★
         const setCounter = document.getElementById('sessionSetCounter');
         const setCurrent = document.getElementById('sessionSetCurrent');
         const setTotal = document.getElementById('sessionSetTotal');
@@ -4049,28 +4100,26 @@ function renderSessionExercise() {
             setCounter.style.display = 'block';
         }
         if (setCurrent) {
-            setCurrent.textContent = exerciseTotalSets;
+            setCurrent.textContent = exerciseCurrentSet;
         }
         if (setTotal) {
             setTotal.textContent = exerciseTotalSets;
         }
         
-        // ★★★ ПОКАЗЫВАЕМ ОБЁРТКУ ★★★
-        const wrapper = document.getElementById('sessionExerciseTimerWrapper');
-        if (wrapper) {
-            wrapper.style.display = 'flex';
-        }
-        
         document.getElementById('sessionMainBtn').textContent = 'СТАРТ';
         
     } else {
-        // Обычное упражнение (повторения)
         details = `${ex.sets} × ${repsValue}`;
         
-        // ★★★ СКРЫВАЕМ ВЕСЬ БЛОК ★★★
-        const wrapper = document.getElementById('sessionExerciseTimerWrapper');
-        if (wrapper) {
-            wrapper.style.display = 'none';
+        const timerEl = document.getElementById('sessionExerciseTimer');
+        if (timerEl) {
+            timerEl.style.display = 'none';
+        }
+        
+        // ★★★ СКРЫВАЕМ СЧЁТЧИК ПОДХОДОВ ★★★
+        const setCounter = document.getElementById('sessionSetCounter');
+        if (setCounter) {
+            setCounter.style.display = 'none';
         }
         
         const total = sessionExercises.length;
@@ -4200,71 +4249,141 @@ function goToNextExercise() {
         return;
     }
     
+    // ★★★ ПРОВЕРЯЕМ ВЫПОЛНЕННЫЕ ПОДХОДЫ ★★★
+    const key = sessionCurrentIndex;
+    const completedSets = sessionCompletedSets[key] || 0;
+    const totalSets = parseInt(sessionExercises[sessionCurrentIndex]?.sets) || 0;
     const hasNext = sessionCurrentIndex < sessionExercises.length - 1;
-    if (hasNext) {
-        if (!sessionCompleted.has(sessionCurrentIndex)) {
+    
+    // ★★★ ЕСЛИ ЕСТЬ ВЫПОЛНЕННЫЕ ПОДХОДЫ ★★★
+    if (completedSets > 0) {
+        if (completedSets >= totalSets) {
+            // Все подходы выполнены - засчитываем
+            sessionCompleted.add(sessionCurrentIndex);
+            sessionCompletedSets[key] = totalSets; // Сохраняем все подходы
+            showToast('✅ Упражнение засчитано!');
+        } else {
+            // Частично выполнено - показываем диалог
             showConfirmModal(
-                'Упражнение не выполнено',
-                'Вы пропускаете упражнение без отметки, оно не засчитается в статистику, продолжить?',
+                'Упражнение не завершено',
+                `Вы выполнили ${completedSets} из ${totalSets} подходов. Засчитать как выполненное?`,
                 function() {
-                    sessionCurrentIndex++;
-                    renderSessionExercise();
-                    renderSessionProgress();
-                    updateSessionButtons();
-                    if (currentSessionId && sessionData) {
-                        updateCoopProgress(sessionCompleted.size, false);
+                    sessionCompleted.add(sessionCurrentIndex);
+                    sessionCompletedSets[key] = completedSets; // Сохраняем фактически выполненные
+                    showToast('✅ Упражнение засчитано!');
+                    // Продолжаем после засчитывания
+                    if (hasNext) {
+                        sessionCurrentIndex++;
+                        renderSessionExercise();
+                        renderSessionProgress();
+                        updateSessionButtons();
+                        if (currentSessionId && sessionData) {
+                            updateCoopProgress(sessionCompleted.size, false);
+                        }
+                    } else {
+                        finishTrainingSession();
                     }
                 },
-                'ДА'
+                'Засчитать'
             );
-        } else {
-            sessionCurrentIndex++;
-            renderSessionExercise();
-            renderSessionProgress();
-            updateSessionButtons();
-            if (currentSessionId && sessionData) {
-                updateCoopProgress(sessionCompleted.size, false);
-            }
+            return;
+        }
+    }
+    
+    if (hasNext) {
+        sessionCurrentIndex++;
+        renderSessionExercise();
+        renderSessionProgress();
+        updateSessionButtons();
+        if (currentSessionId && sessionData) {
+            updateCoopProgress(sessionCompleted.size, false);
         }
     } else {
-        if (!sessionCompleted.has(sessionCurrentIndex)) {
-            showConfirmModal(
-                'Упражнение не выполнено',
-                'Вы пропускаете последнее упражнение. Оно не засчитается в статистику. Завершить тренировку?',
-                function() {
-                    finishTrainingSession();
-                },
-                'Завершить'
-            );
-        } else {
-            finishTrainingSession();
-        }
+        finishTrainingSession();
     }
 }
 
 function markCurrentComplete() {
-    // Отмечаем текущее упражнение как выполненное
+    // ★★★ ПРОВЕРЯЕМ ВЫПОЛНЕННЫЕ ПОДХОДЫ ★★★
+    const key = sessionCurrentIndex;
+    const completedSets = sessionCompletedSets[key] || 0;
+    const totalSets = parseInt(sessionExercises[sessionCurrentIndex]?.sets) || 0;
+    
+    // ★★★ ЕСЛИ ЕСТЬ ВЫПОЛНЕННЫЕ ПОДХОДЫ, НО НЕ ВСЕ ★★★
+    if (completedSets > 0 && completedSets < totalSets) {
+        showConfirmModal(
+            'Упражнение не завершено',
+            `Вы выполнили ${completedSets} из ${totalSets} подходов. Засчитать как выполненное?`,
+            function() {
+                sessionCompleted.add(sessionCurrentIndex);
+                // ★★★ СОХРАНЯЕМ ФАКТИЧЕСКИ ВЫПОЛНЕННЫЕ ПОДХОДЫ ★★★
+                sessionCompletedSets[key] = completedSets;
+                const isLast = sessionCurrentIndex === sessionExercises.length - 1;
+                if (isLast) {
+                    finishTrainingSession();
+                } else {
+                    startRest();
+                }
+            },
+            'Засчитать'
+        );
+        return;
+    }
+    
+    // ★★★ ОТМЕЧАЕМ УПРАЖНЕНИЕ ★★★
     sessionCompleted.add(sessionCurrentIndex);
-
+    // Если подходы не были выполнены, используем все
+    if (sessionCompletedSets[key] === undefined || sessionCompletedSets[key] === 0) {
+        sessionCompletedSets[key] = totalSets;
+    }
+    
     const isLast = sessionCurrentIndex === sessionExercises.length - 1;
-
     if (isLast) {
-        // ★★★ ВСЕГДА ВЫЗЫВАЕМ finishTrainingSession ★★★
         finishTrainingSession();
     } else {
-        goToNextExercise();
+        startRest();
     }
 }
 
 function finishTrainingSession() {
     stopSessionTimer();
+    
+    // ★★★ ПРОВЕРЯЕМ, ЕСТЬ ЛИ НЕЗАВЕРШЁННЫЕ ПОДХОДЫ ★★★
+    const key = sessionCurrentIndex;
+    const completedSets = sessionCompletedSets[key] || 0;
+    const totalSets = parseInt(sessionExercises[sessionCurrentIndex]?.sets) || 0;
+    
+    // ★★★ ЕСЛИ ЕСТЬ ВЫПОЛНЕННЫЕ ПОДХОДЫ, НО УПРАЖНЕНИЕ НЕ ЗАСЧИТАНО ★★★
+    if (completedSets > 0 && !sessionCompleted.has(sessionCurrentIndex)) {
+        sessionCompleted.add(sessionCurrentIndex);
+        // ★★★ СОХРАНЯЕМ ФАКТИЧЕСКИ ВЫПОЛНЕННЫЕ ПОДХОДЫ ★★★
+        if (sessionCompletedSets[key] === undefined || sessionCompletedSets[key] === 0) {
+            sessionCompletedSets[key] = completedSets;
+        }
+        showToast('✅ Упражнение засчитано!');
+    }
+    
+    // ★★★ ДЛЯ ВСЕХ ВЫПОЛНЕННЫХ УПРАЖНЕНИЙ ПРОВЕРЯЕМ ПОДХОДЫ ★★★
+    sessionExercises.forEach((ex, index) => {
+        if (sessionCompleted.has(index)) {
+            const totalSetsEx = getSetsValue(ex);
+            // ★★★ ЕСЛИ УЖЕ ЕСТЬ ЗНАЧЕНИЕ — НЕ ПЕРЕЗАПИСЫВАЕМ ★★★
+            if (sessionCompletedSets[index] === undefined || sessionCompletedSets[index] === 0) {
+                sessionCompletedSets[index] = totalSetsEx;
+            }
+        }
+    });
+    
     const total = sessionExercises.length;
     const completed = sessionCompleted.size;
-    const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
-    const xpEarned = calculateWorkoutXp(completedExercises);
+    
+    // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+    const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
+    
     showFinishPage(total, completed, sessionSeconds, xpEarned);
     
-    // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+    sessionCompletedSets = {};
+    
     if (completed > 0) {
         const workoutData = {
             exercises: sessionExercises.map((ex, index) => ({
@@ -4342,7 +4461,6 @@ function handleTimedExerciseClick() {
     if (!isExerciseTimerRunning) {
         // ЗАПУСКАЕМ ТАЙМЕР
         if (exerciseTimeLeft <= 0) {
-            // Если время закончилось - сбрасываем на полное
             exerciseTimeLeft = exerciseTotalTime;
         }
         isExerciseTimerRunning = true;
@@ -4378,7 +4496,11 @@ function startExerciseTimer() {
             // Уменьшаем количество подходов
             exerciseCurrentSet--;
             
-            // ★★★ ОБНОВЛЯЕМ СЧЁТЧИК ★★★
+            // ★★★ СОХРАНЯЕМ КОЛИЧЕСТВО ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+            const key = sessionCurrentIndex;
+            const completedSets = sessionCompletedSets[key] || 0;
+            sessionCompletedSets[key] = completedSets + 1; // УВЕЛИЧИВАЕМ, НЕ ОБНУЛЯЕМ
+            
             const setCurrent = document.getElementById('sessionSetCurrent');
             if (setCurrent) {
                 setCurrent.textContent = exerciseCurrentSet;
@@ -4392,13 +4514,13 @@ function startExerciseTimer() {
             } else {
                 // ★★★ ВСЕ ПОДХОДЫ ВЫПОЛНЕНЫ ★★★
                 sessionCompleted.add(sessionCurrentIndex);
+                // НЕ ОБНУЛЯЕМ sessionCompletedSets[key] — ОСТАВЛЯЕМ totalSets
                 
                 const timerEl = document.getElementById('sessionExerciseTimer');
                 if (timerEl) {
                     timerEl.style.display = 'none';
                 }
                 
-                // ★★★ СКРЫВАЕМ СЧЁТЧИК ПОДХОДОВ ★★★
                 const setCounter = document.getElementById('sessionSetCounter');
                 if (setCounter) {
                     setCounter.style.display = 'none';
@@ -4469,7 +4591,7 @@ document.getElementById('sessionCloseBtn')?.addEventListener('click', function()
     const secs = String(sessionSeconds % 60).padStart(2, '0');
     
     const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
-    const xpEarned = calculateWorkoutXp(completedExercises);
+    const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
     
     // ★★★ ФОРМИРУЕМ XP ДЛЯ ОТОБРАЖЕНИЯ ★★★
     const xpDisplay = (isNaN(xpEarned) ? 0 : xpEarned).toFixed(1);
@@ -8975,7 +9097,7 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
     const secs = String(seconds % 60).padStart(2, '0');
     document.getElementById('finishMinutes').textContent = `${mins}:${secs}`;
-document.getElementById('finishXp').textContent = '+' + (isNaN(xpEarned) ? 0 : xpEarned).toFixed(1) + ' XP';    
+document.getElementById('finishXp').textContent = '+' + xpEarned.toFixed(1) + ' XP';   
     document.querySelectorAll('#finishStars i').forEach(star => star.classList.remove('active'));
     
     window.navigateTo('finish');
@@ -11658,11 +11780,6 @@ function changeWeeklyLoadMonth(delta) {
     });
 }
 
-// ★★★ ПРОВЕРКА НАЛИЧИЯ ВЕСА ★★★
-function hasWeight(exercise) {
-    return exercise && exercise.weight !== undefined && exercise.weight !== null;
-}
-
 // ★★★ СОХРАНЕНИЕ ВЕСА В ИСХОДНЫЕ ДАННЫЕ ★★★
 function saveExerciseWeightToSource(index, newWeight) {
     const workoutTitle = sessionWorkoutTitle || '';
@@ -11733,7 +11850,6 @@ let universalModalState = {
     callback: null
 };
 
-// Открыть универсальную модалку
 function openUniversalExerciseModal(mode = 'create', source = 'edit', index = null, exercises = null, callback = null) {
     const modal = document.getElementById('exerciseUniversalModal');
     if (!modal) return;
@@ -11748,8 +11864,13 @@ function openUniversalExerciseModal(mode = 'create', source = 'edit', index = nu
     // ★★★ ПОКАЗЫВАЕМ/СКРЫВАЕМ БЛОК ВЫБОРА ЗНАЧКА ★★★
     const iconPickerBlock = document.getElementById('universalIconPickerBlock');
     if (iconPickerBlock) {
-        // Показываем только если НЕ из сессии
         iconPickerBlock.style.display = (source === 'session') ? 'none' : 'block';
+    }
+    
+    // ★★★ ВСЕГДА ПОКАЗЫВАЕМ ВЕС ★★★
+    const weightGroup = document.getElementById('universalWeightGroup');
+    if (weightGroup) {
+        weightGroup.style.display = 'block';
     }
     
     // Устанавливаем заголовок
@@ -11837,8 +11958,8 @@ function toggleExerciseTypeUniversal(type) {
     document.querySelectorAll('#exerciseUniversalModal .toggle-btn').forEach(btn => {
         btn.classList.toggle('toggle-btn-active', btn.dataset.type === type);
         if (btn.dataset.type === type) {
-            btn.style.background = 'var(--accent)';
-            btn.style.color = 'var(--white)';
+            btn.style.background = 'var(--white)';
+            btn.style.color = 'var(--slate)';
         } else {
             btn.style.background = 'transparent';
             btn.style.color = 'var(--slate)';
@@ -11857,8 +11978,8 @@ function setExerciseTypeUniversal(type) {
         const isActive = btn.dataset.type === type;
         btn.classList.toggle('toggle-btn-active', isActive);
         if (isActive) {
-            btn.style.background = 'var(--accent)';
-            btn.style.color = 'var(--white)';
+            btn.style.background = 'var(--white)';
+            btn.style.color = 'var(--slate)';
         } else {
             btn.style.background = 'transparent';
             btn.style.color = 'var(--slate)';
@@ -11940,10 +12061,15 @@ document.getElementById('exerciseUniversalSaveBtn')?.addEventListener('click', f
         exercise.icon = icon;
     }
     
-    // Сохраняем в зависимости от режима
+    // ★★★ СОХРАНЯЕМ В ЗАВИСИМОСТИ ОТ РЕЖИМА ★★★
     if (universalModalState.mode === 'edit' && universalModalState.index !== null && universalModalState.exercises) {
         // Редактирование
         universalModalState.exercises[universalModalState.index] = exercise;
+        
+        // ★★★ ЕСЛИ ИЗ СЕССИИ — СОХРАНЯЕМ В ИСХОДНЫЙ ИСТОЧНИК ★★★
+        if (universalModalState.source === 'session') {
+            saveExerciseToSource(universalModalState.index, exercise);
+        }
         
         // Если есть колбэк — вызываем
         if (typeof universalModalState.callback === 'function') {
@@ -12003,11 +12129,115 @@ function openSessionEditExerciseModal(index) {
         renderSessionExercise();
         renderSessionProgress();
         
-        // Если есть совместная сессия — обновляем прогресс
+        // ★★★ СОХРАНЯЕМ ИЗМЕНЕНИЯ В ИСХОДНЫЕ ДАННЫЕ ★★★
         if (currentSessionId && sessionData) {
+            // Обновляем в sessionData.exercises
+            if (sessionData.exercises && sessionData.exercises[index]) {
+                sessionData.exercises[index] = { ...exercise };
+            }
+            // Обновляем в coopExercises
+            if (coopExercises && coopExercises[index]) {
+                coopExercises[index] = { ...exercise };
+            }
+            // Обновляем в sessionExercises
+            if (sessionExercises && sessionExercises[index]) {
+                sessionExercises[index] = { ...exercise };
+            }
+            
+            // ★★★ СОХРАНЯЕМ В ИСХОДНЫЙ ИСТОЧНИК ★★★
+            saveExerciseToSource(index, exercise);
+            
+            // Обновляем прогресс
             updateCoopProgress(sessionCompleted.size, false);
+        } else {
+            // ★★★ ДЛЯ ОБЫЧНОЙ СЕССИИ (НЕ СОВМЕСТНОЙ) ★★★
+            saveExerciseToSource(index, exercise);
         }
         
         showToast('✅ Упражнение обновлено');
     });
+}
+
+// ★★★ НОВАЯ ФУНКЦИЯ: СОХРАНЕНИЕ УПРАЖНЕНИЯ В ИСХОДНЫЙ ИСТОЧНИК ★★★
+function saveExerciseToSource(index, exercise) {
+    if (index === undefined || index === null) return;
+    
+    const workoutTitle = sessionWorkoutTitle || '';
+    const cleanTitle = workoutTitle.replace(' (совместно)', '').trim();
+    
+    let saved = false;
+    
+    // ★★★ 1. ПРОВЕРЯЕМ ЛИЧНЫЕ ТРЕНИРОВКИ (myCustomWorkouts) ★★★
+    const allWorkouts = getMyWorkouts();
+    for (const workout of allWorkouts) {
+        if (workout.title === cleanTitle) {
+            if (workout.exercises && workout.exercises[index]) {
+                workout.exercises[index] = { ...exercise };
+                saveMyWorkouts(allWorkouts);
+                saved = true;
+                console.log('✅ Сохранено в личные тренировки:', workout.title);
+                break;
+            }
+        }
+    }
+    
+    // ★★★ 2. ЕСЛИ НЕ НАШЛИ В ЛИЧНЫХ — ИЩЕМ В ГОТОВЫХ (exercisesData) ★★★
+    if (!saved) {
+        for (const parent in exercisesData) {
+            if (typeof exercisesData[parent] === 'object') {
+                for (const category in exercisesData[parent]) {
+                    if (typeof exercisesData[parent][category] === 'object') {
+                        for (const level in exercisesData[parent][category]) {
+                            if (level === '_premium' || level === '_restTime') continue;
+                            
+                            const levelData = exercisesData[parent][category][level];
+                            let exercisesArray = null;
+                            let titleFromData = '';
+                            
+                            if (Array.isArray(levelData)) {
+                                exercisesArray = levelData;
+                                titleFromData = category + ' ' + level;
+                            } else if (levelData && typeof levelData === 'object' && levelData._exercises) {
+                                exercisesArray = levelData._exercises;
+                                titleFromData = levelData._title || category + ' ' + level;
+                            }
+                            
+                            if (exercisesArray && exercisesArray[index]) {
+                                // Проверяем совпадение по названию тренировки
+                                const isMatch = 
+                                    titleFromData === cleanTitle || 
+                                    category === cleanTitle ||
+                                    cleanTitle.includes(category) ||
+                                    category.includes(cleanTitle);
+                                
+                                if (isMatch) {
+                                    exercisesArray[index] = { ...exercise };
+                                    saveExercisesData();
+                                    saved = true;
+                                    console.log('✅ Сохранено в готовые тренировки:', titleFromData);
+                                    break;
+                                }
+                            }
+                        }
+                        if (saved) break;
+                    }
+                    if (saved) break;
+                }
+                if (saved) break;
+            }
+        }
+    }
+    
+    // ★★★ 3. ЕСЛИ НЕ НАШЛИ — СОХРАНЯЕМ В СЕССИЮ (КАК FALLBACK) ★★★
+    if (!saved) {
+        // Сохраняем в sessionExercises (уже есть)
+        // И в sessionData.exercises
+        if (sessionData && sessionData.exercises && sessionData.exercises[index]) {
+            sessionData.exercises[index] = { ...exercise };
+        }
+        if (coopExercises && coopExercises[index]) {
+            coopExercises[index] = { ...exercise };
+        }
+        console.log('⚠️ Не найдено исходное место, сохранено только в сессии');
+    }
 }

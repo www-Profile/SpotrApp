@@ -304,12 +304,8 @@
     </div>
     <!-- ★★★ КНОПКИ УПРАВЛЕНИЯ ОТДЫХОМ ★★★ -->
     <div id="sessionRestControls" style="display: none; margin-top: 0.5rem; justify-content: center; gap: 0.8rem;">
-        <button class="session-rest-control-btn" onclick="adjustRestTime(-15)">
-            <i class="fa-solid fa-minus"></i> 15с
-        </button>
-        <button class="session-rest-control-btn" onclick="adjustRestTime(15)">
-            +15с <i class="fa-solid fa-plus"></i>
-        </button>
+        <button class="session-rest-control-btn" onclick="adjustRestTime(-15)">15с</button>
+        <button class="session-rest-control-btn" onclick="adjustRestTime(15)">+15с</button>
     </div>
 </div>
             <div class="session-controls">
@@ -1697,10 +1693,10 @@
         <div class="form-group" style="text-align:left; margin-bottom: 0.8rem;">
             <label class="form-label" style="display:block; margin-bottom: 0.3rem;">Тип</label>
             <div style="display:flex; gap:0.5rem; background:var(--light); padding:0.3rem; border-radius:8px;">
-                <button class="toggle-btn toggle-btn-active" data-type="reps" onclick="toggleExerciseTypeUniversal('reps')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:var(--accent); color:var(--white); transition:all 0.2s ease;">
+                <button class="toggle-btn toggle-btn-active" data-type="reps" onclick="toggleExerciseTypeUniversal('reps')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:var(--white); color:var(--slate);">
                     Повторения
                 </button>
-                <button class="toggle-btn" data-type="seconds" onclick="toggleExerciseTypeUniversal('seconds')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:transparent; color:var(--slate); transition:all 0.2s ease;">
+                <button class="toggle-btn" data-type="seconds" onclick="toggleExerciseTypeUniversal('seconds')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:transparent; color:var(--slate);">
                     Секунды
                 </button>
             </div>

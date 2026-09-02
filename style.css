@@ -2734,7 +2734,7 @@ body.theme-dark-mode .btn-submit-arrow {
     grid-template-columns: 1.4fr 0.8fr 0.8fr;
     background: var(--accent);
     color: var(--white);
-    border: 1px solid var(--light-grey);
+    border: 1px solid var(--accent);
 }
 
 .premium-table-header .premium-table-cell {
@@ -4461,7 +4461,7 @@ body.theme-dark-mode .weight-text {
     color: var(--accent);
     font-variant-numeric: tabular-nums;
     align-self: flex-end;
-    padding-bottom: 0.6rem;
+    padding-bottom: 0.65rem;
 }
 
 /* Тёмная тема */
