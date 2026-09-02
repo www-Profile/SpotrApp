@@ -4812,10 +4812,10 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
     const activeBtn = document.querySelector('.rest-time-btn.rest-time-active');
     const restTime = activeBtn ? parseInt(activeBtn.dataset.seconds) : 30;
     
-    // ★★★ СОХРАНЯЕМ ПОРЯДОК ★★★
-    const workoutIdForOrder = (isCustom || id === 'new') ? (id || 'temp_' + Date.now()) : (category + '_' + level);
-    const order = exercises.map((_, index) => index);
-    saveExercisesOrder(workoutIdForOrder, order);
+    // ★★★ ИСПОЛЬЗУЕМ ТЕКУЩИЙ ПОРЯДОК ИЗ editExercises ★★★
+    // exercises - это параметр, но он может быть старым
+    // Используем глобальный editExercises, в котором уже правильный порядок
+    const exercisesToSave = editExercises;
     
     if (isCustom || id === 'new') {
         const allWorkouts = getMyWorkouts();
@@ -4833,7 +4833,7 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
                 _id: Date.now().toString(),
                 title: title,
                 icon: icon,
-                exercises: exercises,
+                exercises: exercisesToSave,
                 restTime: restTime
             };
             const workouts = getMyWorkouts();
@@ -4866,7 +4866,7 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
                     ...allWorkouts[index],
                     title: title,
                     icon: icon,
-                    exercises: exercises,
+                    exercises: exercisesToSave,
                     restTime: restTime
                 };
                 saveMyWorkouts(allWorkouts);
@@ -4892,12 +4892,12 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
                     if (Array.isArray(exercisesData[parent][category][targetLevel])) {
                         exercisesData[parent][category][targetLevel] = {
                             _title: title,
-                            _exercises: JSON.parse(JSON.stringify(exercises)),
+                            _exercises: JSON.parse(JSON.stringify(exercisesToSave)),
                             _restTime: restTime
                         };
                     } else {
                         exercisesData[parent][category][targetLevel]._title = title;
-                        exercisesData[parent][category][targetLevel]._exercises = JSON.parse(JSON.stringify(exercises));
+                        exercisesData[parent][category][targetLevel]._exercises = JSON.parse(JSON.stringify(exercisesToSave));
                         exercisesData[parent][category][targetLevel]._restTime = restTime;
                     }
                     saved = true;
@@ -4910,12 +4910,12 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
                 if (Array.isArray(exercisesData[category][targetLevel])) {
                     exercisesData[category][targetLevel] = {
                         _title: title,
-                        _exercises: JSON.parse(JSON.stringify(exercises)),
+                        _exercises: JSON.parse(JSON.stringify(exercisesToSave)),
                         _restTime: restTime
                     };
                 } else {
                     exercisesData[category][targetLevel]._title = title;
-                    exercisesData[category][targetLevel]._exercises = JSON.parse(JSON.stringify(exercises));
+                    exercisesData[category][targetLevel]._exercises = JSON.parse(JSON.stringify(exercisesToSave));
                     exercisesData[category][targetLevel]._restTime = restTime;
                 }
                 saved = true;
@@ -5202,49 +5202,32 @@ function initEditSortable() {
         scrollSensitivity: 50,
         scrollSpeed: 15,
         onEnd: function(evt) {
-            const oldIndex = evt.oldIndex;
-            const newIndex = evt.newIndex;
+            // ★★★ ПОЛУЧАЕМ НОВЫЙ ПОРЯДОК ИЗ SORTABLE ★★★
+            const newOrder = this.toArray();
             
-            if (oldIndex === undefined || newIndex === undefined || 
-                oldIndex < 0 || newIndex < 0 ||
-                oldIndex >= editExercises.length || newIndex >= editExercises.length) {
-                console.warn('⚠️ Некорректные индексы при перетаскивании:', oldIndex, newIndex);
-                renderEditExercises();
-                return;
-            }
+            // ★★★ ПЕРЕСТРАИВАЕМ МАССИВ СОГЛАСНО НОВОМУ ПОРЯДКУ ★★★
+            const oldExercises = [...editExercises];
+            editExercises = newOrder.map(id => {
+                const index = parseInt(id);
+                return oldExercises[index];
+            }).filter(ex => ex !== undefined);
             
-            if (oldIndex !== newIndex) {
-                // ★★★ ОБНОВЛЯЕМ МАССИВ ★★★
-                const [removed] = editExercises.splice(oldIndex, 1);
-                if (removed) {
-                    editExercises.splice(newIndex, 0, removed);
-                    
-                    // ★★★ ОБНОВЛЯЕМ ТОЛЬКО data-index И КНОПКИ ★★★
-                    const items = container.querySelectorAll('.edit-exercise-item');
-                    const newOrder = [];
-                    items.forEach((item, index) => {
-                        item.dataset.index = index;
-                        newOrder.push(index);
-                        const editBtn = item.querySelector('.edit-btn');
-                        if (editBtn) {
-                            editBtn.setAttribute('onclick', `openEditExerciseModal(${index})`);
-                        }
-                        const deleteBtn = item.querySelector('.delete-btn');
-                        if (deleteBtn) {
-                            deleteBtn.setAttribute('onclick', `removeEditExercise(${index})`);
-                        }
-                    });
-                    
-                    // ★★★ СОХРАНЯЕМ ПОРЯДОК В localStorage ★★★
-                    const workoutId = editWorkoutId || 'temp_' + Date.now();
-                    saveExercisesOrder(workoutId, newOrder);
-                    
-                    // ★★★ СОХРАНЯЕМ САМИ УПРАЖНЕНИЯ ★★★
-                    saveEditExercisesState();
-                } else {
-                    renderEditExercises();
+            // ★★★ ОБНОВЛЯЕМ data-index У ВСЕХ ЭЛЕМЕНТОВ ★★★
+            const items = container.querySelectorAll('.edit-exercise-item');
+            items.forEach((item, index) => {
+                item.dataset.index = index;
+                const editBtn = item.querySelector('.edit-btn');
+                if (editBtn) {
+                    editBtn.setAttribute('onclick', `openEditExerciseModal(${index})`);
                 }
-            }
+                const deleteBtn = item.querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('onclick', `removeEditExercise(${index})`);
+                }
+            });
+            
+            saveEditExercisesState();
+            showToast('✅ Упражнение перемещено');
         }
     });
 }
@@ -5265,7 +5248,6 @@ function renderEditExercisesSilent() {
     const container = document.getElementById('editExercisesContainer');
     if (!container) return;
     
-    // ★★★ ФИЛЬТРУЕМ ПУСТЫЕ ЭЛЕМЕНТЫ ★★★
     const validExercises = editExercises.filter(ex => ex !== null && ex !== undefined);
     if (validExercises.length !== editExercises.length) {
         editExercises = validExercises;
@@ -5307,7 +5289,7 @@ function renderEditExercisesSilent() {
         let detailsText = `${formatSets(ex.sets, true)} × ${formatReps(ex.reps, true)}`;
         if (hasWeight(ex)) detailsText += ` · ${ex.weight} кг`;
         return `
-            <div class="edit-exercise-item" data-index="${index}" style="cursor: grab; border: 2px dashed transparent;">
+            <div class="edit-exercise-item" data-index="${index}" data-id="${index}" style="cursor: grab; border: 2px dashed transparent;">
                 <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
                 <div class="item-icon">
                     <img src="images/${icon}.png" class="edit-exercise-icon">
@@ -5346,15 +5328,14 @@ function loadExercisesOrder(workoutId) {
 // Применить сохранённый порядок к массиву упражнений
 function applySavedOrder(exercises, workoutId) {
     const savedOrder = loadExercisesOrder(workoutId);
-    if (!savedOrder || savedOrder.length !== exercises.length) return exercises;
+    if (!savedOrder || savedOrder.length === 0) return exercises;
+    if (savedOrder.length !== exercises.length) return exercises;
     
-    // Создаём карту для быстрого доступа
     const exerciseMap = {};
     exercises.forEach((ex, index) => {
         exerciseMap[index] = ex;
     });
     
-    // Восстанавливаем порядок
     const reordered = [];
     savedOrder.forEach(oldIndex => {
         if (exerciseMap[oldIndex] !== undefined) {
@@ -5362,7 +5343,6 @@ function applySavedOrder(exercises, workoutId) {
         }
     });
     
-    // Если какие-то элементы потерялись - добавляем их в конец
     if (reordered.length !== exercises.length) {
         exercises.forEach((ex, index) => {
             if (!savedOrder.includes(index)) {
