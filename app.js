@@ -8852,11 +8852,6 @@ enableEdit() {
     this.isEditing = true;
     this.backupLayout = this.getCurrentLayout();
 
-    // ★★★ БЛОКИРУЕМ СКРОЛЛ СТРАНИЦЫ ★★★
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-
     this.containers.forEach(container => {
         const element = document.getElementById(container.id);
         if (element) {
@@ -9028,21 +9023,13 @@ initSortables() {
             forceFallback: true,
             filter: filter,
             preventOnFilter: false,
-            delay: 200,
+            delay: 300,
             delayOnTouchOnly: true,
             touchStartThreshold: 10,
             scroll: true,
             scrollSensitivity: 50,
             scrollSpeed: 15,
-            bubbleScroll: true,
-            onChoose: function(evt) {
-                document.body.style.overflow = 'hidden';
-                document.body.style.touchAction = 'none';
-            },
-            onUnchoose: function(evt) {
-                document.body.style.overflow = '';
-                document.body.style.touchAction = '';
-            }
+            bubbleScroll: true
         });
         this.sortableInstances.push(s);
     });
