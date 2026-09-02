@@ -8852,12 +8852,15 @@ enableEdit() {
     this.isEditing = true;
     this.backupLayout = this.getCurrentLayout();
 
+    // ★★★ БЛОКИРУЕМ СКРОЛЛ СТРАНИЦЫ ★★★
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+
     this.containers.forEach(container => {
         const element = document.getElementById(container.id);
         if (element) {
             element.classList.add('editing');
-            // ★★★ ЗАПРЕЩАЕМ СКРОЛЛ НА ТЕЛЕФОНАХ ★★★
-            element.addEventListener('touchmove', this._preventScroll, { passive: false });
         }
     });
 
@@ -8882,12 +8885,15 @@ _preventScroll(e) {
 disableEdit(save = false) {
     this.isEditing = false;
     
+    // ★★★ ВОССТАНАВЛИВАЕМ СКРОЛЛ ★★★
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+
     this.containers.forEach(container => {
         const element = document.getElementById(container.id);
         if (element) {
             element.classList.remove('editing');
-            // ★★★ УБИРАЕМ ЗАПРЕТ СКРОЛЛА ★★★
-            element.removeEventListener('touchmove', this._preventScroll);
         }
     });
 
@@ -9002,7 +9008,6 @@ initSortables() {
         let handle = container.handle || '.section-drag';
         let filter = container.filter || null;
         
-        // Для списков тренировок исключаем кнопки удаления
         if (['catalogGridStrength', 'catalogGridFitness', 'catalogGridPremium', 'myWorkoutsList'].includes(container.id)) {
             filter = '.workout-delete';
             handle = null;
@@ -9024,16 +9029,18 @@ initSortables() {
             filter: filter,
             preventOnFilter: false,
             // ★★★ НАСТРОЙКИ ДЛЯ ТЕЛЕФОНОВ ★★★
-            delay: 300,                    // Задержка перед началом перетаскивания
-            delayOnTouchOnly: true,       // Задержка только на тач-устройствах
-            touchStartThreshold: 10,      // Минимальное смещение для начала перетаскивания
-            scroll: true,                 // Разрешаем скролл во время перетаскивания
-            scrollSensitivity: 30,        // Чувствительность скролла
-            scrollSpeed: 10,              // Скорость скролла
-            bubbleScroll: true,           // Позволяем скроллить родительские элементы
-            onMove: function(evt) {
-                // Предотвращаем скролл страницы во время перетаскивания
-                evt.originalEvent.preventDefault();
+            delay: 200,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+            scroll: true,
+            scrollSensitivity: 30,
+            scrollSpeed: 10,
+            bubbleScroll: true,
+            onChoose: function(evt) {
+                document.body.style.overflow = 'hidden';
+            },
+            onUnchoose: function(evt) {
+                document.body.style.overflow = '';
             }
         });
         this.sortableInstances.push(s);

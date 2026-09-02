@@ -4502,35 +4502,29 @@ body.theme-dark-mode #sessionSetCounter {
     touch-action: none !important;
 }
 
-/* Для элементов перетаскивания */
 .section-drag,
 .edit-drag-handle {
     touch-action: none !important;
     cursor: grab;
+    padding: 8px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
-/* ★★★ УЛУЧШЕНИЕ ДЛЯ ТЕЛЕФОНОВ ★★★ */
+/* Увеличенная зона для захвата на телефонах */
 @media (max-width: 768px) {
-    .sortable-chosen {
-        opacity: 0.8 !important;
-        transform: scale(1.02) !important;
-        z-index: 9999 !important;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+    .section-drag {
+        padding: 12px !important;
+        min-height: 48px !important;
+        min-width: 48px !important;
     }
     
-    .sortable-ghost {
-        opacity: 0.3 !important;
-        border: 2px dashed var(--accent) !important;
+    .edit-drag-handle {
+        padding: 8px 12px !important;
+        min-height: 44px !important;
     }
-    
-    /* Подсветка места вставки */
-    .sortable-ghost + .item-card {
-        border-top: 3px solid var(--accent) !important;
-    }
-    
-    .editing .section-drag {
-        display: flex !important;
-        touch-action: none !important;
-        padding: 8px;
-    }
+}
 }
