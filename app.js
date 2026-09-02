@@ -5213,22 +5213,22 @@ function renderEditExercises() {
         if (hasWeight(ex)) {
             detailsText += ` · ${ex.weight} кг`;
         }
-        return `
-            <div class="edit-exercise-item" data-index="${index}" draggable="true">
-                <div class="edit-drag-handle"><span>☰</span></div>
-                <div class="item-icon">
-                    <img src="images/${icon}.png" class="edit-exercise-icon">
-                </div>
-                <div class="edit-exercise-info">
-                    <h4 class="edit-exercise-name">${ex.name}</h4>
-                    <p class="edit-exercise-details">${detailsText}</p>
-                </div>
-                <div class="edit-exercise-actions">
-                    <button class="edit-btn" onclick="openEditExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
-                    <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
-                </div>
-            </div>
-        `;
+return `
+    <div class="edit-exercise-item" data-index="${index}" draggable="true">
+        <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
+        <div class="item-icon">
+            <img src="images/${icon}.png" class="edit-exercise-icon">
+        </div>
+        <div class="edit-exercise-info">
+            <h4 class="edit-exercise-name">${ex.name}</h4>
+            <p class="edit-exercise-details">${detailsText}</p>
+        </div>
+        <div class="edit-exercise-actions">
+            <button class="edit-btn" onclick="openEditExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+    </div>
+`;
     }).join('');
     container.innerHTML = headerHtml + exercisesHtml;
     setupDragDrop();

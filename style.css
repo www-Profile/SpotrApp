@@ -4524,20 +4524,6 @@ body.theme-dark-mode #sessionSetCounter {
     cursor: grab;
 }
 
-/* Увеличенная зона для захвата на телефонах */
-@media (max-width: 768px) {
-    .section-drag {
-        padding: 12px !important;
-        min-height: 48px !important;
-        min-width: 48px !important;
-    }
-    
-    .edit-drag-handle {
-        padding: 8px 12px !important;
-        min-height: 44px !important;
-    }
-}
-
 /* Drag & Drop для упражнений в редактировании */
 .edit-exercise-item.dragging {
     opacity: 0.4;
