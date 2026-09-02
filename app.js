@@ -4979,7 +4979,9 @@ function loadEditPage(category, isCustom, id, level, exercises) {
     editWorkoutId = id;
     editLevel = level || '1 LVL';
 
-    // ===== ПОКАЗЫВАЕМ БЛОК ВЫБОРА ЗНАЧКА ТОЛЬКО ДЛЯ ЛИЧНЫХ ТРЕНИРОВОК =====
+    // ★★★ УНИЧТОЖАЕМ СТАРЫЙ SORTABLE ★★★
+    destroyEditSortable();
+
     const iconPickerBlock = document.getElementById('iconPickerBlock');
     if (iconPickerBlock) {
         if (isCustom || id === 'new') {
@@ -5073,23 +5075,13 @@ function loadEditPage(category, isCustom, id, level, exercises) {
         editExercises = getExercisesForEdit(category, editLevel, isCustom, id);
     }
 
-    // ★★★ ВОССТАНАВЛИВАЕМ СОХРАНЁННЫЙ ЗНАЧОК ★★★
     if (isCustom || id === 'new') {
         const defaultIconMap = {
-            'Руки': 'bodybuilding',
-            'Плечи': 'shoulder',
-            'Пресс': 'press',
-            'Грудь': 'breast',
-            'Спина': 'back',
-            'Ноги': 'legs',
-            'Всё тело': 'WholeBody',
-            'Кардио': 'cardio',
-            'Растяжка': 'stretching',
-            'Зарядка': 'charging',
-            'Пилатес': 'Pilates',
-            'Кроссфит': 'crossfit',
-            'Мужская сила': 'men',
-            'Женское счастье': 'woman',
+            'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
+            'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
+            'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
+            'Зарядка': 'charging', 'Пилатес': 'Pilates', 'Кроссфит': 'crossfit',
+            'Мужская сила': 'men', 'Женское счастье': 'woman',
             'Растяжка позвоночника': 'stretching'
         };
         
@@ -5111,58 +5103,56 @@ function loadEditPage(category, isCustom, id, level, exercises) {
         });
         
         localStorage.setItem('temp_edit_icon', iconToSet);
-        
-        console.log('✅ Значок восстановлен:', iconToSet);
     }
 
-// ★★★ ЗАГРУЗКА ВРЕМЕНИ ОТДЫХА ★★★
-let savedRestTime = null;
+    let savedRestTime = null;
 
-if (isCustom || id === 'new') {
-    // Для личных тренировок — загружаем из localStorage
-    savedRestTime = localStorage.getItem('temp_edit_rest_time');
-    
-    // Если нет сохранённого времени, пробуем загрузить из существующей тренировки
-    if (!savedRestTime && id && id !== 'new') {
-        const workout = getWorkoutById(id);
-        if (workout && workout.restTime) {
-            savedRestTime = String(workout.restTime);
-            localStorage.setItem('temp_edit_rest_time', savedRestTime);
+    if (isCustom || id === 'new') {
+        savedRestTime = localStorage.getItem('temp_edit_rest_time');
+        if (!savedRestTime && id && id !== 'new') {
+            const workout = getWorkoutById(id);
+            if (workout && workout.restTime) {
+                savedRestTime = String(workout.restTime);
+                localStorage.setItem('temp_edit_rest_time', savedRestTime);
+            }
         }
-    }
-} else {
-    // Для готовых — ищем в данных тренировки
-    let found = false;
-    for (const parent in exercisesData) {
-        if (exercisesData[parent] && exercisesData[parent][category]) {
-            const levelData = exercisesData[parent][category][editLevel];
+    } else {
+        let found = false;
+        for (const parent in exercisesData) {
+            if (exercisesData[parent] && exercisesData[parent][category]) {
+                const levelData = exercisesData[parent][category][editLevel];
+                if (levelData && levelData._restTime) {
+                    savedRestTime = String(levelData._restTime);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found && exercisesData[category] && exercisesData[category][editLevel]) {
+            const levelData = exercisesData[category][editLevel];
             if (levelData && levelData._restTime) {
                 savedRestTime = String(levelData._restTime);
-                found = true;
-                break;
             }
         }
     }
-    // Если не нашли через parent, пробуем напрямую
-    if (!found && exercisesData[category] && exercisesData[category][editLevel]) {
-        const levelData = exercisesData[category][editLevel];
-        if (levelData && levelData._restTime) {
-            savedRestTime = String(levelData._restTime);
-        }
-    }
-}
 
-// Применяем сохранённое время или 30 по умолчанию
-const restTime = savedRestTime ? parseInt(savedRestTime) : 30;
-updateRestTimeUI(restTime);
-
-// ★★★ ИНИЦИАЛИЗИРУЕМ ОБРАБОТЧИКИ КНОПОК ★★★
-setTimeout(() => {
-    initRestTimePicker();
+    const restTime = savedRestTime ? parseInt(savedRestTime) : 30;
     updateRestTimeUI(restTime);
-}, 200);
 
-    setTimeout(() => renderEditExercises(), 300);
+    setTimeout(() => {
+        initRestTimePicker();
+        updateRestTimeUI(restTime);
+    }, 200);
+
+    // ★★★ РЕНДЕРИМ И ИНИЦИАЛИЗИРУЕМ SORTABLE ★★★
+    setTimeout(() => {
+        renderEditExercises();
+        setTimeout(() => {
+            if (editExercises.length > 1) {
+                initEditSortable();
+            }
+        }, 300);
+    }, 300);
 }
 
 // ===================ВЫБОР ЗНАЧКА ===================
@@ -5178,22 +5168,111 @@ document.querySelectorAll('.icon-option').forEach(el => {
     });
 });
 
-// ===================РЕНДЕР УПРАЖНЕНИЙ В РЕДАКТИРОВАНИИ ===================
-function renderEditExercises() {
+// =================== SORTABLE ДЛЯ УПРАЖНЕНИЙ В РЕДАКТИРОВАНИИ ===================
+
+let editSortableInstance = null;
+
+function initEditSortable() {
     const container = document.getElementById('editExercisesContainer');
     if (!container) return;
+    
+    const items = container.querySelectorAll('.edit-exercise-item');
+    if (items.length < 2) return;
+    if (editSortableInstance) return;
+    
+    editSortableInstance = new Sortable(container, {
+        animation: 150,
+        handle: '.edit-drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        forceFallback: true,
+        delay: 200,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 10,
+        scroll: true,
+        scrollSensitivity: 50,
+        scrollSpeed: 15,
+        onEnd: function(evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex === undefined || newIndex === undefined || 
+                oldIndex < 0 || newIndex < 0 ||
+                oldIndex >= editExercises.length || newIndex >= editExercises.length) {
+                console.warn('⚠️ Некорректные индексы при перетаскивании:', oldIndex, newIndex);
+                renderEditExercises();
+                return;
+            }
+            
+            if (oldIndex !== newIndex) {
+                // ★★★ ОБНОВЛЯЕМ МАССИВ ★★★
+                const [removed] = editExercises.splice(oldIndex, 1);
+                if (removed) {
+                    editExercises.splice(newIndex, 0, removed);
+                    
+                    // ★★★ ОБНОВЛЯЕМ ТОЛЬКО data-index И КНОПКИ ★★★
+                    const items = container.querySelectorAll('.edit-exercise-item');
+                    items.forEach((item, index) => {
+                        item.dataset.index = index;
+                        const editBtn = item.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.setAttribute('onclick', `openEditExerciseModal(${index})`);
+                        }
+                        const deleteBtn = item.querySelector('.delete-btn');
+                        if (deleteBtn) {
+                            deleteBtn.setAttribute('onclick', `removeEditExercise(${index})`);
+                        }
+                    });
+                    
+                    // ★★★ СОХРАНЯЕМ В localStorage ★★★
+                    saveEditExercisesState();
+                } else {
+                    renderEditExercises();
+                }
+            }
+        }
+    });
+}
+
+function destroyEditSortable() {
+    if (editSortableInstance) {
+        editSortableInstance.destroy();
+        editSortableInstance = null;
+    }
+}
+
+function reinitEditSortable() {
+    destroyEditSortable();
+    setTimeout(initEditSortable, 50);
+}
+
+function renderEditExercisesSilent() {
+    const container = document.getElementById('editExercisesContainer');
+    if (!container) return;
+    
+    // ★★★ ФИЛЬТРУЕМ ПУСТЫЕ ЭЛЕМЕНТЫ ★★★
+    const validExercises = editExercises.filter(ex => ex !== null && ex !== undefined);
+    if (validExercises.length !== editExercises.length) {
+        editExercises = validExercises;
+        saveEditExercisesState();
+    }
+    
     const maxExercises = getMaxExercisesForLevel(editLevel, editIsCustom);
     const currentCount = editExercises.length;
+    
     let headerHtml = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0rem; padding:0 0.2rem;">
             <span class="section-title">Упражнения</span>
             <span class="section-title0-10">${currentCount}/${maxExercises}</span>
         </div>
     `;
+    
     if (editExercises.length === 0) {
         container.innerHTML = headerHtml + `<div class="empty-state"><span class="empty-icon">📋</span><h3 class="empty-title">Нет упражнений</h3><p class="empty-text">Добавьте свое первое упражнение!</p></div>`;
+        destroyEditSortable();
         return;
     }
+    
     let trainingIcon = 'bodybuilding';
     if (editIsCustom || editWorkoutId === 'new') {
         const selectedIcon = document.querySelector('.icon-option-active');
@@ -5207,12 +5286,11 @@ function renderEditExercises() {
         };
         trainingIcon = iconMap[editCategory] || 'bodybuilding';
     }
+    
     const exercisesHtml = editExercises.map((ex, index) => {
         const icon = ex.icon || getExerciseIcon(ex.name);
         let detailsText = `${formatSets(ex.sets, true)} × ${formatReps(ex.reps, true)}`;
-        if (hasWeight(ex)) {
-            detailsText += ` · ${ex.weight} кг`;
-        }
+        if (hasWeight(ex)) detailsText += ` · ${ex.weight} кг`;
         return `
             <div class="edit-exercise-item" data-index="${index}">
                 <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
@@ -5230,33 +5308,33 @@ function renderEditExercises() {
             </div>
         `;
     }).join('');
+    
     container.innerHTML = headerHtml + exercisesHtml;
-    
-    // ★★★ ЗАМЕНЯЕМ setupDragDrop() НА Sortable ★★★
-    // setupDragDrop(); // КОММЕНТИРУЕМ ИЛИ УДАЛЯЕМ
-    
-    // ★★★ ИНИЦИАЛИЗИРУЕМ SORTABLE ★★★
-    if (container.querySelector('.edit-exercise-item')) {
-        new Sortable(container, {
-            animation: 150,
-            handle: '.edit-drag-handle',
-            ghostClass: 'sortable-ghost',
-            chosenClass: 'sortable-chosen',
-            forceFallback: true,
-            delay: 200,
-            delayOnTouchOnly: true,
-            touchStartThreshold: 10,
-            onEnd: function(evt) {
-                const oldIndex = evt.oldIndex;
-                const newIndex = evt.newIndex;
-                if (oldIndex !== newIndex) {
-                    const [removed] = editExercises.splice(oldIndex, 1);
-                    editExercises.splice(newIndex, 0, removed);
-                    renderEditExercises();
-                    showToast('✅ Упражнение перемещено');
-                }
-            }
-        });
+}
+
+function renderEditExercises() {
+    renderEditExercisesSilent();
+    if (editExercises.length > 1) {
+        setTimeout(() => {
+            destroyEditSortable();
+            setTimeout(initEditSortable, 50);
+        }, 50);
+    } else {
+        destroyEditSortable();
+    }
+}
+
+function saveEditExercisesState() {
+    if (editIsCustom || editWorkoutId === 'new') {
+        const nameInput = document.getElementById('editWorkoutName');
+        if (nameInput) localStorage.setItem('temp_edit_name', nameInput.value);
+        localStorage.setItem('temp_edit_exercises', JSON.stringify(editExercises));
+        localStorage.setItem('temp_edit_category', editCategory);
+        localStorage.setItem('temp_edit_level', editLevel);
+        localStorage.setItem('temp_edit_isCustom', editIsCustom);
+        localStorage.setItem('temp_edit_id', editWorkoutId || '');
+    } else {
+        saveExercisesData();
     }
 }
 
@@ -5270,29 +5348,27 @@ document.getElementById('sessionEditBtn')?.addEventListener('click', function() 
     }
 });
 
+// =================== УПРАВЛЕНИЕ УПРАЖНЕНИЯМИ В РЕДАКТИРОВАНИИ ===================
+
 function openEditExerciseModal(index) {
     if (index === undefined || index === null || !editExercises[index]) {
         showToast('⚠️ Упражнение не найдено');
         return;
     }
     openUniversalExerciseModal('edit', 'edit', index, editExercises, function(index, exercise) {
+        editExercises[index] = exercise;
         renderEditExercises();
-        if (editIsCustom || editWorkoutId === 'new') {
-            const nameInput = document.getElementById('editWorkoutName');
-            if (nameInput) localStorage.setItem('temp_edit_name', nameInput.value);
-            localStorage.setItem('temp_edit_exercises', JSON.stringify(editExercises));
-        } else {
-            saveExercisesData();
-        }
+        saveEditExercisesState();
     });
 }
 
-// ===================DRAG & DROP ===================
-
-
-// ===================УПРАВЛЕНИЕ УПРАЖНЕНИЯМИ В РЕДАКТИРОВАНИИ ===================
 window.addEditExercise = function() {
-    editExercises.push({ name: 'Новое упражнение', sets: 3, reps: 12 });
+    const maxExercises = getMaxExercisesForLevel(editLevel, editIsCustom);
+    if (editExercises.length >= maxExercises) {
+        showToast(`⚠️ Вы достигли максимума упражнений ${maxExercises}!`);
+        return;
+    }
+    editExercises.push({ name: 'Новое упражнение', sets: 3, reps: 12, weight: 0 });
     renderEditExercises();
     openEditExerciseModal(editExercises.length - 1);
 };
@@ -5312,6 +5388,9 @@ window.removeEditExercise = function(index) {
 
 // ===================СОХРАНЕНИЕ И ОТМЕНА В РЕДАКТИРОВАНИИ ===================
 document.getElementById('saveEditBtn')?.addEventListener('click', function() {
+    // ★★★ УНИЧТОЖАЕМ SORTABLE ★★★
+    destroyEditSortable();
+    
     if (!preventDoubleClick('saveEditBtn', 2000)) {
         showToast('⏳ Подождите, сохранение уже выполняется...');
         return;
@@ -5337,6 +5416,9 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
         localStorage.removeItem('temp_edit_level');
         localStorage.removeItem('temp_edit_isCustom');
         localStorage.removeItem('temp_edit_id');
+        localStorage.removeItem('temp_edit_icon');
+        localStorage.removeItem('temp_edit_rest_time');
+        
         if (editIsCustom || editWorkoutId === 'new') {
             const id = editWorkoutId === 'new' ? Date.now().toString() : editWorkoutId;
             const workout = getWorkoutById(id);
@@ -5350,6 +5432,9 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
 });
 
 document.getElementById('cancelEditBtn')?.addEventListener('click', function() {
+    // ★★★ УНИЧТОЖАЕМ SORTABLE ★★★
+    destroyEditSortable();
+    
     isEditingWorkout = false;
     
     localStorage.removeItem('temp_edit_name');
@@ -5359,7 +5444,7 @@ document.getElementById('cancelEditBtn')?.addEventListener('click', function() {
     localStorage.removeItem('temp_edit_isCustom');
     localStorage.removeItem('temp_edit_id');
     localStorage.removeItem('temp_edit_icon');
-    localStorage.removeItem('temp_edit_rest_time');  // ← ДОБАВИТЬ
+    localStorage.removeItem('temp_edit_rest_time');
     
     if (editIsCustom || editWorkoutId === 'new') {
         const id = editWorkoutId === 'new' ? null : editWorkoutId;
@@ -5407,6 +5492,9 @@ function resetWorkout() {
 
     document.getElementById('resetConfirmYes').addEventListener('click', function() {
         overlay.remove();
+        // ★★★ УНИЧТОЖАЕМ SORTABLE ★★★
+        destroyEditSortable();
+        
         const category = editCategory;
         const level = editLevel || '1 LVL';
         let parentCategory = null;
@@ -7792,64 +7880,6 @@ async function loadFriendsLeaderboard() {
     }
 }
 
-// ===================PULL-TO-REFRESH ===================
-let pullStartY = 0, pullOffset = 0, isPulling = false, pullRefreshEnabled = true, pullContainer = null;
-
-function initPullToRefresh() {
-    const containers = document.querySelectorAll('.dashboard-container, .profile-container, .main-content');
-    containers.forEach(container => {
-        container.addEventListener('touchstart', function(e) {
-            if (this.scrollTop === 0 && window.scrollY === 0) {
-                pullStartY = e.touches[0].clientY;
-                isPulling = true;
-                pullContainer = this;
-            }
-        }, { passive: true });
-        container.addEventListener('touchmove', function(e) {
-            if (!isPulling) return;
-            const currentY = e.touches[0].clientY;
-            pullOffset = currentY - pullStartY;
-            if (pullOffset > 50 && pullRefreshEnabled) {
-                e.preventDefault();
-                document.getElementById('pullToRefresh').style.display = 'block';
-            }
-        }, { passive: false });
-        container.addEventListener('touchend', function(e) {
-            if (!isPulling) return;
-            if (pullOffset > 100 && pullRefreshEnabled) {
-                performRefresh();
-            } else {
-                document.getElementById('pullToRefresh').style.display = 'none';
-            }
-            isPulling = false;
-            pullOffset = 0;
-            pullContainer = null;
-        }, { passive: true });
-    });
-}
-
-async function performRefresh() {
-    pullRefreshEnabled = false;
-    document.getElementById('pullToRefresh').style.display = 'block';
-    try {
-        const user = await getFirebaseUser();
-        if (user) {
-            await loadProfile();
-            renderMyWorkouts();
-            await renderCalendar(currentMonth, currentYear);
-            updateStats(); // Сама определит, какую вкладку обновлять
-            if (typeof syncPendingWorkouts === 'function') await syncPendingWorkouts();
-            showToast('✅ Данные обновлены');
-        }
-    } catch (error) {
-        console.error('Ошибка обновления:', error);
-        showToast('❌ Ошибка обновления');
-    } finally {
-        document.getElementById('pullToRefresh').style.display = 'none';
-        pullRefreshEnabled = true;
-    }
-}
-
 // ===================ТОСТ ===================
 function showToast(message, duration = 3000) {
     const oldToast = document.getElementById('toast');
@@ -8512,9 +8542,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 8. Состояние блоков
     setTimeout(loadBlocksState, 1000);
-    
-    // 9. Pull-to-refresh
-    initPullToRefresh();
 
     // 10. Применить сохраненный порядок
     applySavedWorldStatsOrder();
