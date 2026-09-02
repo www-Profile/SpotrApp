@@ -2009,11 +2009,30 @@ body.theme-dark-mode .btn-submit-arrow {
     line-height: 1.2; /* ★★★ ДОБАВЛЕН МЕЖСТРОЧНЫЙ ИНТЕРВАЛ ★★★ */
 }
 
+.edit-exercise-item {
+    cursor: grab;
+    border: 2px dashed transparent;
+}
+
+.edit-exercise-item:active {
+    cursor: grabbing;
+}
+
+.sortable-chosen {
+    border-color: var(--accent) !important;
+    opacity: 0.8;
+}
+
+.sortable-ghost {
+    border: 2px dashed var(--accent) !important;
+    background: transparent !important;
+    opacity: 0.4;
+}
+
 /* ===================РЕДАКТИРОВАНИЕ СТРАНИЦ ==================== */
 .editing .section-block {
     border: 2px dashed transparent;
     padding: 1rem 1rem 0.6rem;
-    transition: border-color 0.2s;
 }
 
 .editing .section-block:hover {
@@ -2026,7 +2045,7 @@ body.theme-dark-mode .btn-submit-arrow {
 
 .editing .item-card {
     cursor: grab;
-    border: 2px solid transparent;
+    border: 2px dashed transparent;
 }
 
 .editing .item-card:hover {

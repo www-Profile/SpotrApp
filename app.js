@@ -4812,6 +4812,11 @@ function saveWorkoutData(category, level, isCustom, id, title, icon, exercises) 
     const activeBtn = document.querySelector('.rest-time-btn.rest-time-active');
     const restTime = activeBtn ? parseInt(activeBtn.dataset.seconds) : 30;
     
+    // ★★★ СОХРАНЯЕМ ПОРЯДОК ★★★
+    const workoutIdForOrder = (isCustom || id === 'new') ? (id || 'temp_' + Date.now()) : (category + '_' + level);
+    const order = exercises.map((_, index) => index);
+    saveExercisesOrder(workoutIdForOrder, order);
+    
     if (isCustom || id === 'new') {
         const allWorkouts = getMyWorkouts();
         const isDuplicate = allWorkouts.some(w => w._id !== id && w.title.toLowerCase() === title.toLowerCase());
@@ -5074,6 +5079,10 @@ function loadEditPage(category, isCustom, id, level, exercises) {
     } else {
         editExercises = getExercisesForEdit(category, editLevel, isCustom, id);
     }
+    
+    // ★★★ ПРИМЕНЯЕМ СОХРАНЁННЫЙ ПОРЯДОК ★★★
+    const workoutIdForOrder = (isCustom || id === 'new') ? (id || 'temp_' + Date.now()) : (category + '_' + editLevel);
+    editExercises = applySavedOrder(editExercises, workoutIdForOrder);
 
     if (isCustom || id === 'new') {
         const defaultIconMap = {
@@ -5212,8 +5221,10 @@ function initEditSortable() {
                     
                     // ★★★ ОБНОВЛЯЕМ ТОЛЬКО data-index И КНОПКИ ★★★
                     const items = container.querySelectorAll('.edit-exercise-item');
+                    const newOrder = [];
                     items.forEach((item, index) => {
                         item.dataset.index = index;
+                        newOrder.push(index);
                         const editBtn = item.querySelector('.edit-btn');
                         if (editBtn) {
                             editBtn.setAttribute('onclick', `openEditExerciseModal(${index})`);
@@ -5224,7 +5235,11 @@ function initEditSortable() {
                         }
                     });
                     
-                    // ★★★ СОХРАНЯЕМ В localStorage ★★★
+                    // ★★★ СОХРАНЯЕМ ПОРЯДОК В localStorage ★★★
+                    const workoutId = editWorkoutId || 'temp_' + Date.now();
+                    saveExercisesOrder(workoutId, newOrder);
+                    
+                    // ★★★ СОХРАНЯЕМ САМИ УПРАЖНЕНИЯ ★★★
                     saveEditExercisesState();
                 } else {
                     renderEditExercises();
@@ -5292,7 +5307,7 @@ function renderEditExercisesSilent() {
         let detailsText = `${formatSets(ex.sets, true)} × ${formatReps(ex.reps, true)}`;
         if (hasWeight(ex)) detailsText += ` · ${ex.weight} кг`;
         return `
-            <div class="edit-exercise-item" data-index="${index}">
+            <div class="edit-exercise-item" data-index="${index}" style="cursor: grab; border: 2px dashed transparent;">
                 <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
                 <div class="item-icon">
                     <img src="images/${icon}.png" class="edit-exercise-icon">
@@ -5310,6 +5325,53 @@ function renderEditExercisesSilent() {
     }).join('');
     
     container.innerHTML = headerHtml + exercisesHtml;
+}
+
+// Ключ для сохранения порядка упражнений
+const EXERCISES_ORDER_KEY = 'sportapp_exercises_order';
+
+// Сохранить порядок упражнений
+function saveExercisesOrder(workoutId, order) {
+    const allOrders = JSON.parse(localStorage.getItem(EXERCISES_ORDER_KEY) || '{}');
+    allOrders[workoutId] = order;
+    localStorage.setItem(EXERCISES_ORDER_KEY, JSON.stringify(allOrders));
+}
+
+// Загрузить порядок упражнений
+function loadExercisesOrder(workoutId) {
+    const allOrders = JSON.parse(localStorage.getItem(EXERCISES_ORDER_KEY) || '{}');
+    return allOrders[workoutId] || null;
+}
+
+// Применить сохранённый порядок к массиву упражнений
+function applySavedOrder(exercises, workoutId) {
+    const savedOrder = loadExercisesOrder(workoutId);
+    if (!savedOrder || savedOrder.length !== exercises.length) return exercises;
+    
+    // Создаём карту для быстрого доступа
+    const exerciseMap = {};
+    exercises.forEach((ex, index) => {
+        exerciseMap[index] = ex;
+    });
+    
+    // Восстанавливаем порядок
+    const reordered = [];
+    savedOrder.forEach(oldIndex => {
+        if (exerciseMap[oldIndex] !== undefined) {
+            reordered.push(exerciseMap[oldIndex]);
+        }
+    });
+    
+    // Если какие-то элементы потерялись - добавляем их в конец
+    if (reordered.length !== exercises.length) {
+        exercises.forEach((ex, index) => {
+            if (!savedOrder.includes(index)) {
+                reordered.push(ex);
+            }
+        });
+    }
+    
+    return reordered;
 }
 
 function renderEditExercises() {
