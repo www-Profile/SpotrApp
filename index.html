@@ -707,27 +707,6 @@
                                     <div class="calendar-weekday">Вс</div>
                                     <div id="calendarDays"></div>
                                 </div>
-<!-- ===== ЛЕГЕНДА КАЛЕНДАРЯ ===== -->
-<div class="calendar-legend">
-    <div class="legend-item">
-        <span class="legend-box legend-box-full"></span>
-        <span>- 2 тренировки</span>
-    </div> 
-    <div class="sleh">
-        <span>|</span>
-    </div> 
-    <div class="legend-item">
-        <span class="legend-box legend-box-light"></span>
-        <span>- 1 тренировка</span>
-    </div>
-    <div class="sleh">
-        <span>|</span>
-    </div> 
-    <div class="legend-item">
-        <span class="legend-box legend-box-today"></span>
-        <span>- сегодня</span>
-    </div>
-</div>
                             </div>
                         </div>
                     </div>
@@ -1326,6 +1305,18 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+<!-- МОДАЛКА: ТРЕНИРОВКИ ЗА ДЕНЬ -->
+<div id="dayWorkoutsModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:420px; width:95%; max-height:80vh;">
+        <div class="modal-title" id="dayWorkoutsDate">02.02.2026</div>
+        <label class="form-label" style="margin-left: 0; text-align: left; display: block;">Тренировки</label>
+<div id="dayWorkoutsList" style="max-height:40vh; overflow-y:auto; text-align:left; padding:0.5rem; background:var(--light); border-radius:8px; scrollbar-width:none; -ms-overflow-style:none;">
+    <!-- Сюда будут рендериться тренировки -->
+</div>
+        <button class="btn btn-primary" onclick="closeModal('dayWorkoutsModal')" style="margin-top:0.5rem;">Понятно</button>
+    </div>
+</div>    
 
     <!-- ===== МОДАЛКА: ИНФОРМАЦИЯ ОБ УРОВНЕ ===== -->
 <div id="levelInfoModal" class="modal-overlay" style="display:none;">

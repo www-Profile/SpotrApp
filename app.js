@@ -5646,7 +5646,7 @@ async function loadStats() {
     loadPremiumStats();
 }
 
-// ===================КАЛЕНДАРЬ ===================
+// =================== КАЛЕНДАРЬ ===================
 async function renderCalendar(month, year) {
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
     const monthYearEl = document.getElementById('currentMonthYear');
@@ -5708,6 +5708,11 @@ async function renderCalendar(month, year) {
             year === today.getFullYear()) {
             dayEl.classList.add('calendar-day-today');
         }
+        
+        // ★★★ ДОБАВЛЯЕМ ОБРАБОТЧИК КЛИКА ДЛЯ ОТКРЫТИЯ МОДАЛКИ С ТРЕНИРОВКАМИ ЗА ДЕНЬ ★★★
+        dayEl.addEventListener('click', function() {
+            openDayWorkoutsModal(year, month, day);
+        });
         
         container.appendChild(dayEl);
     }
@@ -8847,11 +8852,12 @@ enableEdit() {
     this.isEditing = true;
     this.backupLayout = this.getCurrentLayout();
 
-    // ★★★ ПРИМЕНЯЕМ КЛАСС editing К КОНТЕЙНЕРАМ ★★★
     this.containers.forEach(container => {
         const element = document.getElementById(container.id);
         if (element) {
             element.classList.add('editing');
+            // ★★★ ЗАПРЕЩАЕМ СКРОЛЛ НА ТЕЛЕФОНАХ ★★★
+            element.addEventListener('touchmove', this._preventScroll, { passive: false });
         }
     });
 
@@ -8864,14 +8870,24 @@ enableEdit() {
     showToast('✏️ Режим редактирования включен');
 }
 
+// ★★★ НОВЫЙ МЕТОД ДЛЯ ПРЕДОТВРАЩЕНИЯ СКРОЛЛА ★★★
+_preventScroll(e) {
+    // Разрешаем скролл только если пользователь не перетаскивает
+    if (!e.target.closest('.sortable-chosen') && !e.target.closest('.sortable-ghost')) {
+        return;
+    }
+    e.preventDefault();
+}
+
 disableEdit(save = false) {
     this.isEditing = false;
     
-    // ★★★ УБИРАЕМ КЛАСС editing С КОНТЕЙНЕРОВ ★★★
     this.containers.forEach(container => {
         const element = document.getElementById(container.id);
         if (element) {
             element.classList.remove('editing');
+            // ★★★ УБИРАЕМ ЗАПРЕТ СКРОЛЛА ★★★
+            element.removeEventListener('touchmove', this._preventScroll);
         }
     });
 
@@ -8887,6 +8903,7 @@ disableEdit(save = false) {
         showToast('↩️ Изменения отменены');
     }
 }
+
 
     save() {
         const layout = this.getCurrentLayout();
@@ -8982,17 +8999,15 @@ initSortables() {
         const element = document.getElementById(container.id);
         if (!element) return;
 
-        // ★★★ ПРАВИЛЬНО НАСТРАИВАЕМ HANDLE ★★★
         let handle = container.handle || '.section-drag';
         let filter = container.filter || null;
         
         // Для списков тренировок исключаем кнопки удаления
         if (['catalogGridStrength', 'catalogGridFitness', 'catalogGridPremium', 'myWorkoutsList'].includes(container.id)) {
             filter = '.workout-delete';
-            handle = null; // Для карточек тренировок используем всю карточку
+            handle = null;
         }
 
-        // Для статистики используем специальный handle
         if (container.id === 'statsSummary') {
             handle = '.stat-card';
         }
@@ -9008,9 +9023,18 @@ initSortables() {
             forceFallback: true,
             filter: filter,
             preventOnFilter: false,
-            delay: 400,
-            delayOnTouchOnly: true,
-            touchStartThreshold: 10
+            // ★★★ НАСТРОЙКИ ДЛЯ ТЕЛЕФОНОВ ★★★
+            delay: 300,                    // Задержка перед началом перетаскивания
+            delayOnTouchOnly: true,       // Задержка только на тач-устройствах
+            touchStartThreshold: 10,      // Минимальное смещение для начала перетаскивания
+            scroll: true,                 // Разрешаем скролл во время перетаскивания
+            scrollSensitivity: 30,        // Чувствительность скролла
+            scrollSpeed: 10,              // Скорость скролла
+            bubbleScroll: true,           // Позволяем скроллить родительские элементы
+            onMove: function(evt) {
+                // Предотвращаем скролл страницы во время перетаскивания
+                evt.originalEvent.preventDefault();
+            }
         });
         this.sortableInstances.push(s);
     });
@@ -12336,4 +12360,74 @@ function saveExerciseToSource(index, exercise) {
         }
         console.log('⚠️ Не найдено исходное место, сохранено только в сессии');
     }
+}
+
+// =================== МОДАЛКА ТРЕНИРОВОК ЗА ДЕНЬ ===================
+async function openDayWorkoutsModal(year, month, day) {
+    const dateObj = new Date(year, month, day);
+    const dateStr = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    document.getElementById('dayWorkoutsDate').textContent = dateStr;
+    
+    const container = document.getElementById('dayWorkoutsList');
+    container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Загрузка...</div>';
+    
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Авторизуйтесь, чтобы увидеть тренировки</div>';
+            openModal('dayWorkoutsModal');
+            return;
+        }
+        
+        const result = await getUserWorkoutsFromFirestore(user.uid);
+        if (!result.success) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Ошибка загрузки тренировок</div>';
+            openModal('dayWorkoutsModal');
+            return;
+        }
+        
+        const targetDate = new Date(year, month, day);
+        targetDate.setHours(0, 0, 0, 0);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        const dayWorkouts = result.data.filter(w => {
+            const workoutDate = new Date(w.date);
+            return workoutDate >= targetDate && workoutDate < nextDay;
+        });
+        
+        const filteredWorkouts = dayWorkouts.filter(w => getWorkoutIcon(w) !== 'charging');
+        
+        if (filteredWorkouts.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">В этот день тренировок не было :(</div>';
+        } else {
+            filteredWorkouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            container.innerHTML = filteredWorkouts.map(w => {
+                const totalEx = w.exercises?.length || 0;
+                const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
+                const xpEarned = w.xpEarned || 0;
+                const minutes = Math.floor((w.durationSeconds || 0) / 60);
+                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP`;
+                const workoutTime = new Date(w.date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                
+                return `
+                    <div class="history-item" style="margin-bottom:0.5rem;">
+                        <div class="history-item-header">
+                            <strong class="history-item-title">${w.title || 'Тренировка'}</strong>
+                            <span class="history-item-date">${workoutTime}</span>
+                        </div>
+                        <div class="history-item-details">${detailsText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки тренировок за день:', error);
+        container.innerHTML = '<div style="text-align:center;color:#EF4444;padding:1rem;">Ошибка загрузки</div>';
+    }
+    
+    openModal('dayWorkoutsModal');
 }
