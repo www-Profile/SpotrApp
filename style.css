@@ -98,7 +98,7 @@ body {
 .section-block {
     background: var(--light);
     border-radius: 16px;
-    padding: 0.2rem 0.2rem 0.4rem;
+    padding: 0rem 0.2rem;
 }
 
 .section-blockFriend {
@@ -109,7 +109,7 @@ body {
 .section-header {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.5rem;
     cursor: pointer;
     user-select: none;
 }
@@ -189,7 +189,7 @@ body {
 .item-card {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     background: var(--white);
     padding: 0.5rem;
     border-radius: 16px;
@@ -600,7 +600,7 @@ body {
 
 .form-input {
     width: 100%;
-    padding: 0.6rem 1rem;
+    padding: 0.6rem;
     border: 1.5px solid var(--light-grey);
     border-radius: 10px;
     font-size: 0.9rem;
@@ -902,7 +902,7 @@ body {
 .history-item {
     background: var(--white);
     padding: 0.6rem 1rem;
-    border-radius: 16px;
+    border-radius: 10px;
     border-left: 4px solid var(--accent);
 }
 
@@ -948,21 +948,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .btn-calendar-nav {
     background: transparent;
     border: none;
     color: var(--slate);
-    font-size: 1.2rem;
+    font-size: 0.8rem;
     cursor: pointer;
-    padding: 0.3rem 0.8rem;
+    padding: 0.3rem;
     border-radius: 8px;
-}
-
-.btn-calendar-nav:active {
-    opacity: 0.6;
 }
 
 #currentMonthYear {
@@ -982,7 +978,7 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--slate);
-    padding: 0.4rem 0;
+    padding: 0.2rem 0;
 }
 
 #calendarDays {
@@ -1368,6 +1364,22 @@ body {
     padding: 0;
 }
 
+.task-checkbox .fa-square-check {
+    color: var(--accent) !important;
+}
+
+.task-checkbox .fa-square {
+    color: var(--light-grey) !important;
+}
+
+.settings-item-task .fa-square-check {
+    color: var(--accent) !important;
+}
+
+.settings-item-task .fa-square {
+    color: var(--light-grey) !important;
+}
+
 /* ===================ДРУЗЬЯ ==================== */
 .friends-list-block {
     background: transparent;
@@ -1615,7 +1627,6 @@ body {
 .empty-icon {
     font-size: 2.5rem;
     display: block;
-    margin-bottom: 0.5rem;
 }
 
 .empty-title {
@@ -1707,10 +1718,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.3rem;
-    margin-bottom: 0.5rem;
     background: var(--white);
-    padding: 1rem;
     border-radius: 16px;
 }
 
@@ -2091,7 +2099,6 @@ body.theme-dark-mode .btn-submit-arrow {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    margin-bottom: 0.8rem;
     position: relative;
 }
 
@@ -2727,7 +2734,7 @@ body.theme-dark-mode .btn-submit-arrow {
     grid-template-columns: 1.4fr 0.8fr 0.8fr;
     background: var(--accent);
     color: var(--white);
-    border-bottom: 2px solid var(--accent-dark);
+    border: 1px solid var(--light-grey);
 }
 
 .premium-table-header .premium-table-cell {
@@ -3570,7 +3577,6 @@ body.theme-dark-mode .edit-exercise-details,
 body.theme-dark-mode .settings-desc,
 body.theme-dark-mode .modal-text,
 body.theme-dark-mode .finish-stat-label,
-body.theme-dark-mode .stat-label,
 body.theme-dark-mode .calendar-weekday,
 body.theme-dark-mode .auth-switch {
     color: var(--text-secondary);
@@ -3658,6 +3664,10 @@ body.theme-dark-mode .toggle-btn-active {
 
 body.theme-dark-mode .edit-header-block {
     background: var(--bg-primary);
+}
+
+body.theme-dark-mode .section-toggle {
+    color: var(--text-primary);
 }
 
 /* Вкладки */
@@ -4075,6 +4085,30 @@ body.theme-dark-mode .hero-buttons .btn {
     color: var(--white);
 }
 
+body.theme-dark-mode .settings-action {
+    color: var(--border-color);
+}
+
+body.theme-dark-mode .item-action {
+    color: var(--border-color);
+}
+
+body.theme-dark-mode .task-checkbox .fa-square-check {
+    color: var(--accent) !important;
+}
+
+body.theme-dark-mode .task-checkbox .fa-square {
+    color: var(--border-color) !important;
+}
+
+body.theme-dark-mode .settings-item-task .fa-square-check {
+    color: var(--accent) !important;
+}
+
+body.theme-dark-mode .settings-item-task .fa-square {
+    color: var(--border-color) !important;
+}
+
 /* Страница загрузки */
 body.theme-dark-mode #page-loading .hero {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -4293,4 +4327,154 @@ body.theme-dark-mode .achievement-modal-progress-text.unlocked {
 
 .item-card.premium-locked .item-title {
     color: var(--slate);
+}
+
+/* =================== ВРЕМЯ ОТДЫХА ==================== */
+.rest-time-picker {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.3rem;
+}
+
+.rest-time-btn {
+    flex: 1;
+    min-width: 44px;
+    padding: 0.4rem 0.2rem;
+    border: 2px solid var(--light-grey);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--slate);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.rest-time-active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.theme-dark-mode .rest-time-btn {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .rest-time-active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* =================== КНОПКИ УПРАВЛЕНИЯ ОТДЫХОМ ==================== */
+.session-rest-control-btn {
+    background: var(--white);
+    border: 2px solid var(--light-grey);
+    border-radius: 12px;
+    padding: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--slate);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.session-rest-control-btn i {
+    font-size: 0.7rem;
+}
+
+/* =================== КНОПКИ УПРАВЛЕНИЯ ОТДЫХОМ ==================== */
+#sessionRestControls {
+    display: none !important; /* ★★★ ВСЕГДА СКРЫТЫ ПО УМОЛЧАНИЮ ★★★ */
+}
+
+#sessionRestControls.visible {
+    display: flex !important; /* ★★★ ПОКАЗЫВАЕМ ТОЛЬКО КОГДА ЕСТЬ КЛАСС visible ★★★ */
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.theme-dark-mode .session-rest-control-btn {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+/* =================== ВЕС В СЕССИИ ==================== */
+.weight-btn {
+    background: var(--light);
+    border: 1px solid var(--light-grey);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--slate);
+    cursor: pointer;
+}
+
+.weight-text {
+    min-width: 50px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--dark);
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.theme-dark-mode .weight-btn {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+body.theme-dark-mode .weight-text {
+    color: var(--text-primary);
+}
+
+/* =================== ТАЙМЕР УПРАЖНЕНИЯ ==================== */
+#sessionExerciseTimerWrapper {
+    position: absolute;
+    bottom: 0rem;
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    z-index: 2;
+    background: none;
+    text-align: center;
+}
+
+#sessionExerciseTimer {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+}
+
+#sessionSetCounter {
+    display: none;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    align-self: flex-end;
+    padding-bottom: 0.6rem;
+}
+
+/* Тёмная тема */
+body.theme-dark-mode #sessionExerciseTimerWrapper {
+    background: none;
+}
+
+body.theme-dark-mode #sessionExerciseTimer {
+    background: none;
+    color: var(--accent);
+}
+
+body.theme-dark-mode #sessionSetCounter {
+    background: none;
+    color: var(--accent);
 }

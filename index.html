@@ -265,31 +265,53 @@
 <div id="page-training-session" class="page">
     <main class="training-session-container">
         <header class="session-header"></header>
-        <div class="session-top">
-            <div class="session-progress-row">
-                <div class="session-progress" id="sessionProgress"></div>
-            </div>
-<div class="session-bg">
-    <span class="session-bg-text">фото будет добавлено позже</span>
-    <div id="sessionRestTimer" style="display: none; font-size: 4.5rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 0.05em;">
-        00:30
+<div class="session-top">
+    <div class="session-progress-row">
+        <div class="session-progress" id="sessionProgress"></div>
     </div>
-    <button class="session-close-btn" id="sessionCloseBtn">
-        <i class="fa-solid fa-xmark"></i>
-    </button>
-    <div class="session-timer" id="sessionTimer">00:00</div>
-</div>
+    <div class="session-bg">
+        <span class="session-bg-text">фото будет добавлено позже</span>
+        
+        <!-- ТАЙМЕР ОТДЫХА (поверх фото) -->
+        <div id="sessionRestTimer" style="display: none; font-size: 4.5rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3;">
+            00:30
         </div>
+        
+<!-- ТАЙМЕР УПРАЖНЕНИЯ (поверх фото, в правом нижнем углу) -->
+<div id="sessionExerciseTimerWrapper" style="position: absolute; bottom: 0rem; right: 0.5rem; display: flex; align-items: center; gap: 0.2rem; z-index: 2; background: none; text-align: center;">
+    <div id="sessionSetCounter">
+        <span id="sessionSetCurrent">3</span> ×
+    </div>
+    <div id="sessionExerciseTimer">
+        00:20
+    </div>
+</div>
+        
+        <button class="session-close-btn" id="sessionCloseBtn">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="session-timer" id="sessionTimer">00:00</div>
+    </div>
+</div>
         <div class="session-bottom">
-            <div class="session-exercise-info">
-                <h2 id="sessionExerciseName">Жим лёжа</h2>
-                <div class="session-exercise-details-row">
-                    <p id="sessionExerciseDetails">3 × 12</p>
-                    <button class="session-edit-btn" id="sessionEditBtn">
-                        <i class="fa-regular fa-pen-to-square"></i>
-                    </button>
-                </div>
-            </div>
+<div class="session-exercise-info">
+    <h2 id="sessionExerciseName">Жим лёжа</h2>
+    <div class="session-exercise-details-row">
+        <p id="sessionExerciseDetails">3 × 12</p>
+        <button class="session-edit-btn" id="sessionEditBtn">
+            <i class="fa-regular fa-pen-to-square"></i>
+        </button>
+    </div>
+    <!-- ★★★ КНОПКИ УПРАВЛЕНИЯ ОТДЫХОМ ★★★ -->
+    <div id="sessionRestControls" style="display: none; margin-top: 0.5rem; justify-content: center; gap: 0.8rem;">
+        <button class="session-rest-control-btn" onclick="adjustRestTime(-15)">
+            <i class="fa-solid fa-minus"></i> 15с
+        </button>
+        <button class="session-rest-control-btn" onclick="adjustRestTime(15)">
+            +15с <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+</div>
             <div class="session-controls">
                 <button class="session-btn session-btn-prev" id="sessionPrevBtn">
                     <i class="fa-solid fa-angle-left"></i>
@@ -426,6 +448,18 @@
                 </div>
             </div>
         </div>
+
+        <!-- ===== БЛОК ВРЕМЯ ОТДЫХА ===== -->
+<div class="form-group" style="text-align:left; margin-bottom: 0.5rem;">
+    <h3 class="section-title">Время отдыха между упражнениями</h3>
+    <div class="rest-time-picker" id="restTimePicker">
+        <button class="rest-time-btn rest-time-active" data-seconds="30">30с</button>
+        <button class="rest-time-btn" data-seconds="45">45с</button>
+        <button class="rest-time-btn" data-seconds="60">60с</button>
+        <button class="rest-time-btn" data-seconds="90">90с</button>
+        <button class="rest-time-btn" data-seconds="120">120с</button>
+    </div>
+</div>
         
         <div id="editExercisesContainer" class="item-grid"></div>
         
@@ -450,7 +484,7 @@
             <div class="modal-title">Добавить упражнение</div>
 <div style="display:flex; gap:0.5rem;">
     <button class="btn btn-secondary" onclick="closeModal('addExerciseModal'); setTimeout(openCreateExerciseModal, 100);" style="flex:1;">Создать</button>
-        <button class="btn btn-primary" onclick="openExerciseList()" style="flex:1;">Список</button>
+    <button class="btn btn-primary" onclick="openExerciseList()" style="flex:1;">Список</button>
 </div>
         </div>
     </div>
@@ -722,15 +756,15 @@
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
         <button class="section-drag"><i class="fa-solid fa-grip-lines"></i></button>
     </div>
-    <div class="section-body">
+    <div class="section-body" style="    background: var(--white); padding: 0.5rem; border-radius: 16px;">
         <!-- Навигация по месяцам -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; padding:0 0.3rem;">
-            <button onclick="changeWeeklyLoadMonth(-1)" style="background:none; border:none; color:var(--slate); font-size:1.2rem; cursor:pointer;">‹</button>
-            <span id="weeklyLoadTitle" style="font-weight:600; font-size:0.9rem; color:var(--dark);">Январь — Февраль</span>
-            <button onclick="changeWeeklyLoadMonth(1)" style="background:none; border:none; color:var(--slate); font-size:1.2rem; cursor:pointer;">›</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+            <button onclick="changeWeeklyLoadMonth(-1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="weeklyLoadTitle" style="font-weight:600; font-size:0.9rem; color:var(--dark);">Январь</span>
+            <button onclick="changeWeeklyLoadMonth(1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <!-- Диаграмма -->
-        <div id="weeklyLoadChart" style="padding:0.2rem 0;"></div>
+        <div id="weeklyLoadChart" style="background: var(--light);  border: 1px solid var(--light-grey); border-radius: 12px;"></div>
     </div>
 </div>
 
@@ -924,6 +958,7 @@
                     <h2 class="section-title">Ежедневные задания</h2>
                     <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
+                
                 <div class="section-body">
                     <div class="settings-block" id="dailyTasksContainer">
                         <!-- Сюда будет рендериться список заданий -->
@@ -1296,51 +1331,6 @@
         </div>
     </nav>
 
-<!-- ===== МОДАЛЬНОЕ ОКНО: ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ===== -->
-<div id="dailyTasksModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="max-width: 420px; width: 95%;">
-        <div class="modal-title">Ежедневные задания</div>
-        
-        <p class="modal-text">За каждое выполненное задание вы получите +10 XP</p>
-        
-        <!-- Список заданий -->
-        <div class="settings-block-task">
-            <!-- Задание 1 -->
-            <div class="settings-item-task" style="cursor: default;" data-task="1">
-                <div class="settings-icon"><i class="fa-solid fa-walking"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Прогулка</div>
-                    <div class="settings-desc">Пройти 5000 шагов сегодня</div>
-                </div>
-<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <!-- Задание 2 -->
-            <div class="settings-item-task" style="cursor: default;" data-task="2">
-                <div class="settings-icon"><i class="fa-solid fa-water"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Водный баланс</div>
-                    <div class="settings-desc">Выпить 2 литра воды</div>
-                </div>
-<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <!-- Задание 3 -->
-            <div class="settings-item-task" style="cursor: default;" data-task="3">
-                <div class="settings-icon"><i class="fa-solid fa-brain"></i></div>
-                <div class="settings-info">
-                    <div class="settings-title">Мозговой штурм</div>
-                    <div class="settings-desc">Решить 3 логические задачи</div>
-                </div>
-<button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        </div>
-        
-        <!-- Кнопка закрытия -->
-        <button class="btn btn-primary" onclick="closeDailyTasksModal()">Закрыть</button>
-    </div>
-</div>
-
     <!-- ===== МОДАЛКА: ИНФОРМАЦИЯ ОБ УРОВНЕ ===== -->
 <div id="levelInfoModal" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-width:420px;">
@@ -1440,33 +1430,6 @@
     </div>
 </div>
 
-    <!-- ===== МОДАЛКА: РЕДАКТИРОВАНИЕ УПРАЖНЕНИЯ ===== -->
-    <div id="exerciseModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content" style="max-width:400px;">
-            <div class="modal-title" style="text-align:center;">РЕДАКТИРОВАТЬ УПРАЖНЕНИЕ</div>
-            <div class="form-group" style="text-align:left;">
-                <label class="form-label">Название</label>
-                <input type="text" id="modalExerciseName" class="form-input" maxlength="50" />
-            </div>
-            <div class="form-group">
-                <div style="display:flex; gap:1rem;">
-                    <div style="flex:1; text-align:left;">
-                        <label class="form-label">Подходы</label>
-                        <input type="number" id="modalExerciseSets" class="form-input" style="text-align:center;" min="1" max="5" step="1" />
-                    </div>
-                    <div style="flex:1; text-align:left;">
-                        <label class="form-label" id="modalExerciseRepsLabel">Повторения</label>
-                        <input type="number" id="modalExerciseReps" class="form-input" style="text-align:center;" min="2" max="60" step="1" />
-                    </div>
-                </div>
-            </div>
-            <div style="display:flex; gap:0.8rem; margin-top:0.5rem;">
-                <button class="btn btn-secondary" id="modalCancelBtn" style="flex:1;">Отмена</button>
-                <button class="btn btn-primary" id="modalSaveBtn" style="flex:1;">Сохранить</button>
-            </div>
-        </div>
-    </div>
-
     <!-- ===== МОДАЛКА: НЕТ ИНТЕРНЕТА ===== -->
     <div id="offlineModal" class="modal-overlay" style="display:none;">
         <div class="modal-content">
@@ -1518,15 +1481,15 @@
             <!-- Строка 4: Совместные тренировки -->
             <div class="premium-table-row">
                 <div class="premium-table-cell premium-table-cell-left">Совместные трени</div>
-                <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
+                <div class="premium-table-cell premium-table-cell-center">Я + 1 Друг</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Я + 3 Друга</div>
             </div>
             
             <!-- Строка 5: Ежедневные задания -->
             <div class="premium-table-row">
                 <div class="premium-table-cell premium-table-cell-left">Ежедневные задания</div>
-                <div class="premium-table-cell premium-table-cell-center">3 задания</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 заданий</div>
+                <div class="premium-table-cell premium-table-cell-center">3 Задания</div>
+                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 Заданий</div>
             </div>
             
             <!-- Строка 6: Акцентные цвета -->
@@ -1678,72 +1641,95 @@
     </div>
 </div>
 
-<!-- ===== МОДАЛКА: СОЗДАТЬ УПРАЖНЕНИЕ ===== -->
-<div id="createExerciseModal" class="modal-overlay" style="display:none;">
+<!-- ===== УНИВЕРСАЛЬНАЯ МОДАЛКА: УПРАЖНЕНИЕ (СОЗДАТЬ / РЕДАКТИРОВАТЬ) ===== -->
+<div id="exerciseUniversalModal" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-width:400px;">
-        <div class="modal-title" style="text-align:center;">СОЗДАТЬ УПРАЖНЕНИЕ</div>
+        <div class="modal-title" id="exerciseUniversalTitle" style="text-align:center;">СОЗДАТЬ УПРАЖНЕНИЕ</div>
+        
         <div class="form-group" style="text-align:left;">
-            <label class="form-label">Название</label>
-            <input type="text" id="createExerciseName" class="form-input" maxlength="50" value="Новое упражнение" />
+            <label class="form-label" for="exerciseUniversalName">Название</label>
+            <input type="text" id="exerciseUniversalName" class="form-input" maxlength="50" placeholder="Название упражнения" />
         </div>
-        <div class="form-group" style="text-align:left;">
-            <label class="form-label">Выбрать значок</label>
-            <div class="icon-pickerMOD" id="createExerciseIconPicker">
-                <div class="icon-option icon-option-active" data-icon="bodybuilding">
-                    <img src="images/bodybuilding.png">
-                </div>
-                <div class="icon-option" data-icon="press">
-                    <img src="images/press.png">
-                </div>
-                <div class="icon-option" data-icon="breast">
-                    <img src="images/breast.png">
-                </div>
-                <div class="icon-option" data-icon="back">
-                    <img src="images/back.png">
-                </div>
-                <div class="icon-option" data-icon="legs">
-                    <img src="images/legs.png">
-                </div>
-                <div class="icon-option" data-icon="shoulder">
-                    <img src="images/shoulder.png">
-                </div>
-                <div class="icon-option" data-icon="cardio">
-                    <img src="images/cardio.png">
-                </div>
-                <div class="icon-option" data-icon="stretching">
-                    <img src="images/stretching.png">
-                </div>
-                <div class="icon-option" data-icon="WholeBody">
-                    <img src="images/WholeBody.png">
-                </div>
-                <div class="icon-option" data-icon="charging">
-                    <img src="images/charging.png">
-                </div>
-                <div class="icon-option" data-icon="Pilates">
-                    <img src="images/Pilates.png">
+
+                <!-- ★★★ БЛОК ВЫБОРА ЗНАЧКА (СКРЫТ ПО УМОЛЧАНИЮ) ★★★ -->
+        <div id="universalIconPickerBlock" style="display:none;">
+            <div class="form-group" style="text-align:left;">
+                <label class="form-label">Выбрать значок</label>
+                <div class="icon-picker" id="universalIconPicker">
+                    <div class="icon-option icon-option-active" data-icon="bodybuilding">
+                        <img src="images/bodybuilding.png">
+                    </div>
+                    <div class="icon-option" data-icon="press">
+                        <img src="images/press.png">
+                    </div>
+                    <div class="icon-option" data-icon="breast">
+                        <img src="images/breast.png">
+                    </div>
+                    <div class="icon-option" data-icon="back">
+                        <img src="images/back.png">
+                    </div>
+                    <div class="icon-option" data-icon="legs">
+                        <img src="images/legs.png">
+                    </div>
+                    <div class="icon-option" data-icon="shoulder">
+                        <img src="images/shoulder.png">
+                    </div>
+                    <div class="icon-option" data-icon="cardio">
+                        <img src="images/cardio.png">
+                    </div>
+                    <div class="icon-option" data-icon="stretching">
+                        <img src="images/stretching.png">
+                    </div>
+                    <div class="icon-option" data-icon="WholeBody">
+                        <img src="images/WholeBody.png">
+                    </div>
+                    <div class="icon-option" data-icon="charging">
+                        <img src="images/charging.png">
+                    </div>
+                    <div class="icon-option" data-icon="Pilates">
+                        <img src="images/Pilates.png">
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="form-group" style="text-align:left;">
-            <label class="form-label">Тип</label>
-            <div class="toggle-group">
-                <button class="toggle-btn toggle-btn-active" data-type="reps">Повторения</button>
-                <button class="toggle-btn" data-type="seconds">Секунды</button>
+        
+        <!-- КНОПКИ ПЕРЕКЛЮЧЕНИЯ ТИПА -->
+        <div class="form-group" style="text-align:left; margin-bottom: 0.8rem;">
+            <label class="form-label" style="display:block; margin-bottom: 0.3rem;">Тип</label>
+            <div style="display:flex; gap:0.5rem; background:var(--light); padding:0.3rem; border-radius:8px;">
+                <button class="toggle-btn toggle-btn-active" data-type="reps" onclick="toggleExerciseTypeUniversal('reps')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:var(--accent); color:var(--white); transition:all 0.2s ease;">
+                    Повторения
+                </button>
+                <button class="toggle-btn" data-type="seconds" onclick="toggleExerciseTypeUniversal('seconds')" style="flex:1; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; background:transparent; color:var(--slate); transition:all 0.2s ease;">
+                    Секунды
+                </button>
             </div>
         </div>
+        
         <div class="form-row">
             <div class="form-group" style="text-align:left;">
-                <label class="form-label">Подходы</label>
-                <input type="number" id="createExerciseSets" class="form-input" value="3" min="1" max="5" step="1" />
+                <label class="form-label" for="exerciseUniversalSets">Подходы</label>
+                <input type="number" id="exerciseUniversalSets" class="form-input" style="text-align:center;" min="1" max="5" step="1" value="3" />
             </div>
             <div class="form-group" style="text-align:left;">
-                <label class="form-label" id="createSecondLabel">Повторения</label>
-                <input type="number" id="createExerciseReps" class="form-input" value="12" min="2" max="60" step="1" />
+                <label class="form-label" for="exerciseUniversalReps" id="exerciseUniversalRepsLabel">Повторения</label>
+                <input type="number" id="exerciseUniversalReps" class="form-input" style="text-align:center;" min="1" max="60" step="1" value="12" />
             </div>
         </div>
-        <div class="form-actions">
-            <button class="btn btn-secondary" id="createExerciseCancelBtn" style="flex:1;">Отмена</button>
-            <button class="btn btn-primary" id="createExerciseSaveBtn" style="flex:1;">Сохранить</button>
+        
+        <!-- ★★★ КИЛОГРАММ С КНОПКАМИ ★★★ -->
+        <div class="form-group" id="universalWeightGroup" style="text-align:left;">
+            <label class="form-label">Килограммы</label>
+            <div class="weight-picker" style="display:flex; align-items:center; gap:0.5rem; justify-content:center;">
+                <button type="button" class="weight-btn" onclick="adjustUniversalWeight(-0.5)">-0.5</button>
+                <span id="exerciseUniversalWeightDisplay" class="weight-text">0</span>
+                <button type="button" class="weight-btn" onclick="adjustUniversalWeight(0.5)">+0.5</button>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:0.8rem; margin-top:0.5rem;">
+            <button class="btn btn-secondary" id="exerciseUniversalCancelBtn" style="flex:1;">Отмена</button>
+            <button class="btn btn-primary" id="exerciseUniversalSaveBtn" style="flex:1;">Сохранить</button>
         </div>
     </div>
 </div>
