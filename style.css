@@ -4561,3 +4561,33 @@ body.theme-dark-mode #sessionSetCounter {
 .editing .edit-exercise-item:active {
     cursor: grabbing;
 }
+
+/* Стили для перетаскивания упражнений */
+.edit-exercise-item.sortable-chosen {
+    opacity: 0.8 !important;
+    transform: scale(1.02) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+}
+
+.edit-exercise-item.sortable-ghost {
+    opacity: 0.3 !important;
+    border: 2px dashed var(--accent) !important;
+}
+
+.edit-drag-handle {
+    touch-action: none !important;
+    cursor: grab;
+    padding: 8px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--slate);
+    font-size: 1.2rem;
+}
+
+.edit-drag-handle:active {
+    cursor: grabbing;
+}

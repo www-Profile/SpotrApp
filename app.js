@@ -5213,25 +5213,51 @@ function renderEditExercises() {
         if (hasWeight(ex)) {
             detailsText += ` · ${ex.weight} кг`;
         }
-return `
-    <div class="edit-exercise-item" data-index="${index}" draggable="true">
-        <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
-        <div class="item-icon">
-            <img src="images/${icon}.png" class="edit-exercise-icon">
-        </div>
-        <div class="edit-exercise-info">
-            <h4 class="edit-exercise-name">${ex.name}</h4>
-            <p class="edit-exercise-details">${detailsText}</p>
-        </div>
-        <div class="edit-exercise-actions">
-            <button class="edit-btn" onclick="openEditExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
-            <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
-        </div>
-    </div>
-`;
+        return `
+            <div class="edit-exercise-item" data-index="${index}">
+                <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
+                <div class="item-icon">
+                    <img src="images/${icon}.png" class="edit-exercise-icon">
+                </div>
+                <div class="edit-exercise-info">
+                    <h4 class="edit-exercise-name">${ex.name}</h4>
+                    <p class="edit-exercise-details">${detailsText}</p>
+                </div>
+                <div class="edit-exercise-actions">
+                    <button class="edit-btn" onclick="openEditExerciseModal(${index})"><i class="fa-regular fa-pen-to-square"></i></button>
+                    <button class="delete-btn" onclick="removeEditExercise(${index})"><i class="fa-regular fa-trash-can"></i></button>
+                </div>
+            </div>
+        `;
     }).join('');
     container.innerHTML = headerHtml + exercisesHtml;
-    setupDragDrop();
+    
+    // ★★★ ЗАМЕНЯЕМ setupDragDrop() НА Sortable ★★★
+    // setupDragDrop(); // КОММЕНТИРУЕМ ИЛИ УДАЛЯЕМ
+    
+    // ★★★ ИНИЦИАЛИЗИРУЕМ SORTABLE ★★★
+    if (container.querySelector('.edit-exercise-item')) {
+        new Sortable(container, {
+            animation: 150,
+            handle: '.edit-drag-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            forceFallback: true,
+            delay: 200,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 10,
+            onEnd: function(evt) {
+                const oldIndex = evt.oldIndex;
+                const newIndex = evt.newIndex;
+                if (oldIndex !== newIndex) {
+                    const [removed] = editExercises.splice(oldIndex, 1);
+                    editExercises.splice(newIndex, 0, removed);
+                    renderEditExercises();
+                    showToast('✅ Упражнение перемещено');
+                }
+            }
+        });
+    }
 }
 
 document.getElementById('sessionEditBtn')?.addEventListener('click', function() {
@@ -5262,43 +5288,7 @@ function openEditExerciseModal(index) {
 }
 
 // ===================DRAG & DROP ===================
-let dragStartIndex = null;
 
-function setupDragDrop() {
-    const items = document.querySelectorAll('.edit-exercise-item');
-    items.forEach((item, index) => {
-        item.draggable = true;
-        item.dataset.index = index;
-        item.addEventListener('dragstart', function(e) {
-            dragStartIndex = parseInt(this.dataset.index);
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        item.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
-            document.querySelectorAll('.edit-exercise-item').forEach(el => el.classList.remove('drag-over'));
-        });
-        item.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
-        });
-        item.addEventListener('dragleave', function(e) {
-            this.classList.remove('drag-over');
-        });
-        item.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-            const dropIndex = parseInt(this.dataset.index);
-            if (dragStartIndex !== null && dragStartIndex !== dropIndex) {
-                const [removed] = editExercises.splice(dragStartIndex, 1);
-                editExercises.splice(dropIndex, 0, removed);
-                renderEditExercises();
-                setupDragDrop();
-            }
-            dragStartIndex = null;
-        });
-    });
-}
 
 // ===================УПРАВЛЕНИЕ УПРАЖНЕНИЯМИ В РЕДАКТИРОВАНИИ ===================
 window.addEditExercise = function() {
