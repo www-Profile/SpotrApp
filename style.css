@@ -4489,16 +4489,32 @@ body.theme-dark-mode #sessionSetCounter {
 
 #dayWorkoutsList::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+/* Скрываем по умолчанию */
+.section-drag {
+    display: none !important;
+}
+
+/* Показываем только в режиме редактирования */
+.editing .section-drag {
+    display: flex !important;
+}
+
 /* Запрещаем скролл при перетаскивании на телефонах */
 .sortable-chosen,
 .sortable-ghost {
     touch-action: none !important;
 }
 
+/* В режиме редактирования элементы не мешают скроллу */
 .editing .item-card,
 .editing .stat-card,
-.editing .stat-item,
-.editing .section-block {
+.editing .stat-item {
+    touch-action: auto !important; /* Разрешаем скролл */
+}
+
+/* Но при перетаскивании блокируем */
+.sortable-chosen,
+.sortable-ghost {
     touch-action: none !important;
 }
 
@@ -4506,12 +4522,6 @@ body.theme-dark-mode #sessionSetCounter {
 .edit-drag-handle {
     touch-action: none !important;
     cursor: grab;
-    padding: 8px;
-    min-height: 44px;
-    min-width: 44px;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Увеличенная зона для захвата на телефонах */
@@ -4527,4 +4537,41 @@ body.theme-dark-mode #sessionSetCounter {
         min-height: 44px !important;
     }
 }
+
+/* Drag & Drop для упражнений в редактировании */
+.edit-exercise-item.dragging {
+    opacity: 0.4;
+    border-color: var(--accent);
+}
+
+.edit-exercise-item.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.edit-drag-handle {
+    color: var(--slate);
+    font-size: 1.2rem;
+    cursor: grab;
+    display: flex;
+    flex-direction: column;
+    line-height: 0.4;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 4px 8px;
+    touch-action: none !important;
+}
+
+/* В режиме редактирования карточки упражнений становятся перетаскиваемыми */
+.editing .edit-exercise-item {
+    cursor: grab;
+    border: 2px solid transparent;
+}
+
+.editing .edit-exercise-item:hover {
+    border-color: var(--accent);
+}
+
+.editing .edit-exercise-item:active {
+    cursor: grabbing;
 }

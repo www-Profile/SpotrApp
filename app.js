@@ -9028,19 +9028,20 @@ initSortables() {
             forceFallback: true,
             filter: filter,
             preventOnFilter: false,
-            // ★★★ НАСТРОЙКИ ДЛЯ ТЕЛЕФОНОВ ★★★
             delay: 200,
             delayOnTouchOnly: true,
-            touchStartThreshold: 5,
+            touchStartThreshold: 10,
             scroll: true,
-            scrollSensitivity: 30,
-            scrollSpeed: 10,
+            scrollSensitivity: 50,
+            scrollSpeed: 15,
             bubbleScroll: true,
             onChoose: function(evt) {
                 document.body.style.overflow = 'hidden';
+                document.body.style.touchAction = 'none';
             },
             onUnchoose: function(evt) {
                 document.body.style.overflow = '';
+                document.body.style.touchAction = '';
             }
         });
         this.sortableInstances.push(s);
