@@ -5227,7 +5227,6 @@ function initEditSortable() {
             });
             
             saveEditExercisesState();
-            showToast('✅ Упражнение перемещено');
         }
     });
 }
