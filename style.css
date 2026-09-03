@@ -1308,7 +1308,7 @@ body {
 }
 
 .settings-icon-danger {
-    background: #FEE2E2 !important;
+    background: #ffe5ea !important;
     color: #EF4444 !important;
 }
 
@@ -4353,14 +4353,13 @@ body.theme-dark-mode .achievement-modal-progress-text.unlocked {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
-    margin-top: 0.3rem;
 }
 
 .rest-time-btn {
     flex: 1;
     min-width: 44px;
     padding: 0.4rem 0.2rem;
-    border: 2px solid var(--light-grey);
+    border: 1px solid var(--light-grey);
     border-radius: 10px;
     background: var(--white);
     color: var(--slate);
@@ -4507,3 +4506,116 @@ body.theme-dark-mode #sessionSetCounter {
 }
 
 #dayWorkoutsList::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+
+.dayWorkoutsList {
+max-height:40vh;
+ overflow-y:auto;
+  text-align:left;
+   padding:0.5rem;
+    background:var(--light);
+     border-radius:8px;
+      scrollbar-width:none;
+ -ms-overflow-style:none;
+}
+
+body.theme-dark-mode .dayWorkoutsList {
+    background:var(--bg-primary);
+}
+
+.weekly-load {
+    background: var(--white);
+    padding: 0.5rem;
+    border-radius: 16px;
+}
+
+.weekly-load-naw {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 0.5rem;
+}
+
+.weekly-load-naw-title {
+    font-weight:600;
+    font-size:0.9rem;
+    color:var(--dark);
+}
+.weekly-load-Chart {
+    background: var(--light);
+    border: 1px solid var(--light-grey);
+    border-radius: 12px;
+}
+
+.weekly-load-info {
+    display:flex;
+    justify-content:space-between;
+    margin-top:0.5rem;
+    padding:0.3rem 0.5rem;
+    font-size:0.6rem;
+    color:var(--slate);
+    background:var(--white);
+    border-radius:6px;
+}
+
+body.theme-dark-mode .weekly-load-info {
+    color:var(--slate);
+    background: var(--bg-secondary);
+}
+
+body.theme-dark-mode .weekly-load-Chart {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+body.theme-dark-mode .weekly-load-naw-title {
+    color:var(--text-primary);
+}
+
+body.theme-dark-mode .weekly-load {
+    background: var(--bg-secondary);
+}
+
+/* Стили для кнопок-переключателей */
+.toggle-group {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--light);
+    padding: 0.3rem;
+    border-radius: 8px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--slate);
+}
+
+.toggle-btn-active {
+    background: var(--white) !important;
+    color: var(--slate) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Для тёмной темы */
+
+
+.theme-dark-mode .toggle-btn-active {
+    background: var(--bg-secondary) !important;
+}
+
+/* =================== ЗАДАНИЯ (КУРСОР) ==================== */
+.settings-item .task-checkbox {
+    cursor: pointer !important;
+}
+
+.settings-item .task-checkbox i {
+    pointer-events: none;
+}
+
