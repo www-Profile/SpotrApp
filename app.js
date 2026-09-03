@@ -7034,7 +7034,10 @@ async function acceptFriendRequest(requestId, fromUserId) {
             return { success: false, error: 'Заявка не найдена' };
         }
         
+        // ПРИНИМАЕМ ЗАЯВКУ
         await firebase.firestore().collection('friendRequests').doc(requestId).update({ status: 'accepted' });
+        
+        // ДОБАВЛЯЕМ ДРУГА ОБОИМ
         await firebase.firestore().collection('users').doc(user.uid).update({ 
             friends: firebase.firestore.FieldValue.arrayUnion(fromUserId) 
         });
@@ -7042,17 +7045,19 @@ async function acceptFriendRequest(requestId, fromUserId) {
             friends: firebase.firestore.FieldValue.arrayUnion(user.uid) 
         });
         
+        // ОЧИЩАЕМ УВЕДОМЛЕНИЕ О ЗАЯВКЕ
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const updated = shownRequests.filter(id => id !== requestId);
         localStorage.setItem('shownFriendRequests', JSON.stringify(updated));
         
+        // ПОЛУЧАЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ
         const currentUserProfile = await getUserProfile(user.uid);
         const currentUserName = currentUserProfile.success ? currentUserProfile.data.displayName : 'Пользователь';
         
         const friendProfile = await getUserProfile(fromUserId);
         const friendName = friendProfile.success ? friendProfile.data.displayName : 'Пользователь';
         
-        // ===== УВЕДОМЛЕНИЕ ДЛЯ ТОГО, КТО ПРИНЯЛ ЗАЯВКУ (МАТВЕЙ) =====
+        // ===== УВЕДОМЛЕНИЕ ДЛЯ ТОГО, КТО ПРИНЯЛ ЗАЯВКУ =====
         const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
         if (!shownFriendNotifications.includes(fromUserId)) {
             showNotification('👥', `У вас новый друг — ${friendName}!`, null);
@@ -7060,10 +7065,23 @@ async function acceptFriendRequest(requestId, fromUserId) {
             localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
         }
         
-        // ===== ЗАДАНИЕ ДЛЯ ТОГО, КТО ПРИНЯЛ ЗАЯВКУ (МАТВЕЙ) =====
-        checkDailyTasksAfterAddFriend();
+        // ★★★ ===== ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА (ДЛЯ ТОГО, КТО ПРИНЯЛ) ===== ★★★
+        const tasksData = JSON.parse(localStorage.getItem('sportapp_tasks') || '{}');
+        if (!tasksData[4]) {
+            tasksData[4] = true;
+            localStorage.setItem('sportapp_tasks', JSON.stringify(tasksData));
+            
+            // ★★★ ОБНОВЛЯЕМ ГЛОБАЛЬНЫЙ МАССИВ tasks ★★★
+            tasks[4] = true;
+            
+            // ★★★ ОБНОВЛЯЕМ UI ★★★
+            updateTasksUI();
+            
+            showToast('✅ Задание "Новые знакомства" выполнено!');
+            addTaskXp();
+        }
         
-        // ★★★ ===== УВЕДОМЛЕНИЕ ДЛЯ ТОГО, КТО ОТПРАВИЛ ЗАЯВКУ (ДАША) ===== ★★★
+        // ===== УВЕДОМЛЕНИЕ ДЛЯ ТОГО, КТО ОТПРАВИЛ ЗАЯВКУ =====
         await firebase.firestore().collection('notifications').add({
             to: fromUserId,
             from: user.uid,
@@ -7074,34 +7092,7 @@ async function acceptFriendRequest(requestId, fromUserId) {
             read: false
         });
         
-        // ★★★ ===== ЗАДАНИЕ ДЛЯ ТОГО, КТО ОТПРАВИЛ ЗАЯВКУ (ДАША) ===== ★★★
-        // Добавляем задание "Новые знакомства" для отправителя
-        const senderTasks = JSON.parse(localStorage.getItem('sportapp_tasks') || '{}');
-        if (!senderTasks[4]) {
-            senderTasks[4] = true;
-            localStorage.setItem('sportapp_tasks', JSON.stringify(senderTasks));
-            // Начисляем XP отправителю
-            try {
-                const senderProfile = await getUserProfile(fromUserId);
-                if (senderProfile.success) {
-                    const currentXp = senderProfile.data.totalXp || 0;
-                    await updateUserProfile(fromUserId, { totalXp: currentXp + 10 });
-                }
-            } catch (error) {
-                console.error('Ошибка начисления XP отправителю:', error);
-            }
-        }
-        
         await renderFriendsInProfile();
-        
-        // ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА (ДЛЯ ТОГО, КТО ПРИНЯЛ)
-        if (!tasks[4]) {
-            tasks[4] = true;
-            saveTasks();
-            updateTasksUI();
-            showToast('✅ Задание "Новые знакомства" выполнено!');
-            addTaskXp();
-        }
         
         // ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ
         if (checkAllTasksCompleted()) {
@@ -7120,9 +7111,6 @@ async function acceptFriendRequest(requestId, fromUserId) {
             );
         }
         
-        // ПРОВЕРЯЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ (ДОБАВЛЕНИЕ ДРУГА)
-        checkDailyTasksAfterAddFriend();
-        
         return { success: true };
     } catch (error) {
         console.error('Ошибка принятия заявки:', error);
@@ -7140,7 +7128,6 @@ async function acceptFriendRequest(requestId, fromUserId) {
 
 function listenForFriendAcceptedNotifications() {
     firebase.auth().onAuthStateChanged(async (user) => {
-        // ОТПИСЫВАЕМСЯ ОТ СТАРОГО СЛУШАТЕЛЯ
         if (window._friendAcceptedListener) {
             window._friendAcceptedListener();
             window._friendAcceptedListener = null;
@@ -7158,38 +7145,41 @@ function listenForFriendAcceptedNotifications() {
                     if (change.type === 'added') {
                         const data = change.doc.data();
                         
-                        // Проверяем, не показывали ли уже это уведомление
                         const notificationId = 'friend_accepted_' + change.doc.id;
                         if (isNotificationSeen(notificationId)) continue;
                         
-                        // Показываем уведомление
                         showNotification(
                             '👥',
                             data.message || `${data.fromName} принял(а) вашу заявку в друзья!`,
                             null
                         );
                         
-                        // ★★★ ===== ЗАДАНИЕ ДЛЯ ОТПРАВИТЕЛЯ ЗАЯВКИ (ДАША) ===== ★★★
-                        // Проверяем задание "Новые знакомства" для отправителя
-                        const senderTasks = JSON.parse(localStorage.getItem('sportapp_tasks') || '{}');
-                        if (!senderTasks[4]) {
-                            senderTasks[4] = true;
-                            localStorage.setItem('sportapp_tasks', JSON.stringify(senderTasks));
+                        // ★★★ ===== ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА (ДЛЯ ОТПРАВИТЕЛЯ) ===== ★★★
+                        const tasksData = JSON.parse(localStorage.getItem('sportapp_tasks') || '{}');
+                        if (!tasksData[4]) {
+                            tasksData[4] = true;
+                            localStorage.setItem('sportapp_tasks', JSON.stringify(tasksData));
                             
-                            // Начисляем XP отправителю
+                            // ★★★ ОБНОВЛЯЕМ ГЛОБАЛЬНЫЙ МАССИВ tasks ★★★
+                            tasks[4] = true;
+                            
+                            // ★★★ ОБНОВЛЯЕМ UI ★★★
+                            updateTasksUI();
+                            
+                            showToast('✅ Задание "Новые знакомства" выполнено!');
+                            
+                            // Начисляем XP
                             try {
                                 const senderProfile = await getUserProfile(user.uid);
                                 if (senderProfile.success) {
                                     const currentXp = senderProfile.data.totalXp || 0;
                                     await updateUserProfile(user.uid, { totalXp: currentXp + 10 });
-                                    showToast('✅ Задание "Новые знакомства" выполнено! +10 XP');
                                 }
                             } catch (error) {
-                                console.error('Ошибка начисления XP отправителю:', error);
+                                console.error('Ошибка начисления XP:', error);
                             }
                         }
                         
-                        // Отмечаем как прочитанное
                         await firebase.firestore()
                             .collection('notifications')
                             .doc(change.doc.id)
@@ -7252,7 +7242,7 @@ async function getFriendsList() {
     }
 }
 
-// ===================РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ ===================
+// =================== РЕНДЕР ДРУЗЕЙ В ПРОФИЛЕ (ИСПРАВЛЕННЫЙ) ===================
 async function renderFriendsInProfile() {
     const searchBtn = document.getElementById('searchFriendBtn') || document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
@@ -7278,29 +7268,29 @@ async function renderFriendsInProfile() {
                 resultsDiv.innerHTML = '<p style="color:var(--slate);font-size:0.9rem;text-align:center;padding:1rem;">Пользователи не найдены</p>'; 
                 return; 
             }
-resultsDiv.innerHTML = result.data.map(u => {
-    const initial = (u.displayName || 'П')[0].toUpperCase();
-    const level = getCurrentLevel(u.totalXp || 0).id;
-    const xp = (u.totalXp || 0).toFixed(1);
-    let buttonHtml = '';
-    if (u.friendshipStatus === 'none') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
-    } else if (u.friendshipStatus === 'pending_sent') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
-    } else if (u.friendshipStatus === 'pending_received') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
-    } else if (u.friendshipStatus === 'friends') {
-        buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
-    }
-    return `<div class="friend-result-item">
-        <div class="friend-avatar">${initial}</div>
-        <div class="friend-result-info">
-            <strong>${u.displayName || 'Пользователь'}</strong>
-            <span>Уровень ${level} · ${xp} XP</span>
-        </div>
-        ${buttonHtml}
-    </div>`;
-}).join('');
+            resultsDiv.innerHTML = result.data.map(u => {
+                const initial = (u.displayName || 'П')[0].toUpperCase();
+                const level = getCurrentLevel(u.totalXp || 0).id;
+                const xp = (u.totalXp || 0).toFixed(1);
+                let buttonHtml = '';
+                if (u.friendshipStatus === 'none') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
+                } else if (u.friendshipStatus === 'pending_sent') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Ждем ответа</button>`;
+                } else if (u.friendshipStatus === 'pending_received') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Входящая заявка</button>`;
+                } else if (u.friendshipStatus === 'friends') {
+                    buttonHtml = `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">В друзьях</button>`;
+                }
+                return `<div class="friend-result-item">
+                    <div class="friend-avatar">${initial}</div>
+                    <div class="friend-result-info">
+                        <strong>${u.displayName || 'Пользователь'}</strong>
+                        <span>Уровень ${level} · ${xp} XP</span>
+                    </div>
+                    ${buttonHtml}
+                </div>`;
+            }).join('');
         };
         
         if (searchInput) {
@@ -7316,7 +7306,6 @@ resultsDiv.innerHTML = result.data.map(u => {
         const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
         const newRequests = requests.data.filter(r => !shownRequests.includes(r.id));
         
-        // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ ДЛЯ НОВЫХ ЗАЯВОК ★★★
         newRequests.forEach(r => {
             const fromUser = r.fromUser || {};
             const name = fromUser.displayName || 'Пользователь';
@@ -7327,25 +7316,23 @@ resultsDiv.innerHTML = result.data.map(u => {
             });
         });
         
-        // ★★★ СОХРАНЯЕМ ВСЕ ПОКАЗАННЫЕ ЗАЯВКИ ★★★
         const updatedShown = [...shownRequests, ...newRequests.map(r => r.id)];
         localStorage.setItem('shownFriendRequests', JSON.stringify(updatedShown));
         
-        // ★★★ РЕНДЕРИМ ЗАЯВКИ ★★★
-let requestsHtml = requests.data.map(r => {
-    const fromUser = r.fromUser || {};
-    const initial = (fromUser.displayName || 'П')[0].toUpperCase();
-    const level = getCurrentLevel(fromUser.totalXp || 0).id;
-    const xp = (fromUser.totalXp || 0).toFixed(1);
-    return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
-        <div class="friend-avatar">${initial}</div>
-        <div class="friend-result-info">
-            <strong>${fromUser.displayName || 'Пользователь'}</strong>
-            <span>Уровень ${level} · ${xp} XP</span>
-        </div>
-        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>`;
-}).join('');
+        let requestsHtml = requests.data.map(r => {
+            const fromUser = r.fromUser || {};
+            const initial = (fromUser.displayName || 'П')[0].toUpperCase();
+            const level = getCurrentLevel(fromUser.totalXp || 0).id;
+            const xp = (fromUser.totalXp || 0).toFixed(1);
+            return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
+                <div class="friend-avatar">${initial}</div>
+                <div class="friend-result-info">
+                    <strong>${fromUser.displayName || 'Пользователь'}</strong>
+                    <span>Уровень ${level} · ${xp} XP</span>
+                </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>`;
+        }).join('');
         if (requestsDiv) requestsDiv.innerHTML = requestsHtml;
     } else {
         if (requestsDiv) requestsDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">📧</span><h3 class="empty-title">Нет заявок</h3><p class="empty-text">Здесь будут отображаться входящие заявки.</p></div>';
@@ -7355,37 +7342,23 @@ let requestsHtml = requests.data.map(r => {
     const friends = await getFriendsList();
     let friendsHtml = '';
     if (friends.success && friends.data.length > 0) {
-        const prevFriends = JSON.parse(localStorage.getItem('prevFriendsList') || '[]');
-        const prevFriendIds = prevFriends.map(f => f.id);
-        const shownFriendNotifications = JSON.parse(localStorage.getItem('shownFriendNotifications') || '[]');
+        // ★★★ УБИРАЕМ АВТОМАТИЧЕСКОЕ УВЕДОМЛЕНИЕ ПРИ РЕНДЕРЕ ★★★
+        // Уведомления о новых друзьях теперь показываются ТОЛЬКО в acceptFriendRequest
+        // и в listenForFriendAcceptedNotifications
         
-        friends.data.forEach(f => {
-            const friendId = f.id;
-            const friendName = f.displayName || 'Пользователь';
-            if (!prevFriendIds.includes(friendId) && !shownFriendNotifications.includes(friendId)) {
-                showNotification('👥', `У вас новый друг — ${friendName}!`, null, true, function() {
-                    TabManager.profile('friends');
-                    window.navigateTo('profile');
-                    setTimeout(() => renderFriendsInProfile(), 300);
-                });
-                shownFriendNotifications.push(friendId);
-                localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
-            }
-        });
-        localStorage.setItem('prevFriendsList', JSON.stringify(friends.data));
-friendsHtml = friends.data.map(f => {
-    const initial = (f.displayName || 'П')[0].toUpperCase();
-    const level = getCurrentLevel(f.totalXp || 0).id;
-    const xp = (f.totalXp || 0).toFixed(1);
-    return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
-        <div class="friend-avatar">${initial}</div>
-        <div class="friend-info">
-            <strong>${f.displayName || 'Пользователь'}</strong>
-            <span>Уровень ${level} · ${xp} XP</span>
-        </div>
-        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>`;
-}).join('');
+        friendsHtml = friends.data.map(f => {
+            const initial = (f.displayName || 'П')[0].toUpperCase();
+            const level = getCurrentLevel(f.totalXp || 0).id;
+            const xp = (f.totalXp || 0).toFixed(1);
+            return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
+                <div class="friend-avatar">${initial}</div>
+                <div class="friend-info">
+                    <strong>${f.displayName || 'Пользователь'}</strong>
+                    <span>Уровень ${level} · ${xp} XP</span>
+                </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>`;
+        }).join('');
     } else {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
@@ -8877,6 +8850,8 @@ async function resetProgress() {
     }
 
     try {
+        showToast('✅ Прогресс сброшен');
+        // 1. Удаляем все тренировки из Firestore
         const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
         if (workoutsResult.success) {
             const workouts = workoutsResult.data;
@@ -8886,39 +8861,23 @@ async function resetProgress() {
             console.log(`✅ Удалено ${workouts.length} выполненных тренировок`);
         }
 
+        // 2. Обнуляем XP
         await updateUserProfile(user.uid, { totalXp: 0 });
 
-        const theme = localStorage.getItem('themeColor') || 'red';
-        const premium = localStorage.getItem(PREMIUM_KEY) || 'false';
+        // 3. Сбрасываем достижения
+        await updateUserProfile(user.uid, { achievements: {} });
         
-        const exercisesDataRaw = localStorage.getItem(STORAGE_KEY);
-        const myWorkouts = localStorage.getItem('myCustomWorkouts');
-        const pendingWorkouts = localStorage.getItem('pendingWorkouts');
+        // 4. Очищаем уведомления о достижениях
+        for (const ach of ACHIEVEMENTS_CONFIG) {
+            localStorage.removeItem('achievement_notified_' + ach.id);
+        }
 
+        // ★★★ 5. ПОЛНОСТЬЮ ОЧИЩАЕМ localStorage (ВСЁ!) ★★★
         localStorage.clear();
 
-        localStorage.setItem('themeColor', theme);
-        localStorage.setItem(PREMIUM_KEY, premium);
-        
-        if (exercisesDataRaw) {
-            localStorage.setItem(STORAGE_KEY, exercisesDataRaw);
-        }
-        
-        if (myWorkouts) {
-            localStorage.setItem('myCustomWorkouts', myWorkouts);
-        }
-        
-        if (pendingWorkouts) {
-            localStorage.setItem('pendingWorkouts', pendingWorkouts);
-        }
-        // Сброс достижений
-await updateUserProfile(user.uid, { achievements: {} });
-// Очищаем уведомления о достижениях
-for (const ach of ACHIEVEMENTS_CONFIG) {
-    localStorage.removeItem('achievement_notified_' + ach.id);
-}
+        // ★★★ 6. НИЧЕГО НЕ ВОССТАНАВЛИВАЕМ! ★★★
+        // Все настройки сбрасываются к значениям по умолчанию
 
-        showToast('✅ Статистика сброшена');
         setTimeout(() => {
             window.location.reload();
         }, 500);
