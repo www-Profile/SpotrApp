@@ -6047,6 +6047,8 @@ async function loadProfile() {
     initProfileBlocks();
     switchProfileTab(activeProfileTab);
 
+    await loadFriendsHistoryVisibilityFromProfile();
+
     renderAchievements();
     loadAchievementsVisibility();
     document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
@@ -7399,8 +7401,14 @@ async function renderFriendsInProfile() {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
     if (friendsDiv) friendsDiv.innerHTML = friendsHtml;
-    // Рендерим историю друзей
-setTimeout(() => renderFriendsHistory(), 300);
+    // ★★★ РЕНДЕРИМ ИСТОРИЮ ДРУЗЕЙ (С УЧЁТОМ ВИДИМОСТИ) ★★★
+    const historyBlock = document.getElementById('friends-history-block');
+    if (historyBlock) {
+        const visible = isFriendsHistoryVisible();
+        historyBlock.style.display = visible ? 'block' : 'none';
+    }
+    
+    setTimeout(() => renderFriendsHistory(), 300);
 }
 
 // ===================ОТКРЫТИЕ ПРОФИЛЯ ЗАЯВКИ ===================
@@ -14157,12 +14165,15 @@ function updateWeeklyLoadDemoTitle() {
 
 // =================== ИСТОРИЯ ДРУЗЕЙ ===================
 
-/**
- * Получить историю тренировок всех друзей
- */
+/*** Получить историю тренировок всех друзей (с учётом их настроек видимости)*/
 async function getFriendsWorkoutHistory() {
     const user = await getFirebaseUser();
     if (!user) return { success: false, error: 'Не авторизован' };
+    
+    // Проверяем, видит ли пользователь историю друзей
+    if (!isFriendsHistoryVisible()) {
+        return { success: true, data: [] };
+    }
     
     try {
         const friendsResult = await getFriendsList();
@@ -14173,6 +14184,15 @@ async function getFriendsWorkoutHistory() {
         const allHistory = [];
         
         for (const friend of friendsResult.data) {
+            // ★★★ ПРОВЕРЯЕМ, РАЗРЕШАЕТ ЛИ ДРУГ ВИДЕТЬ СВОЮ ИСТОРИЮ ★★★
+            const friendProfile = await getUserProfile(friend.id);
+            if (!friendProfile.success) continue;
+            
+            // Если друг скрыл историю - пропускаем его
+            if (friendProfile.data.friendsHistoryVisible === false) {
+                continue;
+            }
+            
             const workoutsResult = await getUserWorkoutsFromFirestore(friend.id);
             if (workoutsResult.success && workoutsResult.data.length > 0) {
                 // Фильтруем только тренировки (не зарядку)
@@ -14230,6 +14250,18 @@ async function renderFriendsHistory() {
     const container = document.getElementById('friendsHistoryContainer');
     if (!container) return;
     
+    // Проверяем, видит ли пользователь историю
+    if (!isFriendsHistoryVisible()) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span class="empty-icon">🔒</span>
+                <h3 class="empty-title">История скрыта</h3>
+                <p class="empty-text">Вы скрыли историю друзей. Включите в настройках, чтобы видеть.</p>
+            </div>
+        `;
+        return;
+    }
+    
     container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Загрузка...</div>';
     
     try {
@@ -14264,7 +14296,7 @@ async function renderFriendsHistory() {
         grouped.forEach(group => {
             // Заголовок с именем друга
             html += `
-                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem; margin-top:0.2rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
                     <div class="friend-avatar" style="width:32px; height:32px; font-size:0.8rem;">${group.friendAvatar}</div>
                     <span style="font-weight:600; font-size:0.9rem; color:var(--dark);">${group.friendName}</span>
                 </div>
@@ -14279,7 +14311,7 @@ async function renderFriendsHistory() {
                 const date = new Date(w.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 
                 html += `
-                    <div class="history-item" style="margin-bottom:0.3rem; cursor:pointer;" onclick="openFriendProfile('${group.friendId}')">
+                    <div class="history-item">
                         <div class="history-item-header">
                             <strong class="history-item-title" style="font-size:0.75rem;">${w.title || 'Тренировка'}</strong>
                             <span class="history-item-date" style="font-size:0.65rem;">${date}</span>
@@ -14307,5 +14339,93 @@ function refreshFriendsHistory() {
     const friendsTab = document.getElementById('profileTab-friends');
     if (friendsTab && friendsTab.classList.contains('profile-tab-content-active')) {
         renderFriendsHistory();
+    }
+}
+
+// =================== ИСТОРИЯ ДРУЗЕЙ - ВИДИМОСТЬ ===================
+
+const FRIENDS_HISTORY_VISIBILITY_KEY = 'friendsHistoryVisible';
+
+/**
+ * Получить настройку видимости истории друзей
+ */
+function isFriendsHistoryVisible() {
+    return localStorage.getItem(FRIENDS_HISTORY_VISIBILITY_KEY) !== 'false';
+}
+
+/**
+ * Обновить UI статуса видимости истории друзей
+ */
+function updateFriendsHistoryStatusUI(visible) {
+    const statusEl = document.getElementById('friendsHistoryStatus');
+    if (statusEl) {
+        statusEl.textContent = visible ? 'Показана' : 'Скрыта';
+    }
+    
+    // Обновляем видимость блока в профиле
+    const block = document.getElementById('friends-history-block');
+    if (block) {
+        block.style.display = visible ? 'block' : 'none';
+    }
+}
+
+/**
+ * Переключить видимость истории друзей
+ */
+function toggleFriendsHistoryVisibility() {
+    const current = isFriendsHistoryVisible();
+    const newState = !current;
+
+    showConfirmModal(
+        newState ? 'Показать историю друзей?' : 'Скрыть историю друзей?',
+        newState
+            ? 'Ваша история тренировок снова будет видна друзьям, и вы будете видеть их историю.'
+            : 'Ваша история тренировок будет скрыта от друзей, и вы не будете видеть их историю.',
+        async function() {
+            localStorage.setItem(FRIENDS_HISTORY_VISIBILITY_KEY, String(newState));
+            updateFriendsHistoryStatusUI(newState);
+            
+            // Обновляем профиль в Firestore
+            const user = await getFirebaseUser();
+            if (user) {
+                await updateUserProfile(user.uid, { 
+                    friendsHistoryVisible: newState 
+                });
+            }
+            
+            // Перерендериваем историю друзей
+            const friendsTab = document.getElementById('profileTab-friends');
+            if (friendsTab && friendsTab.classList.contains('profile-tab-content-active')) {
+                setTimeout(() => renderFriendsHistory(), 300);
+            }
+            
+            showToast(`✅ История друзей ${newState ? 'показана' : 'скрыта'}`);
+        },
+        newState ? 'Показать' : 'Скрыть'
+    );
+}
+
+/**
+ * Загрузить настройку видимости из профиля пользователя
+ */
+async function loadFriendsHistoryVisibilityFromProfile() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        const profileResult = await getUserProfile(user.uid);
+        if (profileResult.success && profileResult.data.friendsHistoryVisible !== undefined) {
+            const visible = profileResult.data.friendsHistoryVisible;
+            localStorage.setItem(FRIENDS_HISTORY_VISIBILITY_KEY, String(visible));
+            updateFriendsHistoryStatusUI(visible);
+        } else {
+            // Если в профиле нет настройки, используем localStorage
+            const visible = isFriendsHistoryVisible();
+            updateFriendsHistoryStatusUI(visible);
+        }
+    } catch (error) {
+        console.warn('Ошибка загрузки настройки видимости истории:', error);
+        const visible = isFriendsHistoryVisible();
+        updateFriendsHistoryStatusUI(visible);
     }
 }

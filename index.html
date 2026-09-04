@@ -1119,6 +1119,16 @@
                             </div>
                             <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
+
+                        <!-- ВСТАВЬТЕ ЭТОТ ПУНКТ В БЛОК ДОПОЛНИТЕЛЬНЫХ НАСТРОЕК -->
+<div class="settings-item" onclick="toggleFriendsHistoryVisibility()">
+    <div class="settings-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+    <div class="settings-info">
+        <div class="settings-title">История друзей</div>
+        <div class="settings-desc" id="friendsHistoryStatus">Показана</div>
+    </div>
+    <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
                         
                         <div class="settings-item" onclick="toggleEditPages()">
                             <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
@@ -1215,8 +1225,8 @@
                 </div>
             </div>
 
-            <!-- Блок 4: История друзей -->
-<div class="section-block" data-block-id="friends-history" style="padding: 0rem 0.2rem; margin-top: 0.5rem;">
+<!-- Блок 4: История друзей (обновленный с ID) -->
+<div class="section-block" id="friends-history-block" data-block-id="friends-history" style="padding: 0rem 0.2rem; margin-top: 0.5rem;">
     <div class="section-header">
         <h2 class="section-title">История друзей</h2>
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
