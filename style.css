@@ -4523,6 +4523,8 @@ body.theme-dark-mode .dayWorkoutsList {
     background:var(--bg-primary);
 }
 
+/* =================== НАГРУЗОЧНЫЙ ИНДЕКС (ДЕМО И ОРИГИНАЛ) ==================== */
+
 .weekly-load {
     background: var(--white);
     padding: 0.5rem;
@@ -4530,36 +4532,87 @@ body.theme-dark-mode .dayWorkoutsList {
 }
 
 .weekly-load-naw {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.5rem;
 }
 
 .weekly-load-naw-title {
-    font-weight:600;
-    font-size:0.9rem;
-    color:var(--dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--dark);
 }
+
 .weekly-load-Chart {
     background: var(--light);
     border: 1px solid var(--light-grey);
     border-radius: 12px;
+    padding: 0.5rem 0.5rem 0.2rem;
+}
+
+.weekly-load-value {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.weekly-load-bar {
+    width: 100%;
+    background: var(--accent-light);
+    border-radius: 6px 6px 0 0;
+    position: relative;
+    border: 1px solid var(--accent);
+    border-bottom: none;
+    min-height: 4px;
+}
+
+.weekly-load-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--accent);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+}
+
+.weekly-load-label {
+    font-size: 0.5rem;
+    color: var(--slate);
+    text-align: center;
+    line-height: 1.2;
 }
 
 .weekly-load-info {
-    display:flex;
-    justify-content:space-between;
-    margin-top:0.5rem;
-    padding:0.3rem 0.5rem;
-    font-size:0.6rem;
-    color:var(--slate);
-    background:var(--white);
-    border-radius:6px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.6rem;
+    color: var(--slate);
+    background: var(--white);
+    border-radius: 6px;
+    border-top: 1px solid var(--light-grey);
 }
 
-body.theme-dark-mode .weekly-load-info {
-    color:var(--slate);
+.weekly-load-premium-banner {
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--slate);
+    background: var(--accent-light);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    cursor: pointer;
+}
+
+.weekly-load-premium-banner strong {
+    color: var(--accent);
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.theme-dark-mode .weekly-load {
     background: var(--bg-secondary);
 }
 
@@ -4569,11 +4622,31 @@ body.theme-dark-mode .weekly-load-Chart {
 }
 
 body.theme-dark-mode .weekly-load-naw-title {
-    color:var(--text-primary);
+    color: var(--text-primary);
 }
 
-body.theme-dark-mode .weekly-load {
+body.theme-dark-mode .weekly-load-info {
+    color: var(--text-secondary);
     background: var(--bg-secondary);
+    border-top-color: var(--border-color);
+}
+
+body.theme-dark-mode .weekly-load-premium-banner {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+}
+
+body.theme-dark-mode .weekly-load-premium-banner strong {
+    color: var(--accent);
+}
+
+body.theme-dark-mode .weekly-load-bar {
+    background: var(--accent-dark);
+    border-color: var(--accent);
+}
+
+body.theme-dark-mode .weekly-load-value {
+    color: var(--accent);
 }
 
 /* Стили для кнопок-переключателей */

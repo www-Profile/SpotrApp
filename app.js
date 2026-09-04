@@ -739,6 +739,9 @@ let coopExercises = [];
 let sessionData = null;
 let coopStarted = false;
 let finishPageShown = false;
+
+// app.js - в самом начале, после объявления констант
+const DAILY_PROGRESS_KEY = 'sportapp_daily_progress';
 // ===================СОВМЕСТНЫЕ ТРЕНИРОВКИ ===================
 const SESSION_MAX_AGE_HOURS = 6; // Максимальное время жизни сессии в часах
 const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_HOURS * 60 * 60 * 1000; // в миллисекундах
@@ -2536,11 +2539,26 @@ function processNotificationQueue() {
             }
             hideNotification();
             
-            // ★★★ ДЛЯ ПРИНУДИТЕЛЬНЫХ УВЕДОМЛЕНИЙ НЕ СОХРАНЯЕМ ★★★
             if (!notification.forceShow && !notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
         };
+        
+        // ★★★ АВТО-ЗАКРЫТИЕ ДЛЯ "ПРИНЯТЬ" — 10 СЕКУНД ★★★
+        if (notification.autoClose !== false) {
+            console.log('⏰ Уведомление с "Принять" закроется через 10 секунд');
+            setTimeout(() => {
+                if (isNotificationShowing) {
+                    console.log('⏰ Авто-закрытие уведомления с "Принять"');
+                    hideNotification();
+                    
+                    if (!notification.forceShow && !notification.isInvite && notification.id) {
+                        markNotificationSeen(notification.id);
+                    }
+                }
+            }, 10000);  // ← 10 СЕКУНД
+        }
+        
     } else {
         console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
         okBtn.textContent = 'ОК';
@@ -2567,7 +2585,6 @@ function processNotificationQueue() {
                 shownThisSession.delete(notification.requestId);
             }
             
-            // ★★★ ДЛЯ ПРИНУДИТЕЛЬНЫХ УВЕДОМЛЕНИЙ НЕ СОХРАНЯЕМ ★★★
             if (!notification.forceShow && !notification.isInvite && notification.id) {
                 markNotificationSeen(notification.id);
             }
@@ -2584,9 +2601,9 @@ function processNotificationQueue() {
         notificationCard.style.opacity = '';
         console.log('✅ Уведомление показано');
         
-        // ★★★ АВТОМАТИЧЕСКОЕ ЗАКРЫТИЕ ЧЕРЕЗ 10 СЕКУНД ★★★
-        if (notification.autoClose !== false) {
-            console.log('⏰ Уведомление закроется через 10 секунд');
+        // ★★★ АВТО-ЗАКРЫТИЕ ДЛЯ "ОК" — 5 СЕКУНД ★★★
+        if (!notification.actionCallback && notification.autoClose !== false) {
+            console.log('⏰ Уведомление закроется через 5 секунд');
             setTimeout(() => {
                 if (isNotificationShowing) {
                     console.log('⏰ Авто-закрытие уведомления');
@@ -2596,7 +2613,7 @@ function processNotificationQueue() {
                         markNotificationSeen(notification.id);
                     }
                 }
-            }, 10000);
+            }, 5000);  // ← 5 СЕКУНД
         }
     }, 100);
 }
@@ -3505,12 +3522,17 @@ function closeModal(modalId) {
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
 window.switchStatsTab = function(tab) {
-    if (!tasks[2]) {
-        tasks[2] = true;
-        saveTasks();
-        updateTasksUI();
-        showToast('✅ Задание "Статистика" выполнено!');
-        addTaskXp();
+    // ★★★ ЕСЛИ ИДЁТ ТУТОРИАЛ — НЕ ВЫПОЛНЯЕМ ЗАДАНИЕ ★★★
+    if (!tutorialActive) {
+        if (!tasks[2]) {
+            tasks[2] = true;
+            saveTasks();
+            updateTasksUI();
+            showToast('✅ Задание "Статистика" выполнено!');
+            addTaskXp();
+        }
+    } else {
+        console.log('⏳ Обучение активно, задание "Статистика" не выполняется');
     }
     
     // Переключаем UI
@@ -5860,6 +5882,9 @@ async function loadStats() {
     applyStatsTab(activeStatsTab);
     initAccordion();
     loadPremiumStats();
+    
+    // ★★★ ПРИМЕНЯЕМ ПОРЯДОК БЛОКОВ (ЕСЛИ НЕТ СОХРАНЁННОГО — ИСПОЛЬЗУЕТ ДЕФОЛТНЫЙ) ★★★
+    applySavedStatsOrder();
 }
 
 // =================== КАЛЕНДАРЬ ===================
@@ -7064,6 +7089,9 @@ async function acceptFriendRequest(requestId, fromUserId) {
             shownFriendNotifications.push(fromUserId);
             localStorage.setItem('shownFriendNotifications', JSON.stringify(shownFriendNotifications));
         }
+
+        // ★★★ ПРОВЕРЯЕМ ЕЖЕДНЕВНОЕ ЗАДАНИЕ "ОБЩИТЕЛЬНЫЙ" ★★★
+checkDailyTasksAfterAddFriend();
         
         // ★★★ ===== ЗАДАНИЕ 4: НОВЫЕ ЗНАКОМСТВА (ДЛЯ ТОГО, КТО ПРИНЯЛ) ===== ★★★
         const tasksData = JSON.parse(localStorage.getItem('sportapp_tasks') || '{}');
@@ -7098,7 +7126,7 @@ async function acceptFriendRequest(requestId, fromUserId) {
         if (checkAllTasksCompleted()) {
             showNotification(
                 '🎉',
-                'Все задания выполнены! Теперь вам доступны ежедневные задания!',
+                'Теперь вам доступны ежедневные задания!',
                 null,
                 true,
                 function() {
@@ -8060,6 +8088,8 @@ function showToast(message, duration = 3000) {
     }, duration);
 }
 
+
+
 // ===================ТУТОРИАЛ ===================
 const TUTORIAL_KEY = 'tutorialCompleted';
 
@@ -8086,6 +8116,9 @@ function startTutorial() {
     
     if (document.getElementById('tutorialOverlay')) return;
 
+    // ★★★ УСТАНАВЛИВАЕМ ФЛАГ, ЧТОБЫ ЗАДАНИЯ НЕ ВЫПОЛНЯЛИСЬ ★★★
+    tutorialActive = true;
+
     _savedEditPagesState = localStorage.getItem(EDIT_PAGES_KEY) !== 'false';
     _savedEditWorkoutState = localStorage.getItem(EDIT_WORKOUT_KEY) !== 'false';
 
@@ -8097,6 +8130,23 @@ function startTutorial() {
     tutorialActive = true;
     document.addEventListener('click', blockClicksDuringTutorial, true);
     showTutorialStep(0);
+}
+
+// ★★★ НОВАЯ ФУНКЦИЯ ДЛЯ КНОПКИ ОБУЧЕНИЯ ★★★
+function restartTutorial() {
+    // Сбрасываем флаг завершения
+    localStorage.removeItem(TUTORIAL_KEY);
+    
+    // Сбрасываем в Firestore
+    const user = firebase.auth().currentUser;
+    if (user) {
+        firebase.firestore().collection('users').doc(user.uid).update({
+            tutorialCompleted: false
+        }).catch(() => {});
+    }
+    
+    // Запускаем туториал
+    startTutorial();
 }
 
 function blockClicksDuringTutorial(e) {
@@ -8198,7 +8248,7 @@ function createTutorialOverlay(step) {
     `;
     document.body.appendChild(tooltip);
 
-    const autoSteps = [1, 9, 10, 14, 15];
+    const autoSteps = [1, 9, 10, 14, 15, 16];
     const isAuto = autoSteps.includes(step.id) && highlightElements.length > 0;
 
     if (isAuto) {
@@ -8287,6 +8337,22 @@ async function finishTutorial() {
     updateEditWorkoutUI(_savedEditWorkoutState);
 
     setTimeout(showRulesModal, 600);
+}
+
+// =================== УМНЫЙ ШАГ ДЛЯ ТУТОРИАЛА ===================
+
+function getTasksHighlight() {
+    const isDaily = checkAllTasksCompleted();
+    return isDaily 
+        ? ['#daily-tasks-block', '#daily-tasks-block .section-header']
+        : ['#tasks-block', '#tasks-block .section-header'];
+}
+
+function getTasksText() {
+    const isDaily = checkAllTasksCompleted();
+    return isDaily 
+        ? 'Это ваши ежедневные задания.\nВыполняйте их каждый день, чтобы получать дополнительный опыт!\nЗадания обновляются ежедневно.'
+        : 'Это ваши первые задания.\nВыполните все 5 заданий, чтобы открыть ежедневные задания!\nЗа каждое задание вы получаете +10 XP.';
 }
 
 const tutorialSteps = [
@@ -8399,26 +8465,77 @@ const tutorialSteps = [
         highlight: [ '.profile-tab-btn[data-tab="my"]', '.profile-tab-btn[data-tab="friends"]'],
         text: 'Страница Профиля делится на два раздела:\nМой и Друзья.'
     },
-{
-    id: 13,
-    page: 'profile',
-    highlight: ['.profile-card', '.level-block', '.profile-tab-btn[data-tab="my"]'],
-    text: 'Это ваш профиль, в нем есть система уровней.\nТренируйтесь, получайте XP и повышайте свой уровень.\nСоревнуйтесь с друзьями и другими пользователями!'
-},
     {
-        id: 14,
+        id: 13,
+        page: 'profile',
+        highlight: ['.profile-card', '.level-block', '.profile-tab-btn[data-tab="my"]'],
+        text: 'Это ваш профиль, в нем есть система уровней.\nТренируйтесь, получайте XP и повышайте свой уровень.\nСоревнуйтесь с друзьями и другими пользователями!'
+    },
+{
+    id: 14,
+    page: 'profile',
+    get highlight() {
+        const isDaily = checkAllTasksCompleted();
+        // ★★★ ВОЗВРАЩАЕМ CSS-СЕЛЕКТОР ДЛЯ НУЖНОГО БЛОКА ★★★
+        return isDaily 
+            ? '#daily-tasks-block .settings-block'
+            : '#tasks-block .settings-block';
+    },
+    get text() {
+        const isDaily = checkAllTasksCompleted();
+        return isDaily 
+            ? 'Это ваши ежедневные задания.\nВыполняйте их каждый день, чтобы получать дополнительный опыт!'
+            : 'Это ваши первые задания.\nВыполните все 5 заданий, чтобы открыть ежедневные задания! За каждое задание вы получаете +10 XP.';
+    },
+    action: function() {
+        const isDaily = checkAllTasksCompleted();
+        
+        if (isDaily) {
+            // ★★★ РАСКРЫВАЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+            const block = document.getElementById('daily-tasks-block');
+            if (block) {
+                block.classList.add('open');
+                block.style.display = 'block';
+                saveBlocksState();
+            }
+            // ★★★ СКРЫВАЕМ ПЕРВЫЕ ЗАДАНИЯ ★★★
+            const tasksBlock = document.getElementById('tasks-block');
+            if (tasksBlock) {
+                tasksBlock.style.display = 'none';
+            }
+            renderDailyTasks();
+        } else {
+            // ★★★ РАСКРЫВАЕМ ПЕРВЫЕ ЗАДАНИЯ ★★★
+            const block = document.getElementById('tasks-block');
+            if (block) {
+                block.classList.add('open');
+                block.style.display = 'block';
+                saveBlocksState();
+            }
+            // ★★★ СКРЫВАЕМ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+            const dailyBlock = document.getElementById('daily-tasks-block');
+            if (dailyBlock) {
+                dailyBlock.style.display = 'none';
+            }
+            updateTasksUI();
+        }
+    }
+},
+    
+    {
+        id: 15,
         page: 'profile',
         highlight: '#settings-block-main .settings-block',
         text: 'В дополнительных настройках вы можете настроить приложение под себя.'
     },
     {
-        id: 15,
+        id: 16,
         page: 'profile',
         highlight: '#dangerSettings .settings-block',
         text: 'Здесь находятся важные настройки. Будьте внимательны - эти действия нельзя отменить.'
     },
     {
-        id: 16,
+        id: 17,
         page: 'profile',
         highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block', '.scroll-wrapper'],
         text: 'Здесь вы можете находить друзей, отправлять им заявки и добавлять их в друзья.',
@@ -8428,7 +8545,7 @@ const tutorialSteps = [
         }
     },
     {
-        id: 17,
+        id: 18,
         page: 'workouts',
         highlight: null,
         text: 'Тренируйтесь с умом и достигайте целей!',
@@ -8466,27 +8583,47 @@ function closePremiumActiveModal() {
 function buyPremium() {
     localStorage.setItem(PREMIUM_KEY, 'true');
     closePremiumModal();
+    
+    // ★★★ ОБНОВЛЯЕМ ВСЕ UI ЭЛЕМЕНТЫ ★★★
     updatePremiumUI();
+    updateWeeklyLoadBlocks();
     
-    // ★★★ ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ★★★
-    // Перезагружаем каталог упражнений
-    allExercisesList = getAllExercises();
-    currentCategoryFilter = 'all';
-    currentSearchQuery = '';
-    document.getElementById('exerciseSearchInput').value = '';
-    
-    // Если страница списка упражнений активна — перерендериваем
-    if (document.getElementById('page-exercise-list').classList.contains('page-active')) {
-        renderExerciseListPageContent();
-    }
-    
-    // Если страница тренировок активна — обновляем премиум-блоки
-    if (document.getElementById('page-workouts').classList.contains('page-active')) {
+    // ★★★ ОБНОВЛЯЕМ СТРАНИЦУ ТРЕНИРОВОК (ЕСЛИ ОНА АКТИВНА) ★★★
+    const workoutsPage = document.getElementById('page-workouts');
+    if (workoutsPage && workoutsPage.classList.contains('page-active')) {
+        // Перерендериваем каталог упражнений
+        if (typeof renderExerciseListPageContent === 'function') {
+            renderExerciseListPageContent();
+        }
+        // Обновляем премиум-блоки
         updatePremiumUI();
     }
     
+    // ★★★ ОБНОВЛЯЕМ СТАТИСТИКУ (ЕСЛИ ОНА АКТИВНА) ★★★
+    const statsPage = document.getElementById('page-stats');
+    if (statsPage && statsPage.classList.contains('page-active')) {
+        // Перезагружаем статистику, чтобы показать нагрузочный индекс
+        if (typeof loadPremiumStats === 'function') {
+            loadPremiumStats();
+        }
+        // Обновляем видимость блоков
+        updateWeeklyLoadBlocks();
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ СПИСОК УПРАЖНЕНИЙ (ЕСЛИ ОН ОТКРЫТ) ★★★
+    const exerciseListPage = document.getElementById('page-exercise-list');
+    if (exerciseListPage && exerciseListPage.classList.contains('page-active')) {
+        if (typeof allExercisesList !== 'undefined') {
+            allExercisesList = getAllExercises();
+            renderExerciseListPageContent();
+        }
+    }
+    
+    // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ★★★
     showToast('👑 Поздравляем! PREMIUM активирован!');
-    setTimeout(() => openPremiumActiveModal(), 300);
+    
+    // ★★★ ОТКРЫВАЕМ МОДАЛКУ PREMIUM АКТИВИРОВАН ★★★
+    setTimeout(() => openPremiumActiveModal(), 500);
 }
 
 function updatePremiumUI() {
@@ -8503,6 +8640,20 @@ function updatePremiumUI() {
     document.querySelectorAll('.item-card[data-premium="true"]').forEach(card => {
         card.style.display = 'flex';
     });
+    updateWeeklyLoadBlocks();
+}
+
+function updateWeeklyLoadBlocks() {
+    const hasPremiumAccess = hasPremium();
+    const demoBlock = document.getElementById('weekly-load-demo-block');
+    const originalBlock = document.getElementById('weekly-load-block');
+    
+    if (demoBlock) {
+        demoBlock.style.display = hasPremiumAccess ? 'none' : 'block';
+    }
+    if (originalBlock) {
+        originalBlock.style.display = hasPremiumAccess ? 'block' : 'none';
+    }
 }
 
 function checkPremiumAndNavigate(category) {
@@ -8742,6 +8893,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ★★★ 13. ИНИЦИАЛИЗИРУЕМ ВЫБОР ВРЕМЕНИ ОТДЫХА ★★★
     initRestTimePicker();
+
+
+    updateWeeklyLoadDemoTitle();
+    updateWeeklyLoadBlocks();
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -8851,7 +9006,8 @@ async function resetProgress() {
 
     try {
         showToast('✅ Прогресс сброшен');
-        // 1. Удаляем все тренировки из Firestore
+        
+        // ★★★ 1. Удаляем ВСЕ тренировки пользователя из Firestore ★★★
         const workoutsResult = await getUserWorkoutsFromFirestore(user.uid);
         if (workoutsResult.success) {
             const workouts = workoutsResult.data;
@@ -8861,29 +9017,85 @@ async function resetProgress() {
             console.log(`✅ Удалено ${workouts.length} выполненных тренировок`);
         }
 
-        // 2. Обнуляем XP
+        // ★★★ 2. Удаляем ВСЕ активные сессии, где пользователь участник ★★★
+        try {
+            const sessionsSnapshot = await firebase.firestore()
+                .collection('trainingSessions')
+                .where('participants', 'array-contains', { id: user.uid })
+                .get();
+            
+            const sessionDeletions = [];
+            sessionsSnapshot.forEach(doc => {
+                sessionDeletions.push(doc.ref.delete());
+                console.log(`🗑️ Удалена сессия: ${doc.id}`);
+            });
+            
+            if (sessionDeletions.length > 0) {
+                await Promise.all(sessionDeletions);
+                console.log(`✅ Удалено ${sessionDeletions.length} активных сессий`);
+            } else {
+                console.log('ℹ️ Нет активных сессий для удаления');
+            }
+        } catch (error) {
+            console.warn('⚠️ Ошибка при удалении сессий:', error);
+        }
+
+        // ★★★ 3. Обнуляем XP в профиле ★★★
         await updateUserProfile(user.uid, { totalXp: 0 });
 
-        // 3. Сбрасываем достижения
+        // ★★★ 4. Сбрасываем достижения ★★★
         await updateUserProfile(user.uid, { achievements: {} });
         
-        // 4. Очищаем уведомления о достижениях
+        // ★★★ 5. Очищаем уведомления о достижениях ★★★
         for (const ach of ACHIEVEMENTS_CONFIG) {
             localStorage.removeItem('achievement_notified_' + ach.id);
         }
 
-        // ★★★ 5. ПОЛНОСТЬЮ ОЧИЩАЕМ localStorage (ВСЁ!) ★★★
+        // ★★★ 6. СОХРАНЯЕМ ТОЛЬКО PREMIUM И ЛОКАЛЬНЫЕ ТРЕНИРОВКИ ★★★
+        const hasPremiumStatus = localStorage.getItem(PREMIUM_KEY) === 'true';
+        const premiumValue = hasPremiumStatus ? 'true' : null;
+        const localWorkouts = localStorage.getItem('myCustomWorkouts');
+
+        // ★★★ 7. КЛЮЧИ, КОТОРЫЕ НУЖНО СОХРАНИТЬ (ТОЛЬКО PREMIUM И ТРЕНИРОВКИ) ★★★
+        const keysToPreserve = [
+            'sportapp_premium',      // PREMIUM — СОХРАНЯЕМ
+            'myCustomWorkouts'       // Локальные тренировки — СОХРАНЯЕМ
+        ];
+
+        // Получаем значения перед очисткой
+        const preservedData = {};
+        keysToPreserve.forEach(key => {
+            const value = localStorage.getItem(key);
+            if (value !== null) {
+                preservedData[key] = value;
+            }
+        });
+
+        // ★★★ 8. ПОЛНОСТЬЮ ОЧИЩАЕМ localStorage ★★★
         localStorage.clear();
 
-        // ★★★ 6. НИЧЕГО НЕ ВОССТАНАВЛИВАЕМ! ★★★
-        // Все настройки сбрасываются к значениям по умолчанию
+// ★★★ 9. ВОССТАНАВЛИВАЕМ ТОЛЬКО PREMIUM И ЛОКАЛЬНЫЕ ТРЕНИРОВКИ ★★★
+for (const [key, value] of Object.entries(preservedData)) {
+    localStorage.setItem(key, value);
+}
 
+// ★★★ ЯВНО УДАЛЯЕМ ПОРЯДКИ СТРАНИЦ ★★★
+localStorage.removeItem('statsLayout');
+localStorage.removeItem('workoutsLayout');
+localStorage.removeItem('worldStatsLayout');
+localStorage.removeItem('blocksState');
+
+        console.log('✅ Сохранены: PREMIUM, локальные тренировки');
+        console.log('🗑️ Удалены: statsLayout, workoutsLayout, worldStatsLayout, themeColor, appThemeMode, themeColorCustom и все остальные настройки');
+
+        // ★★★ 10. Перезагружаем страницу ★★★
         setTimeout(() => {
             window.location.reload();
         }, 500);
+        
     } catch (error) {
-        console.error('Ошибка сброса прогресса:', error);
-        alert('Ошибка при сбросе прогресса: ' + error.message);
+        console.error('❌ Ошибка сброса прогресса:', error);
+        showToast('❌ Ошибка при сбросе прогресса: ' + error.message);
     }
 }
 
@@ -9229,7 +9441,7 @@ window.statsEditor = new PageEditor({
     ],
     defaultLayout: {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'weekly-load-demo', 'weekly-load', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         worldStatsBlocksContainer: ['world-leaderboard', 'friends-leaderboard']
@@ -10863,6 +11075,7 @@ const tasks = {
 // Ключ для localStorage
 const TASKS_STORAGE_KEY = 'sportapp_tasks';
 
+// app.js
 function loadTasks() {
     const saved = localStorage.getItem(TASKS_STORAGE_KEY);
     if (saved) {
@@ -10878,34 +11091,38 @@ function loadTasks() {
         }
     }
     
-    // ★★★ ВСЕГДА СКРЫВАЕМ ОБА БЛОКА ПРИ ЗАГРУЗКЕ ★★★
-    const tasksBlock = document.getElementById('tasks-block');
-    const dailyTasksBlock = document.getElementById('daily-tasks-block');
-    
-    if (tasksBlock) {
-        tasksBlock.style.display = 'none';
-        tasksBlock.dataset.active = 'false';
-    }
-    if (dailyTasksBlock) {
-        dailyTasksBlock.style.display = 'none';
-        dailyTasksBlock.dataset.active = 'false';
-    }
-    
-    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ ★★★
+    // ★★★ СТРОГАЯ ЛОГИКА ★★★
     if (checkAllTasksCompleted()) {
+        // Все первые задания выполнены → показываем ЕЖЕДНЕВНЫЕ
         showDailyTasks();
+        hideTasks();  // ← СКРЫВАЕМ ПЕРВЫЕ
     } else {
+        // Не все выполнены → показываем ПЕРВЫЕ
         showTasks();
+        hideDailyTasks();  // ← СКРЫВАЕМ ЕЖЕДНЕВНЫЕ
     }
     
     updateTasksUI();
 }
 
+// app.js
+function hideTasks() {
+    const tasksBlock = document.getElementById('tasks-block');
+    if (tasksBlock) {
+        tasksBlock.style.display = 'none';
+    }
+}
+
+function hideDailyTasks() {
+    const dailyTasksBlock = document.getElementById('daily-tasks-block');
+    if (dailyTasksBlock) {
+        dailyTasksBlock.style.display = 'none';
+    }
+}
+
 function showTasks() {
     const tasksBlock = document.getElementById('tasks-block');
     const dailyTasksBlock = document.getElementById('daily-tasks-block');
-    
-    console.log('📋 Показываем первые задания');
     
     if (tasksBlock) {
         tasksBlock.style.display = 'block';
@@ -10916,6 +11133,23 @@ function showTasks() {
         dailyTasksBlock.style.display = 'none';
     }
     
+    saveBlocksState();
+}
+
+function showDailyTasks() {
+    const tasksBlock = document.getElementById('tasks-block');
+    const dailyTasksBlock = document.getElementById('daily-tasks-block');
+    
+    if (tasksBlock) {
+        tasksBlock.style.display = 'none';
+    }
+    
+    if (dailyTasksBlock) {
+        dailyTasksBlock.style.display = 'block';
+        dailyTasksBlock.classList.add('open');
+    }
+    
+    renderDailyTasks();
     saveBlocksState();
 }
 
@@ -10933,27 +11167,6 @@ function toggleTask(taskId) {
     
     // ★★★ ОТКРЫВАЕМ МОДАЛКУ С ПОДСКАЗКОЙ ★★★
     openTaskHelpModal(taskId);
-}
-
-function showDailyTasks() {
-    const tasksBlock = document.getElementById('tasks-block');
-    const dailyTasksBlock = document.getElementById('daily-tasks-block');
-    
-    console.log('📋 Показываем ежедневные задания');
-    
-    if (tasksBlock) {
-        tasksBlock.style.display = 'none';
-    }
-    
-    if (dailyTasksBlock) {
-        dailyTasksBlock.style.display = 'block';
-        dailyTasksBlock.classList.add('open');
-    }
-    
-    // ★★★ РЕНДЕРИМ ЗАДАНИЯ ★★★
-    renderDailyTasks();
-    
-    saveBlocksState();
 }
 
 // Обновить интерфейс ежедневных заданий
@@ -11001,11 +11214,33 @@ async function addTaskXp() {
     } catch (error) {
         console.error('Ошибка начисления XP:', error);
     }
+    
+    // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ ЗАДАНИЯ ВЫПОЛНЕНЫ ★★★
+    if (checkAllTasksCompleted()) {
+        // Все первые задания выполнены → показываем ЕЖЕДНЕВНЫЕ
+        showDailyTasks();
+        hideTasks();
+        
+        // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ★★★
+        showNotification(
+            '🎉',
+            'Теперь вам доступны ежедневные задания!',
+            null,
+            true,
+            function() {
+                window.navigateTo('profile');
+                TabManager.profile('my');
+                setTimeout(function() {
+                    showDailyTasks();
+                }, 300);
+            }
+        );
+    }
 }
 
 // Проверка всех заданий (для отладки)
 function checkAllTasksCompleted() {
-    return Object.values(tasks).every(v => v === true);
+    return Object.values(tasks).every(function(v) { return v === true; });
 }
 
 // Загружаем задания при инициализации
@@ -11652,7 +11887,7 @@ async function addDailyTaskXp() {
 async function completeDailyTaskIfExists(taskId) {
     if (!dailyTasksList || dailyTasksList.length === 0) return false;
     
-    const task = dailyTasksList.find(t => t.id === taskId);
+    var task = dailyTasksList.find(function(t) { return t.id === taskId; });
     if (!task || task.completed) return false;
     
     task.completed = true;
@@ -11664,7 +11899,7 @@ async function completeDailyTaskIfExists(taskId) {
     
     showToast('✅ Ежедневное задание выполнено!');
     
-    const allCompleted = dailyTasksList.every(t => t.completed);
+    var allCompleted = dailyTasksList.every(function(t) { return t.completed; });
     if (allCompleted) {
         showNotification(
             '🎉',
@@ -11674,7 +11909,7 @@ async function completeDailyTaskIfExists(taskId) {
             function() {
                 window.navigateTo('profile');
                 TabManager.profile('my');
-                setTimeout(() => loadProfile(), 300);
+                setTimeout(function() { loadProfile(); }, 300);
             }
         );
     }
@@ -11682,98 +11917,254 @@ async function completeDailyTaskIfExists(taskId) {
     return true;
 }
 
-// Триггер: завершение тренировки
 function checkDailyTasksAfterWorkout(workoutData) {
-    // ★★★ ПРОВЕРЯЕМ, ВЫПОЛНЕНЫ ЛИ ПЕРВЫЕ ЗАДАНИЯ ★★★
+    // ★★★ ЕСЛИ ПЕРВЫЕ ЗАДАНИЯ НЕ ВЫПОЛНЕНЫ — ЕЖЕДНЕВНЫЕ НЕ АКТИВНЫ ★★★
     if (!checkAllTasksCompleted()) {
         console.log('⏭️ Первые задания не выполнены, ежедневные не активны');
         return;
     }
+    
     if (!dailyTasksList || dailyTasksList.length === 0) return;
     
-    const completedExercises = workoutData.exercises?.filter(e => e.completed).length || 0;
-    const durationMinutes = Math.floor((workoutData.durationSeconds || 0) / 60);
-    const workoutCategory = workoutData.category || '';
+    // ★★★ СЧИТАЕМ ВЫПОЛНЕННЫЕ УПРАЖНЕНИЯ ★★★
+    const completedExercises = workoutData.exercises?.filter(function(e) { 
+        return e.completed; 
+    }).length || 0;
     
-    // Проверяем задания по упражнениям
-    dailyTasksList.forEach(task => {
+    // ★★★ СЧИТАЕМ ДЛИТЕЛЬНОСТЬ В МИНУТАХ ★★★
+    const durationMinutes = Math.floor((workoutData.durationSeconds || 0) / 60);
+    
+    // ★★★ СЧИТАЕМ УПРАЖНЕНИЯ ПО КАТЕГОРИЯМ (для smart_exercise) ★★★
+    const categoryCounts = {};
+    workoutData.exercises?.forEach(function(e) {
+        if (e.completed) {
+            const icon = e.icon || getExerciseIcon(e.name);
+            const category = getCategoryByIcon(icon);
+            if (category && category !== 'Зарядка') {
+                if (!categoryCounts[category]) {
+                    categoryCounts[category] = 0;
+                }
+                categoryCounts[category]++;
+            }
+        }
+    });
+    
+    // ★★★ СЧИТАЕМ ПОВТОРЕНИЯ ПО ФИЗИЧЕСКИМ УПРАЖНЕНИЯМ ★★★
+    const exerciseRepsData = {};
+    workoutData.exercises?.forEach(function(e) {
+        if (e.completed) {
+            // Проверяем, есть ли это упражнение в конфиге ежедневных заданий
+            const isDailyExercise = DAILY_TASKS_CONFIG.exercise.items.some(function(item) {
+                return e.name.toLowerCase().includes(item.name.toLowerCase());
+            });
+            
+            if (isDailyExercise) {
+                const sets = parseInt(e.sets) || 0;
+                const repsStr = String(e.reps || '');
+                let repsValue = 0;
+                
+                // Проверяем, секунды это или повторения
+                if (repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд')) {
+                    repsValue = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
+                } else {
+                    repsValue = parseFloat(repsStr) || 0;
+                }
+                
+                const totalReps = sets * repsValue;
+                
+                if (!exerciseRepsData[e.name]) {
+                    exerciseRepsData[e.name] = 0;
+                }
+                exerciseRepsData[e.name] += totalReps;
+            }
+        }
+    });
+    
+    // ★★★ ОБНОВЛЯЕМ ДНЕВНОЙ ПРОГРЕСС ★★★
+    const dailyProgress = updateDailyProgress(completedExercises, durationMinutes, categoryCounts, exerciseRepsData);
+    
+    console.log('📊 Дневной прогресс: упражнений = ' + dailyProgress.exercises + ', минут = ' + dailyProgress.minutes);
+    console.log('📊 По категориям:', dailyProgress.categories);
+    console.log('📊 По упражнениям:', dailyProgress.exerciseReps);
+    
+    // ★★★ ПРОВЕРЯЕМ ЗАДАНИЯ ★★★
+    dailyTasksList.forEach(function(task) {
         if (task.completed) return;
         
-        // ★★★ УПРАЖНЕНИЯ (ФИЗИЧЕСКИЕ) — СЧИТАЕМ ОБЩЕЕ КОЛИЧЕСТВО ★★★
+        // ★★★ ФИЗИЧЕСКИЕ УПРАЖНЕНИЯ (СУММАРНО ЗА ДЕНЬ) ★★★
         if (task.type === 'exercise') {
-            // Находим все выполненные упражнения с таким названием
-            const matchingExercises = workoutData.exercises?.filter(e => 
-                e.name.toLowerCase().includes(task.name.toLowerCase()) && e.completed
-            );
+            const totalReps = dailyProgress.exerciseReps[task.name] || 0;
+            console.log('📊 ' + task.name + ': totalReps за день = ' + totalReps + ', нужно = ' + task.target);
             
-            if (matchingExercises && matchingExercises.length > 0) {
-                // ★★★ СЧИТАЕМ ОБЩЕЕ КОЛИЧЕСТВО: подход × повторения ★★★
-                let totalReps = 0;
-                matchingExercises.forEach(ex => {
-                    const sets = parseInt(ex.sets) || 0;
-                    const reps = parseInt(ex.reps) || 0;
-                    totalReps += sets * reps;
-                });
-                
-                console.log(`📊 ${task.name}: totalReps = ${totalReps}, нужно = ${task.target}`);
-                
-                if (totalReps >= task.target) {
-                    completeDailyTaskIfExists(task.id);
-                }
+            if (totalReps >= task.target) {
+                completeDailyTaskIfExists(task.id);
             }
         }
         
-        // Статистика - упражнения
+        // Статистика - упражнения (суммарно за день)
         if (task.type === 'stats_exercise') {
-            if (completedExercises >= task.target) {
+            if (dailyProgress.exercises >= task.target) {
                 completeDailyTaskIfExists(task.id);
             }
         }
         
-        // Статистика - время
+        // Статистика - время (суммарно за день)
         if (task.type === 'stats_time') {
-            if (durationMinutes >= task.target) {
+            if (dailyProgress.minutes >= task.target) {
                 completeDailyTaskIfExists(task.id);
             }
         }
         
-        // Умная статистика - упражнения на категорию
+        // Умная статистика - упражнения на категорию (суммарно за день)
         if (task.type === 'smart_exercise') {
-            const categoryExercises = workoutData.exercises?.filter(e => 
-                e.completed && getCategoryByIcon(e.icon) === task.category
-            ).length || 0;
-            if (categoryExercises >= task.target) {
+            const categoryProgress = dailyProgress.categories[task.category] || 0;
+            console.log('📊 Прогресс по категории "' + task.category + '": ' + categoryProgress + '/' + task.target);
+            
+            if (categoryProgress >= task.target) {
                 completeDailyTaskIfExists(task.id);
             }
         }
         
-        // Умная статистика - тренировка категории
+        // Умная статистика - тренировка категории (за 1 тренировку)
         if (task.type === 'smart_workout') {
-            if (workoutCategory.toLowerCase().includes(task.category.toLowerCase())) {
+            if (workoutData.category?.toLowerCase().includes(task.category?.toLowerCase())) {
                 completeDailyTaskIfExists(task.id);
             }
         }
     });
 }
 
-// Триггер: завершение совместной тренировки
 function checkDailyTasksAfterCoopWorkout(workoutData) {
+    // ★★★ ЕСЛИ ПЕРВЫЕ ЗАДАНИЯ НЕ ВЫПОЛНЕНЫ — ЕЖЕДНЕВНЫЕ НЕ АКТИВНЫ ★★★
+    if (!checkAllTasksCompleted()) {
+        console.log('⏭️ Первые задания не выполнены, ежедневные не активны');
+        return;
+    }
+    
     if (!dailyTasksList || dailyTasksList.length === 0) return;
     
-    dailyTasksList.forEach(task => {
+    // ★★★ СЧИТАЕМ ВЫПОЛНЕННЫЕ УПРАЖНЕНИЯ ★★★
+    const completedExercises = workoutData.exercises?.filter(function(e) { 
+        return e.completed; 
+    }).length || 0;
+    
+    // ★★★ СЧИТАЕМ ДЛИТЕЛЬНОСТЬ В МИНУТАХ ★★★
+    const durationMinutes = Math.floor((workoutData.durationSeconds || 0) / 60);
+    
+    // ★★★ СЧИТАЕМ УПРАЖНЕНИЯ ПО КАТЕГОРИЯМ ★★★
+    const categoryCounts = {};
+    workoutData.exercises?.forEach(function(e) {
+        if (e.completed) {
+            const icon = e.icon || getExerciseIcon(e.name);
+            const category = getCategoryByIcon(icon);
+            if (category && category !== 'Зарядка') {
+                if (!categoryCounts[category]) {
+                    categoryCounts[category] = 0;
+                }
+                categoryCounts[category]++;
+            }
+        }
+    });
+    
+    // ★★★ СЧИТАЕМ ПОВТОРЕНИЯ ПО ФИЗИЧЕСКИМ УПРАЖНЕНИЯМ ★★★
+    const exerciseRepsData = {};
+    workoutData.exercises?.forEach(function(e) {
+        if (e.completed) {
+            const isDailyExercise = DAILY_TASKS_CONFIG.exercise.items.some(function(item) {
+                return e.name.toLowerCase().includes(item.name.toLowerCase());
+            });
+            
+            if (isDailyExercise) {
+                const sets = parseInt(e.sets) || 0;
+                const repsStr = String(e.reps || '');
+                let repsValue = 0;
+                
+                if (repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд')) {
+                    repsValue = parseFloat(repsStr.replace(/[^0-9.]/g, '')) || 0;
+                } else {
+                    repsValue = parseFloat(repsStr) || 0;
+                }
+                
+                const totalReps = sets * repsValue;
+                
+                if (!exerciseRepsData[e.name]) {
+                    exerciseRepsData[e.name] = 0;
+                }
+                exerciseRepsData[e.name] += totalReps;
+            }
+        }
+    });
+    
+    // ★★★ ОБНОВЛЯЕМ ДНЕВНОЙ ПРОГРЕСС ★★★
+    const dailyProgress = updateDailyProgress(completedExercises, durationMinutes, categoryCounts, exerciseRepsData);
+    
+    console.log('📊 Дневной прогресс (совместная): упражнений = ' + dailyProgress.exercises + ', минут = ' + dailyProgress.minutes);
+    console.log('📊 По категориям:', dailyProgress.categories);
+    console.log('📊 По упражнениям:', dailyProgress.exerciseReps);
+    
+    // ★★★ ПРОВЕРЯЕМ ЗАДАНИЯ ★★★
+    dailyTasksList.forEach(function(task) {
         if (task.completed) return;
         
+        // friends_1 — совместная тренировка
         if (task.id === 'friends_1' || task.name.includes('Совместная тренировка')) {
             completeDailyTaskIfExists(task.id);
+        }
+        
+        // ★★★ ФИЗИЧЕСКИЕ УПРАЖНЕНИЯ (СУММАРНО ЗА ДЕНЬ) ★★★
+        if (task.type === 'exercise') {
+            const totalReps = dailyProgress.exerciseReps[task.name] || 0;
+            console.log('📊 ' + task.name + ': totalReps за день = ' + totalReps + ', нужно = ' + task.target);
+            
+            if (totalReps >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Статистика - упражнения (суммарно за день)
+        if (task.type === 'stats_exercise') {
+            if (dailyProgress.exercises >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Статистика - время (суммарно за день)
+        if (task.type === 'stats_time') {
+            if (dailyProgress.minutes >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Умная статистика - упражнения на категорию (суммарно за день)
+        if (task.type === 'smart_exercise') {
+            const categoryProgress = dailyProgress.categories[task.category] || 0;
+            console.log('📊 Прогресс по категории "' + task.category + '": ' + categoryProgress + '/' + task.target);
+            
+            if (categoryProgress >= task.target) {
+                completeDailyTaskIfExists(task.id);
+            }
+        }
+        
+        // Умная статистика - тренировка категории (за 1 тренировку)
+        if (task.type === 'smart_workout') {
+            if (workoutData.category?.toLowerCase().includes(task.category?.toLowerCase())) {
+                completeDailyTaskIfExists(task.id);
+            }
         }
     });
 }
 
 // Триггер: открытие профиля друга
 function checkDailyTasksAfterFriendProfile(friendId) {
+    // ★★★ ЕСЛИ ПЕРВЫЕ ЗАДАНИЯ НЕ ВЫПОЛНЕНЫ — ЕЖЕДНЕВНЫЕ НЕ АКТИВНЫ ★★★
+    if (!checkAllTasksCompleted()) {
+        console.log('⏭️ Первые задания не выполнены, ежедневные не активны');
+        return;
+    }
+    
     if (!dailyTasksList || dailyTasksList.length === 0) return;
     
-    dailyTasksList.forEach(task => {
+    dailyTasksList.forEach(function(task) {
         if (task.completed) return;
         
         if (task.id === 'friends_2' || task.name.includes('Профиль друга')) {
@@ -11784,14 +12175,17 @@ function checkDailyTasksAfterFriendProfile(friendId) {
 
 // Триггер: добавление друга
 function checkDailyTasksAfterAddFriend() {
+    // ★★★ ЕСЛИ ПЕРВЫЕ ЗАДАНИЯ НЕ ВЫПОЛНЕНЫ — ЕЖЕДНЕВНЫЕ НЕ АКТИВНЫ ★★★
     if (!checkAllTasksCompleted()) {
         console.log('⏭️ Первые задания не выполнены, ежедневные не активны');
         return;
     }
+    
     if (!dailyTasksList || dailyTasksList.length === 0) return;
     
-    dailyTasksList.forEach(task => {
+    dailyTasksList.forEach(function(task) {
         if (task.completed) return;
+        
         if (task.id === 'friends_3' || task.name.includes('Новый друг')) {
             completeDailyTaskIfExists(task.id);
         }
@@ -12875,7 +13269,7 @@ function openDailyTaskHelpModal(taskId) {
     if (task.block === 'stats_exercise') {
         document.getElementById('dailyTaskHelpTitle').textContent = 'Спортсмен';
         document.getElementById('dailyTaskHelpIcon').innerHTML = `<i class="fa-solid fa-chart-bar" style="color: var(--accent);"></i>`;
-        document.getElementById('dailyTaskHelpText').textContent = `Для прохождения задания "Спортсмен" нужно выполнить ${task.target} упражнений за одну тренировку.`;
+        document.getElementById('dailyTaskHelpText').textContent = `Для прохождения задания "Спортсмен" нужно выполнить ${task.target} упражнений.`;
         document.getElementById('dailyTaskHelpActionBtn').onclick = function() {
             closeModal('dailyTaskHelpModal');
             TabManager.workouts('ready');
@@ -12890,7 +13284,7 @@ function openDailyTaskHelpModal(taskId) {
     if (task.block === 'stats_time') {
         document.getElementById('dailyTaskHelpTitle').textContent = 'Атлет';
         document.getElementById('dailyTaskHelpIcon').innerHTML = `<i class="fa-solid fa-stopwatch" style="color: var(--accent);"></i>`;
-        document.getElementById('dailyTaskHelpText').textContent = `Для прохождения задания "Атлет" нужно тренироваться ${task.target} минут за одну тренировку.`;
+        document.getElementById('dailyTaskHelpText').textContent = `Для прохождения задания "Атлет" нужно тренироваться ${task.target} минут.`;
         document.getElementById('dailyTaskHelpActionBtn').onclick = function() {
             closeModal('dailyTaskHelpModal');
             TabManager.workouts('ready');
@@ -13157,6 +13551,7 @@ function openTaskResultModal(sessionData, actualSeconds) {
         const isCompleted = entered >= target;
         const taskId = sessionData.taskId;
         const exercise = sessionData.exercise;
+        const exerciseName = exercise.name;
 
         modal.remove();
 
@@ -13184,15 +13579,22 @@ function openTaskResultModal(sessionData, actualSeconds) {
 
         let durationSeconds = actualSeconds || 0;
 
+        // ★★★ 1. НАЧИСЛЯЕМ XP ★★★
         const xpForExercise = calculateExerciseXP(tempExercise, 1);
         await addSingleExerciseToStats(tempExercise, durationSeconds, xpForExercise);
         console.log('✅ XP за упражнение начислено:', xpForExercise);
 
-        if (isCompleted) {
+        // ★★★ 2. ОБНОВЛЯЕМ ДНЕВНОЙ ПРОГРЕСС (СУММИРУЕМ) ★★★
+        const dailyProgress = updateDailyProgressForExercise(exerciseName, entered);
+        console.log('📊 Дневной прогресс по упражнению "' + exerciseName + '": ' + dailyProgress.exerciseReps[exerciseName] + '/' + target);
+
+        // ★★★ 3. ПРОВЕРЯЕМ, ВЫПОЛНЕНО ЛИ ЗАДАНИЕ ★★★
+        if (dailyProgress.exerciseReps[exerciseName] >= target) {
             await completeDailyTaskIfExists(taskId);
-            showToast('✅ Задание выполнено!');
+            showToast('✅ Задание "' + exerciseName + '" выполнено!');
         } else {
-            showToast('❌ Задание не выполнено');
+            const remaining = target - dailyProgress.exerciseReps[exerciseName];
+            showToast('📊 Выполнено ' + dailyProgress.exerciseReps[exerciseName] + ' из ' + target + '. Осталось ' + remaining);
         }
 
         TabManager.profile('my');
@@ -13441,35 +13843,46 @@ document.getElementById('taskFinishBtn')?.addEventListener('click', function() {
                     btn.textContent = 'СТАРТ';
                     btn.style.background = 'var(--accent)';
                     
-                    // АВТОМАТИЧЕСКИ ВЫПОЛНЯЕМ ЗАДАНИЕ (БЕЗ МОДАЛКИ)
-                    (async function() {
-                        const taskId = taskSessionData.taskId;
-                        const exercise = taskSessionData.exercise;
-                        
-                        const tempExercise = {
-                            name: exercise.name,
-                            sets: 1,
-                            reps: exercise.reps,
-                            weight: 0,
-                            icon: exercise.icon || 'bodybuilding'
-                        };
-                        
-                        const xpForExercise = calculateExerciseXP(tempExercise, 1);
-                        await addSingleExerciseToStats(tempExercise, taskSessionData.target, xpForExercise);
-                        console.log('✅ XP за упражнение начислено:', xpForExercise);
-                        
-                        await completeDailyTaskIfExists(taskId);
-                        
-                        stopTaskTimer();
-                        
-                        taskSessionData.isActive = false;
-                        taskSessionData = null;
-                        taskSessionSeconds = 0;
-                        
-                        TabManager.profile('my');
-                        window.navigateTo('profile');
-                        document.getElementById('bottomNav').style.display = 'block';
-                    })();
+// АВТОМАТИЧЕСКИ ВЫПОЛНЯЕМ ЗАДАНИЕ (БЕЗ МОДАЛКИ)
+(async function() {
+    const taskId = taskSessionData.taskId;
+    const exercise = taskSessionData.exercise;
+    const exerciseName = exercise.name;
+    const target = taskSessionData.target;
+    
+    const tempExercise = {
+        name: exercise.name,
+        sets: 1,
+        reps: exercise.reps,
+        weight: 0,
+        icon: exercise.icon || 'bodybuilding'
+    };
+    
+    const xpForExercise = calculateExerciseXP(tempExercise, 1);
+    await addSingleExerciseToStats(tempExercise, taskSessionData.target, xpForExercise);
+    console.log('✅ XP за упражнение начислено:', xpForExercise);
+    
+    // ★★★ ОБНОВЛЯЕМ ДНЕВНОЙ ПРОГРЕСС ★★★
+    const dailyProgress = updateDailyProgressForExercise(exerciseName, target);
+    console.log('📊 Дневной прогресс по упражнению "' + exerciseName + '": ' + dailyProgress.exerciseReps[exerciseName] + '/' + target);
+    
+    // ★★★ ПРОВЕРЯЕМ, ВЫПОЛНЕНО ЛИ ЗАДАНИЕ ★★★
+    if (dailyProgress.exerciseReps[exerciseName] >= target) {
+        await completeDailyTaskIfExists(taskId);
+        showToast('✅ Задание "' + exerciseName + '" выполнено!');
+    } else {
+        const remaining = target - dailyProgress.exerciseReps[exerciseName];
+showToast('❌ Задание не выполнено.');    }
+    
+    stopTaskTimer();
+    taskSessionData.isActive = false;
+    taskSessionData = null;
+    taskSessionSeconds = 0;
+    
+    TabManager.profile('my');
+    window.navigateTo('profile');
+    document.getElementById('bottomNav').style.display = 'block';
+})();
                 }
             }, 1000);
             
@@ -13611,3 +14024,123 @@ document.getElementById('taskStartStopBtn')?.addEventListener('click', function(
         }
     }
 });
+
+// app.js - обновляем getDailyProgress()
+function getDailyProgress() {
+    const today = new Date().toISOString().split('T')[0];
+    const saved = localStorage.getItem(DAILY_PROGRESS_KEY);
+    
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            if (data.date !== today) {
+                const newData = { 
+                    date: today, 
+                    exercises: 0, 
+                    minutes: 0,
+                    categories: {},
+                    exerciseReps: {}  // ★★★ ДОБАВЛЯЕМ ДЛЯ ФИЗИЧЕСКИХ УПРАЖНЕНИЙ ★★★
+                };
+                localStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newData));
+                return newData;
+            }
+            if (!data.categories) {
+                data.categories = {};
+            }
+            if (!data.exerciseReps) {
+                data.exerciseReps = {};  // ★★★ ДОБАВЛЯЕМ ★★★
+            }
+            return data;
+        } catch (e) {
+            console.warn('Ошибка загрузки дневного прогресса:', e);
+        }
+    }
+    
+    const newData = { 
+        date: today, 
+        exercises: 0, 
+        minutes: 0,
+        categories: {},
+        exerciseReps: {}  // ★★★ ДОБАВЛЯЕМ ★★★
+    };
+    localStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newData));
+    return newData;
+}
+
+// app.js - обновляем updateDailyProgress()
+function updateDailyProgress(exercisesCompleted, durationMinutes, exercisesWithCategories, exerciseRepsData) {
+    const progress = getDailyProgress();
+    progress.exercises += exercisesCompleted;
+    progress.minutes += durationMinutes;
+    
+    // Обновляем прогресс по категориям (для smart_exercise)
+    if (exercisesWithCategories) {
+        for (const [category, count] of Object.entries(exercisesWithCategories)) {
+            if (!progress.categories[category]) {
+                progress.categories[category] = 0;
+            }
+            progress.categories[category] += count;
+        }
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС ПО ФИЗИЧЕСКИМ УПРАЖНЕНИЯМ ★★★
+    if (exerciseRepsData) {
+        for (const [exerciseName, reps] of Object.entries(exerciseRepsData)) {
+            if (!progress.exerciseReps[exerciseName]) {
+                progress.exerciseReps[exerciseName] = 0;
+            }
+            progress.exerciseReps[exerciseName] += reps;
+        }
+    }
+    
+    localStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(progress));
+    return progress;
+}
+
+// Получить прогресс по конкретной категории за день
+function getDailyCategoryProgress(category) {
+    const progress = getDailyProgress();
+    return progress.categories[category] || 0;
+}
+
+// Сбросить дневной прогресс (принудительно)
+function resetDailyProgress() {
+    const today = new Date().toISOString().split('T')[0];
+    const newData = { date: today, exercises: 0, minutes: 0 };
+    localStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newData));
+    return newData;
+}
+
+// app.js - добавить новую функцию
+
+function updateDailyProgressForExercise(exerciseName, totalReps) {
+    const today = new Date().toISOString().split('T')[0];
+    let progress = getDailyProgress();
+    
+    // Проверяем, не изменилась ли дата
+    if (progress.date !== today) {
+        progress = { date: today, exercises: 0, minutes: 0, categories: {}, exerciseReps: {} };
+    }
+    
+    // Добавляем повторения
+    if (!progress.exerciseReps[exerciseName]) {
+        progress.exerciseReps[exerciseName] = 0;
+    }
+    progress.exerciseReps[exerciseName] += totalReps;
+    
+    // Добавляем общее количество упражнений (для stats_exercise)
+    progress.exercises += 1;
+    
+    localStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(progress));
+    return progress;
+}
+
+function updateWeeklyLoadDemoTitle() {
+    const titleEl = document.getElementById('weeklyLoadDemoTitle');
+    if (!titleEl) return;
+    
+    const now = new Date();
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
+                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    titleEl.textContent = monthNames[now.getMonth()];
+}
