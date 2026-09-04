@@ -1911,6 +1911,8 @@ finishTrainingSession = async function() {
         console.log('📊 [finishTrainingSession] Обычная тренировка: total=' + total + ', completed=' + completed + ', xp=' + xpEarned);
         showFinishPage(total, completed, sessionSeconds, xpEarned);
         console.log('✅ [finishTrainingSession] Обычная тренировка завершена');
+
+        refreshFriendsHistory()
         
         // ЗАДАНИЕ 1: ПЕРВЫЙ ШАГ
         if (completed > 0 && !tasks[1]) {
@@ -2000,6 +2002,8 @@ finishTrainingSession = async function() {
     console.log('🔄 [finishTrainingSession] Вызов showCoopFinishPage()');
     showCoopFinishPage();
     console.log('✅ [finishTrainingSession] ЗАВЕРШЕНА');
+
+    refreshFriendsHistory()
 
     // ЗАДАНИЕ 1: ПЕРВЫЙ ШАГ
     if (completedCount > 0 && !tasks[1]) {
@@ -2294,7 +2298,11 @@ function switchProfileTab(tab) {
         target.classList.add('profile-tab-content-active');
     }
     if (tab === 'friends') {
-        setTimeout(() => renderFriendsInProfile(), 100);
+        setTimeout(() => {
+            renderFriendsInProfile();
+            // ★★★ ДОБАВЛЯЕМ РЕНДЕР ИСТОРИИ ★★★
+            setTimeout(() => renderFriendsHistory(), 300);
+        }, 100);
     }
     
     // ★★★ ОБНОВЛЯЕМ ВИДИМОСТЬ КНОПКИ РЕДАКТИРОВАНИЯ ДРУЗЕЙ ★★★
@@ -7391,6 +7399,8 @@ async function renderFriendsInProfile() {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
     if (friendsDiv) friendsDiv.innerHTML = friendsHtml;
+    // Рендерим историю друзей
+setTimeout(() => renderFriendsHistory(), 300);
 }
 
 // ===================ОТКРЫТИЕ ПРОФИЛЯ ЗАЯВКИ ===================
@@ -14143,4 +14153,159 @@ function updateWeeklyLoadDemoTitle() {
     const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                         'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     titleEl.textContent = monthNames[now.getMonth()];
+}
+
+// =================== ИСТОРИЯ ДРУЗЕЙ ===================
+
+/**
+ * Получить историю тренировок всех друзей
+ */
+async function getFriendsWorkoutHistory() {
+    const user = await getFirebaseUser();
+    if (!user) return { success: false, error: 'Не авторизован' };
+    
+    try {
+        const friendsResult = await getFriendsList();
+        if (!friendsResult.success || friendsResult.data.length === 0) {
+            return { success: true, data: [] };
+        }
+        
+        const allHistory = [];
+        
+        for (const friend of friendsResult.data) {
+            const workoutsResult = await getUserWorkoutsFromFirestore(friend.id);
+            if (workoutsResult.success && workoutsResult.data.length > 0) {
+                // Фильтруем только тренировки (не зарядку)
+                const filteredWorkouts = workoutsResult.data.filter(w => getWorkoutIcon(w) !== 'charging');
+                
+                // Добавляем имя друга к каждой тренировке
+                filteredWorkouts.forEach(w => {
+                    allHistory.push({
+                        friendName: friend.displayName || 'Пользователь',
+                        friendId: friend.id,
+                        friendAvatar: (friend.displayName || 'П')[0].toUpperCase(),
+                        ...w
+                    });
+                });
+            }
+        }
+        
+        // Сортируем по дате (сначала новые)
+        allHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        return { success: true, data: allHistory };
+        
+    } catch (error) {
+        console.error('Ошибка получения истории друзей:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Сгруппировать историю по друзьям
+ */
+function groupHistoryByFriend(history) {
+    const grouped = {};
+    
+    history.forEach(item => {
+        const key = item.friendId;
+        if (!grouped[key]) {
+            grouped[key] = {
+                friendId: item.friendId,
+                friendName: item.friendName,
+                friendAvatar: item.friendAvatar,
+                workouts: []
+            };
+        }
+        grouped[key].workouts.push(item);
+    });
+    
+    return Object.values(grouped);
+}
+
+/**
+ * Рендерить историю друзей
+ */
+async function renderFriendsHistory() {
+    const container = document.getElementById('friendsHistoryContainer');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Загрузка...</div>';
+    
+    try {
+        const result = await getFriendsWorkoutHistory();
+        
+        if (!result.success) {
+            container.innerHTML = `<div style="text-align:center;color:var(--slate);padding:1rem;">Ошибка загрузки истории</div>`;
+            return;
+        }
+        
+        if (result.data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">📋</span>
+                    <h3 class="empty-title">Нет истории</h3>
+                    <p class="empty-text">У ваших друзей нет выполненных тренировок.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Группируем по друзьям
+        const grouped = groupHistoryByFriend(result.data);
+        
+        // Берем только последние 3 тренировки для каждого друга
+        grouped.forEach(group => {
+            group.workouts = group.workouts.slice(0, 3);
+        });
+        
+        let html = '';
+        
+        grouped.forEach(group => {
+            // Заголовок с именем друга
+            html += `
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem; margin-top:0.2rem;">
+                    <div class="friend-avatar" style="width:32px; height:32px; font-size:0.8rem;">${group.friendAvatar}</div>
+                    <span style="font-weight:600; font-size:0.9rem; color:var(--dark);">${group.friendName}</span>
+                </div>
+            `;
+            
+            // Тренировки друга
+            group.workouts.forEach(w => {
+                const totalEx = w.exercises?.length || 0;
+                const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
+                const xpEarned = w.xpEarned || 0;
+                const minutes = Math.floor((w.durationSeconds || 0) / 60);
+                const date = new Date(w.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                html += `
+                    <div class="history-item" style="margin-bottom:0.3rem; cursor:pointer;" onclick="openFriendProfile('${group.friendId}')">
+                        <div class="history-item-header">
+                            <strong class="history-item-title" style="font-size:0.75rem;">${w.title || 'Тренировка'}</strong>
+                            <span class="history-item-date" style="font-size:0.65rem;">${date}</span>
+                        </div>
+                        <div class="history-item-details" style="font-size:0.65rem;">
+                            ${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `<div style="height:4px;"></div>`;
+        });
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Ошибка рендера истории друзей:', error);
+        container.innerHTML = `<div style="text-align:center;color:#EF4444;padding:1rem;">Ошибка загрузки</div>`;
+    }
+}
+
+// Добавьте эту функцию для обновления истории после завершения тренировки
+function refreshFriendsHistory() {
+    const friendsTab = document.getElementById('profileTab-friends');
+    if (friendsTab && friendsTab.classList.contains('profile-tab-content-active')) {
+        renderFriendsHistory();
+    }
 }
