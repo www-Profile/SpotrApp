@@ -1221,12 +1221,19 @@
             </div>
 
 <!-- Блок 4: История друзей (обновленный с ID) -->
-<div class="section-block" id="friends-history-block" data-block-id="friends-history" style="padding: 0rem 0.2rem; margin-top: 0.5rem;">
+<div class="section-block" id="friends-history-block" data-block-id="friends-history" style="padding: 0rem 0.2rem;">
     <div class="section-header">
         <h2 class="section-title">История друзей</h2>
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <div class="section-body">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+            <button class="btn btn-primary" onclick="openFriendHistoryFilterModal()">
+                <i class="fa-solid fa-user-group"></i>
+                <span>Выбранный друг: </span>
+                <span id="selectedFriendName" style="font-weight: 600;">Все</span>
+            </button>
+        </div>
         <div id="friendsHistoryContainer" style="display:flex; flex-direction:column; gap:0.5rem; padding: 0.2rem 0;">
             <!-- Сюда будет рендериться история друзей -->
         </div>

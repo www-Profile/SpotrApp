@@ -1650,11 +1650,10 @@ function showFriendSelectModal(friends) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'friendSelectModal';
-    overlay.innerHTML = `
+overlay.innerHTML = `
         <div class="modal-content" style="max-width: 400px;">
-            <div class="scroll-wrapper">
                 <div class="modal-title">Выберите друга</div>
-                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
+                <div class="scroll-wrapper" style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
 ${friends.map(f => {
     const level = getCurrentLevel(f.totalXp || 0).id;
     const xp = Math.round(f.totalXp || 0); // ← ИСПРАВЛЕНО: используем f.totalXp
@@ -1674,7 +1673,6 @@ ${friends.map(f => {
                     <button class="btn btn-secondary" onclick="document.getElementById('friendSelectModal').remove()" style="flex: 1;">Закрыть</button>
                     <button class="btn btn-primary" id="sendInviteBtn" style="flex: 1;">Отправить</button>
                 </div>
-            </div>
         </div>
     `;
     document.body.appendChild(overlay);
@@ -5969,7 +5967,7 @@ document.getElementById('nextMonth')?.addEventListener('click', () => {
     renderCalendar(currentMonth, currentYear);
 });
 
-// ===================ПРОФИЛЬ ===================
+// =================== ПРОФИЛЬ ===================
 async function loadProfile() {
     const user = await getFirebaseUser();
     if (!user) return;
@@ -6008,8 +6006,16 @@ async function loadProfile() {
     if (levelProgressText) levelProgressText.textContent = progressText;
     if (levelFill) levelFill.style.width = progress + '%';
     
+    // ★★★ ПРОВЕРКА ПОВЫШЕНИЯ УРОВНЯ И СОХРАНЕНИЕ СОБЫТИЯ ★★★
     const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
     if (currentLevel.id > prevLevel) {
+        // Сохраняем событие о новом уровне
+        await saveUserEvent(user.uid, 'level_up', {
+            level: currentLevel.id,
+            levelName: currentLevel.name
+        });
+        
+        // Показываем уведомление
         if (currentLevel.id > 1) {
             const id = 'new_level_' + currentLevel.id;
             if (!isNotificationSeen(id)) {
@@ -10746,6 +10752,7 @@ const ACHIEVEMENTS_CONFIG = [
     }
 ];
 
+// =================== ДОСТИЖЕНИЯ ===================
 async function checkAllAchievements(userId) {
     try {
         // Получаем профиль и тренировки
@@ -10779,9 +10786,20 @@ async function checkAllAchievements(userId) {
         if (changed) {
             await updateUserProfile(userId, { achievements: currentAchievements });
             
-            // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ ДЛЯ НОВЫХ ДОСТИЖЕНИЙ ★★★
+            // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ И СОХРАНЯЕМ СОБЫТИЯ ДЛЯ НОВЫХ ДОСТИЖЕНИЙ ★★★
             for (const id of newUnlocked) {
-                showAchievementNotification(id);
+                const ach = ACHIEVEMENTS_CONFIG.find(a => a.id === id);
+                if (ach) {
+                    // Сохраняем событие о новом достижении
+                    await saveUserEvent(userId, 'achievement_unlocked', {
+                        achievementId: ach.id,
+                        achievementName: ach.name,
+                        achievementIcon: ach.icon
+                    });
+                    
+                    // Показываем уведомление
+                    showAchievementNotification(id);
+                }
             }
         }
 
@@ -14151,6 +14169,10 @@ function updateWeeklyLoadDemoTitle() {
 
 // =================== ИСТОРИЯ ДРУЗЕЙ ===================
 
+// Переменные для фильтра
+let selectedFriendForHistory = 'all';
+let tempSelectedFriendForHistory = 'all';
+
 /*** Получить историю тренировок всех друзей (с учётом их настроек видимости)*/
 async function getFriendsWorkoutHistory() {
     const user = await getFirebaseUser();
@@ -14221,13 +14243,138 @@ function groupHistoryByFriend(history) {
 }
 
 /**
- * Рендерить историю друзей
+ * Форматирование даты: сегодня, вчера, X дней назад (до 7 дней), потом DD.MM.YYYY
  */
+function formatRelativeDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diffDays = Math.floor((today - targetDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'сегодня';
+    if (diffDays === 1) return 'вчера';
+    if (diffDays <= 7) return `${diffDays} дня назад`;
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+
+/**
+ * Обновить отображение выбранного друга в кнопке
+ */
+function updateSelectedFriendName() {
+    const nameEl = document.getElementById('selectedFriendName');
+    if (!nameEl) return;
+    
+    if (selectedFriendForHistory === 'all') {
+        nameEl.textContent = 'Все';
+        return;
+    }
+    
+    getFriendsList().then(result => {
+        if (result.success) {
+            const friend = result.data.find(f => f.id === selectedFriendForHistory);
+            if (friend) {
+                nameEl.textContent = friend.displayName || 'Пользователь';
+            } else {
+                nameEl.textContent = 'Все';
+                selectedFriendForHistory = 'all';
+            }
+        }
+    });
+}
+
+/**
+ * Открыть модалку выбора друга для истории
+ */
+function openFriendHistoryFilterModal() {
+    const oldModal = document.getElementById('friendHistoryFilterModal');
+    if (oldModal) oldModal.remove();
+    
+    tempSelectedFriendForHistory = selectedFriendForHistory;
+    
+    getFriendsList().then(result => {
+        const friends = result.success ? result.data : [];
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.id = 'friendHistoryFilterModal';
+        overlay.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-title">Выберите друга</div>
+                <div class="scroll-wrapper" style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
+                    <!-- Блок "Все" -->
+                    <div class="friend-itemMOD" data-friend-id="all" onclick="selectFriendHistoryFilter('all')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+                        <div class="friend-avatar" style="background: var(--accent-light); color: var(--accent);">
+                            <i class="fa-solid fa-users" style="font-size: 1rem;"></i>
+                        </div>
+                        <div class="friend-info">
+                            <strong>Все</strong>
+                            <span>Показать всех друзей</span>
+                        </div>
+                        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    
+                    <!-- Реальные друзья -->
+                    ${friends.map(f => {
+                        const level = getCurrentLevel(f.totalXp || 0).id;
+                        const xp = Math.round(f.totalXp || 0);
+                        return `
+                            <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendHistoryFilter('${f.id}')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+                                <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
+                                <div class="friend-info">
+                                    <strong>${f.displayName || 'Пользователь'}</strong>
+                                    <span>Уровень ${level} · ${xp} XP</span>
+                                </div>
+                                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="closeFriendHistoryFilterModal()" style="flex: 1;">Отмена</button>
+                    <button class="btn btn-primary" id="applyFriendFilterBtn" style="flex: 1;">Применить</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.style.display = 'flex';
+        
+        document.getElementById('applyFriendFilterBtn').addEventListener('click', function() {
+            applyFriendHistoryFilter();
+        });
+    });
+}
+
+function closeFriendHistoryFilterModal() {
+    const modal = document.getElementById('friendHistoryFilterModal');
+    if (modal) modal.remove();
+}
+
+function selectFriendHistoryFilter(friendId) {
+    tempSelectedFriendForHistory = friendId;
+    
+    document.querySelectorAll('#friendHistoryFilterModal .friend-itemMOD').forEach(el => {
+        const isSelected = el.dataset.friendId === friendId;
+        el.style.border = isSelected ? '2px solid var(--accent)' : '1px solid #E2E8F0';
+        el.style.background = isSelected ? 'var(--light)' : 'var(--light)';
+    });
+}
+
+function applyFriendHistoryFilter() {
+    selectedFriendForHistory = tempSelectedFriendForHistory;
+    closeFriendHistoryFilterModal();
+    updateSelectedFriendName();
+    renderFriendsHistory();
+}
+
 async function renderFriendsHistory() {
     const container = document.getElementById('friendsHistoryContainer');
     if (!container) return;
     
-    // ★★★ ЕСЛИ ИСТОРИЯ СКРЫТА - ПОКАЗЫВАЕМ ЗАМОК ★★★
     if (!isFriendsHistoryVisible()) {
         container.innerHTML = `
             <div class="empty-state">
@@ -14242,65 +14389,134 @@ async function renderFriendsHistory() {
     container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Загрузка...</div>';
     
     try {
-        const result = await getFriendsWorkoutHistory();
+        // Получаем тренировки друзей
+        const workoutsResult = await getFriendsWorkoutHistory();
+        // Получаем события друзей
+        const eventsResult = await getFriendsEvents();
         
-        if (!result.success) {
-            container.innerHTML = `<div style="text-align:center;color:var(--slate);padding:1rem;">Ошибка загрузки истории</div>`;
-            return;
+        // Объединяем и сортируем
+        let allItems = [];
+        
+        // Добавляем тренировки
+        if (workoutsResult.success) {
+            let filteredData = workoutsResult.data;
+            if (selectedFriendForHistory !== 'all') {
+                filteredData = filteredData.filter(item => item.friendId === selectedFriendForHistory);
+            }
+            filteredData.forEach(w => {
+                allItems.push({
+                    type: 'workout',
+                    timestamp: new Date(w.date).getTime() / 1000,
+                    friendName: w.friendName,
+                    friendAvatar: w.friendAvatar,
+                    friendId: w.friendId,
+                    data: w
+                });
+            });
         }
         
-        if (result.data.length === 0) {
+        // Добавляем события
+        if (eventsResult.success) {
+            let filteredData = eventsResult.data;
+            if (selectedFriendForHistory !== 'all') {
+                filteredData = filteredData.filter(item => item.friendId === selectedFriendForHistory);
+            }
+            filteredData.forEach(event => {
+                allItems.push({
+                    type: event.type,
+                    timestamp: event.timestamp?.seconds || 0,
+                    friendName: event.friendName,
+                    friendAvatar: event.friendAvatar,
+                    friendId: event.friendId,
+                    data: event.data
+                });
+            });
+        }
+        
+        // Сортируем по времени (новые сверху)
+        allItems.sort((a, b) => b.timestamp - a.timestamp);
+        
+        if (allItems.length === 0) {
+            const friendName = selectedFriendForHistory !== 'all' 
+                ? 'у этого друга' 
+                : 'у ваших друзей';
             container.innerHTML = `
                 <div class="empty-state">
                     <span class="empty-icon">📋</span>
-                    <h3 class="empty-title">Нет истории</h3>
-                    <p class="empty-text">У ваших друзей пока нет выполненных тренировок</p>
+                    <h3 class="empty-title">Нет активности</h3>
+                    <p class="empty-text">Пока нет активности ${friendName}</p>
                 </div>
             `;
             return;
         }
         
-        // Группируем по друзьям
-        const grouped = groupHistoryByFriend(result.data);
-        
-        // Берем только последние 3 тренировки для каждого друга
-        grouped.forEach(group => {
-            group.workouts = group.workouts.slice(0, 3);
-        });
-        
+        // Рендерим
         let html = '';
+        let currentFriend = '';
         
-        grouped.forEach(group => {
+        allItems.forEach(item => {
             // Заголовок с именем друга
-            html += `
-                <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <div class="friend-avatar" style="width:32px; height:32px; font-size:0.8rem;">${group.friendAvatar}</div>
-                    <span style="font-weight:600; font-size:0.9rem; color:var(--dark);">${group.friendName}</span>
-                </div>
-            `;
+            if (currentFriend !== item.friendId) {
+                currentFriend = item.friendId;
+                html += `
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.3rem;">
+                        <div class="friend-avatar" style="width:32px; height:32px; font-size:0.8rem;">${item.friendAvatar}</div>
+                        <span style="font-weight:600; font-size:0.9rem; color:var(--dark);">${item.friendName}</span>
+                    </div>
+                `;
+            }
             
-            // Тренировки друга
-            group.workouts.forEach(w => {
+            const relativeDate = formatRelativeDateFromTimestamp(item.timestamp);
+            
+            if (item.type === 'workout') {
+                // Тренировка
+                const w = item.data;
                 const totalEx = w.exercises?.length || 0;
                 const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
                 const xpEarned = w.xpEarned || 0;
                 const minutes = Math.floor((w.durationSeconds || 0) / 60);
-                const date = new Date(w.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 
                 html += `
                     <div class="history-item">
                         <div class="history-item-header">
                             <strong class="history-item-title" style="font-size:0.75rem;">${w.title || 'Тренировка'}</strong>
-                            <span class="history-item-date" style="font-size:0.65rem;">${date}</span>
+                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
                         </div>
                         <div class="history-item-details" style="font-size:0.65rem;">
                             ${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP
                         </div>
                     </div>
                 `;
-            });
-            
-            html += `<div style="height:4px;"></div>`;
+            } else if (item.type === 'level_up') {
+                // Новый уровень
+                const level = item.data.level || '?';
+                const levelName = item.data.levelName || '';
+                html += `
+                    <div class="history-item" style="border-left-color: var(--gold);">
+                        <div class="history-item-header">
+                            <strong class="history-item-title" style="font-size:0.75rem;">Новый уровень</strong>
+                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
+                        </div>
+                        <div class="history-item-details" style="font-size:0.65rem; color: var(--gold); font-weight: 600;">
+                            Достиг ${level} уровня — ${levelName}
+                        </div>
+                    </div>
+                `;
+            } else if (item.type === 'achievement_unlocked') {
+                // Новое достижение
+                const achName = item.data.achievementName || 'Достижение';
+                html += `
+                    <div class="history-item" style="border-left-color: var(--gold);">
+                        <div class="history-item-header">
+                            <strong class="history-item-title" style="font-size:0.75rem;">Новое достижение</strong>
+                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
+                        </div>
+                        <div class="history-item-details" style="font-size:0.65rem; font-weight: 600;">
+                            ${achName}
+                        </div>
+                    </div>
+                `;
+            }
         });
         
         container.innerHTML = html;
@@ -14317,6 +14533,23 @@ function refreshFriendsHistory() {
     if (friendsTab && friendsTab.classList.contains('profile-tab-content-active')) {
         renderFriendsHistory();
     }
+}
+
+function formatRelativeDateFromTimestamp(timestamp) {
+    if (!timestamp) return 'недавно';
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diffDays = Math.floor((today - targetDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'сегодня';
+    if (diffDays === 1) return 'вчера';
+    if (diffDays <= 7) return `${diffDays} дня назад`;
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}.${month}`;
 }
 
 // =================== ИСТОРИЯ ДРУЗЕЙ - ВИДИМОСТЬ ===================
@@ -14398,5 +14631,98 @@ async function loadFriendsHistoryVisibilityFromProfile() {
         console.warn('Ошибка загрузки настройки видимости истории:', error);
         const visible = isFriendsHistoryVisible();
         updateFriendsHistoryStatusUI(visible);
+    }
+}
+
+// =================== СОХРАНЕНИЕ СОБЫТИЙ В FIRESTORE ===================
+
+/**
+ * Сохранить событие в Firestore
+ */
+async function saveUserEvent(userId, type, data) {
+    try {
+        await firebase.firestore().collection('userEvents').add({
+            userId: userId,
+            type: type,
+            data: data,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`✅ Событие "${type}" сохранено`);
+    } catch (error) {
+        console.error('❌ Ошибка сохранения события:', error);
+    }
+}
+
+/**
+ * Получить события пользователя (для его друзей)
+ */
+async function getUserEvents(userId, limit = 30) {
+    try {
+        const snapshot = await firebase.firestore()
+            .collection('userEvents')
+            .where('userId', '==', userId)
+            .orderBy('timestamp', 'desc')
+            .limit(limit)
+            .get();
+        
+        const events = [];
+        snapshot.forEach(doc => {
+            events.push({ id: doc.id, ...doc.data() });
+        });
+        return { success: true, data: events };
+    } catch (error) {
+        console.error('❌ Ошибка получения событий:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Получить события для всех друзей
+ */
+async function getFriendsEvents() {
+    const user = await getFirebaseUser();
+    if (!user) return { success: false, error: 'Не авторизован' };
+    
+    try {
+        const friendsResult = await getFriendsList();
+        if (!friendsResult.success || friendsResult.data.length === 0) {
+            return { success: true, data: [] };
+        }
+        
+        const allEvents = [];
+        const friendIds = friendsResult.data.map(f => f.id);
+        
+        // Получаем события для всех друзей
+        for (const friendId of friendIds) {
+            const result = await getUserEvents(friendId);
+            if (result.success) {
+                // Добавляем имя друга к каждому событию
+                const friend = friendsResult.data.find(f => f.id === friendId);
+                const friendName = friend?.displayName || 'Пользователь';
+                const friendAvatar = (friendName)[0].toUpperCase();
+                
+                result.data.forEach(event => {
+                    allEvents.push({
+                        ...event,
+                        friendName: friendName,
+                        friendAvatar: friendAvatar,
+                        friendId: friendId
+                    });
+                });
+            }
+        }
+        
+        // Сортируем по времени
+        allEvents.sort((a, b) => {
+            const timeA = a.timestamp?.seconds || 0;
+            const timeB = b.timestamp?.seconds || 0;
+            return timeB - timeA;
+        });
+        
+        return { success: true, data: allEvents };
+        
+    } catch (error) {
+        console.error('❌ Ошибка получения событий друзей:', error);
+        return { success: false, error: error.message };
     }
 }
