@@ -6006,14 +6006,14 @@ async function loadProfile() {
     if (levelProgressText) levelProgressText.textContent = progressText;
     if (levelFill) levelFill.style.width = progress + '%';
     
-    // ★★★ ПРОВЕРКА ПОВЫШЕНИЯ УРОВНЯ И СОХРАНЕНИЕ СОБЫТИЯ ★★★
-    const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
-    if (currentLevel.id > prevLevel) {
-        // Сохраняем событие о новом уровне
-        await saveUserEvent(user.uid, 'level_up', {
-            level: currentLevel.id,
-            levelName: currentLevel.name
-        });
+// ★★★ ПРОВЕРКА ПОВЫШЕНИЯ УРОВНЯ И СОХРАНЕНИЕ СОБЫТИЯ ★★★
+const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
+if (currentLevel.id > prevLevel) {
+    // Сохраняем событие о новом уровне
+    await saveUserEvent(user.uid, 'level_up', {
+        level: currentLevel.id,
+        levelName: currentLevel.name
+    });
         
         // Показываем уведомление
         if (currentLevel.id > 1) {
@@ -10786,21 +10786,21 @@ async function checkAllAchievements(userId) {
         if (changed) {
             await updateUserProfile(userId, { achievements: currentAchievements });
             
-            // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ И СОХРАНЯЕМ СОБЫТИЯ ДЛЯ НОВЫХ ДОСТИЖЕНИЙ ★★★
-            for (const id of newUnlocked) {
-                const ach = ACHIEVEMENTS_CONFIG.find(a => a.id === id);
-                if (ach) {
-                    // Сохраняем событие о новом достижении
-                    await saveUserEvent(userId, 'achievement_unlocked', {
-                        achievementId: ach.id,
-                        achievementName: ach.name,
-                        achievementIcon: ach.icon
-                    });
-                    
-                    // Показываем уведомление
-                    showAchievementNotification(id);
-                }
-            }
+    // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЯ И СОХРАНЯЕМ СОБЫТИЯ ДЛЯ НОВЫХ ДОСТИЖЕНИЙ ★★★
+    for (const id of newUnlocked) {
+        const ach = ACHIEVEMENTS_CONFIG.find(a => a.id === id);
+        if (ach) {
+            // Сохраняем событие о новом достижении
+            await saveUserEvent(userId, 'achievement_unlocked', {
+                achievementId: ach.id,
+                achievementName: ach.name,
+                achievementIcon: ach.icon
+            });
+            
+            // Показываем уведомление
+            showAchievementNotification(id);
+        }
+    }
         }
 
         return results;
@@ -14389,9 +14389,9 @@ async function renderFriendsHistory() {
     container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Загрузка...</div>';
     
     try {
-        // Получаем тренировки друзей
+        // ★★★ ПОЛУЧАЕМ ТРЕНИРОВКИ ДРУЗЕЙ ★★★
         const workoutsResult = await getFriendsWorkoutHistory();
-        // Получаем события друзей
+        // ★★★ ПОЛУЧАЕМ СОБЫТИЯ ДРУЗЕЙ (LVL И ДОСТИЖЕНИЯ) ★★★
         const eventsResult = await getFriendsEvents();
         
         // Объединяем и сортируем
@@ -14415,7 +14415,7 @@ async function renderFriendsHistory() {
             });
         }
         
-        // Добавляем события
+        // ★★★ ДОБАВЛЯЕМ СОБЫТИЯ (LVL И ДОСТИЖЕНИЯ) ★★★
         if (eventsResult.success) {
             let filteredData = eventsResult.data;
             if (selectedFriendForHistory !== 'all') {
@@ -14450,7 +14450,7 @@ async function renderFriendsHistory() {
             return;
         }
         
-        // Рендерим
+        // ★★★ РЕНДЕРИМ ★★★
         let html = '';
         let currentFriend = '';
         
