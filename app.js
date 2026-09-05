@@ -746,6 +746,45 @@ const DAILY_PROGRESS_KEY = 'sportapp_daily_progress';
 const SESSION_MAX_AGE_HOURS = 6; // Максимальное время жизни сессии в часах
 const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_HOURS * 60 * 60 * 1000; // в миллисекундах
 
+// =================== ЛОГИРОВАНИЕ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
+function logCoopState(label) {
+    console.log(`%c📊 [${label}] СОСТОЯНИЕ СОВМЕСТНОЙ ТРЕНИРОВКИ`, 'font-weight:bold; font-size:14px;');
+    
+    const user = firebase.auth().currentUser;
+    const currentUserId = user ? user.uid : null;
+    
+    console.log('  👤 Текущий пользователь:', currentUserId);
+    console.log('  🆔 Session ID:', currentSessionId);
+    console.log('  🏷️  Статус сессии:', sessionData?.status || 'нет данных');
+    console.log('  📝 Всего упражнений:', coopExercises.length);
+    console.log('  ✅ Выполнено упражнений (sessionCompleted.size):', sessionCompleted.size);
+    console.log('  ⏱️  Время (сек):', sessionSeconds);
+    console.log('  📦 sessionCompletedSets:', JSON.stringify(sessionCompletedSets));
+    
+    if (sessionData && sessionData.participants) {
+        console.log('  👥 Участники:');
+        sessionData.participants.forEach(p => {
+            const isMe = p.id === currentUserId;
+            const progress = sessionData.participantProgress?.[p.id] || 0;
+            const finished = sessionData.participantFinished?.[p.id] || false;
+            const time = sessionData.participantFinishedSeconds?.[p.id] || 0;
+            const xp = sessionData.participantXp?.[p.id] || 0;
+            const ready = sessionData.participantReady?.[p.id] || false;
+            console.log(`    ${isMe ? '👉' : '   '} ${p.name} (${p.id}): progress=${progress}/${coopExercises.length}, finished=${finished}, time=${time}s, xp=${xp.toFixed(1)}, ready=${ready}`);
+        });
+    } else {
+        console.warn('  ⚠️ sessionData.participants отсутствует');
+    }
+    
+    // Проверяем, все ли завершили
+    if (sessionData && sessionData.participants && sessionData.participantFinished) {
+        const allFinished = sessionData.participants.every(p => sessionData.participantFinished[p.id] === true);
+        console.log('  🏁 Все завершили?', allFinished);
+    }
+    
+    console.log('--------------------------------------------------');
+}
+
 // =================== ПРОВЕРКА ВРЕМЕНИ СЕССИИ ===================
 function isSessionExpired(createdAt) {
     if (!createdAt) return false;
@@ -1044,7 +1083,9 @@ function listenSession(sessionId) {
 }
 
 function handleSessionSnapshot(doc) {
+    console.log('🔥 [handleSessionSnapshot] ПОЛУЧЕН СНАПШОТ');
     if (!doc.exists) {
+        console.warn('⚠️ Документ сессии не существует');
         if (sessionListener) {
             sessionListener();
             sessionListener = null;
@@ -1058,9 +1099,11 @@ function handleSessionSnapshot(doc) {
     }
     
     const data = doc.data();
+    console.log('📄 Данные из Firestore:', JSON.stringify(data, null, 2));
     
     // ★★★ ПРОВЕРКА ИСТЕКШЕЙ СЕССИИ ★★★
     if (isSessionExpired(data.createdAt)) {
+        console.warn('⏰ Сессия истекла');
         deleteSessionIfExpired(currentSessionId, data);
         const isOnTrainingPage = document.getElementById('page-training-session').classList.contains('page-active');
         const isOnWaitingPage = document.getElementById('page-training-waiting').classList.contains('page-active');
@@ -1102,11 +1145,13 @@ function handleSessionSnapshot(doc) {
     
     // ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
     updateCoopUI();
+    logCoopState('handleSessionSnapshot (после обновления)');
     
     // ★★★ ЕСЛИ МЫ НА СТРАНИЦЕ ОЖИДАНИЯ — ОБНОВЛЯЕМ СТАТУСЫ ДРУЗЕЙ ★★★
     const isWaitingPageActive = document.getElementById('page-coop-waiting')?.classList.contains('page-active');
     if (isWaitingPageActive) {
         renderCoopFriendsStatus();
+        console.log('🔄 Обновлены статусы друзей на странице ожидания');
     }
     
     // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ УЧАСТНИКИ ЗАВЕРШИЛИ ★★★
@@ -1201,7 +1246,7 @@ function startCoopTraining(data) {
     }));
     sessionCurrentIndex = myProgress;
     sessionCompleted = new Set();
-    sessionCompletedSets = {}; // ★★★ ИНИЦИАЛИЗИРУЕМ ★★★
+    sessionCompletedSets = {};
     for (let i = 0; i < myProgress; i++) {
         sessionCompleted.add(i);
     }
@@ -1217,6 +1262,9 @@ function startCoopTraining(data) {
     renderSessionProgress();
     updateSessionButtons();
     startSessionTimer();
+
+    // ★★★ ЛОГИРУЕМ НАЧАЛО ★★★
+    logCoopState('startCoopTraining');
 
     setTimeout(updateCoopUI, 500);
 }
@@ -1358,8 +1406,8 @@ function showCoopFinishPage() {
 
 function renderFinishPageData(data) {
     console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
-    console.log('📊 [renderFinishPageData] Полученные данные:', JSON.stringify(data, null, 2));
-
+    logCoopState('renderFinishPageData (перед рендером)');
+    
     if (!data || Object.keys(data).length === 0) {
         console.warn('⚠️ [renderFinishPageData] data пустая, используем sessionData');
         data = sessionData;
@@ -1413,6 +1461,8 @@ function renderFinishPageData(data) {
         const name = p.name || 'Пользователь';
         const icon = isMe ? 'fa-solid fa-user' : 'fa-solid fa-user';
         const xpDisplay = (isNaN(xp) ? 0 : xp).toFixed(1);
+        
+        console.log(`📊 Участник ${name}: progress=${progress}/${total}, time=${time}s, xp=${xpDisplay}`);
 
         html += `
             <div style="width:100%;">
@@ -1527,6 +1577,10 @@ markCurrentComplete = function() {
     if (currentSessionId && sessionData) {
         updateCoopProgress(sessionCompleted.size, false);
     }
+    if (currentSessionId && sessionData) {
+    updateCoopProgress(sessionCompleted.size, false);
+}
+logCoopState('markCurrentComplete (после завершения упражнения)');
     
     const isLast = sessionCurrentIndex === sessionExercises.length - 1;
     if (isLast) {
@@ -1547,6 +1601,8 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
         const total = coopExercises.length || 0;
         const currentTime = sessionSeconds;
 
+        console.log(`📤 Отправка прогресса: пользователь ${userId}, выполнено ${completedCount}/${total}, завершение=${isFinishing}`);
+
         const update = {};
         update[`participantProgress.${userId}`] = completedCount;
 
@@ -1554,7 +1610,6 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             update[`participantFinished.${userId}`] = true;
             update[`participantFinishedSeconds.${userId}`] = currentTime;
             
-            // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
             const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
             console.log('📊 XP за тренировку:', xpEarned);
             update[`participantXp.${userId}`] = xpEarned;
@@ -1565,6 +1620,9 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             .doc(currentSessionId)
             .update(update);
 
+        console.log('✅ Прогресс успешно обновлён в Firestore');
+
+        // Обновляем локальные данные
         if (sessionData) {
             sessionData.participantProgress[userId] = completedCount;
             if (isFinishing || completedCount >= total) {
@@ -1575,8 +1633,9 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             }
         }
 
-        // ★★★ ОБНОВЛЯЕМ UI НЕМЕДЛЕННО ★★★
+        // ★★★ ОБНОВЛЯЕМ UI И ЛОГИРУЕМ ★★★
         updateCoopUI();
+        logCoopState('updateCoopProgress (после обновления)');
 
     } catch (error) {
         console.error('❌ [updateCoopProgress] ОШИБКА:', error);
@@ -1981,6 +2040,7 @@ finishTrainingSession = async function() {
 // =================== СТРАНИЦА ОЖИДАНИЯ ОСТАЛЬНЫХ ===================
 function showCoopWaitingPage() {
     console.log('🔥🔥🔥 [showCoopWaitingPage] НАЧАЛО');
+    logCoopState('showCoopWaitingPage (перед отображением)');
     
     // Обновляем мою статистику
     const total = coopExercises.length || 0;
@@ -2006,6 +2066,8 @@ function showCoopWaitingPage() {
         target.style.display = 'block';
     }
     document.getElementById('bottomNav').style.display = 'none';
+    
+    console.log('✅ Страница ожидания показана');
 }
 
 function renderCoopFriendsStatus() {
