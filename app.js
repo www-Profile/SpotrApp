@@ -1159,6 +1159,7 @@ function handleSessionSnapshot(doc) {
         // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ НА СТРАНИЦЕ ФИНИША ★★★
         renderFinishPageData(sessionData);
         
+        // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ФИНИША, ЕСЛИ ОНА ЕЩЁ НЕ ПОКАЗАНА ★★★
         if (!finishPageShown) {
             finishPageShown = true;
             document.querySelectorAll('.page').forEach(p => {
@@ -1395,7 +1396,6 @@ function showCoopFinishPage() {
     }
 }
 
-// ===== 1. ИСПРАВЛЕННАЯ renderFinishPageData =====
 function renderFinishPageData(data) {
     console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
     logCoopState('renderFinishPageData (перед рендером)');
@@ -1587,15 +1587,19 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
 
         console.log(`📤 Отправка прогресса: пользователь ${userId}, выполнено ${completedCount}/${total}, завершение=${isFinishing}`);
 
+        // ★★★ XP ВЫЧИСЛЯЕМ ВСЕГДА, ДАЖЕ ЕСЛИ НЕ ФИНИШ ★★★
+        const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
+        console.log('📊 XP за тренировку (текущий):', xpEarned);
+
         const update = {};
         update[`participantProgress.${userId}`] = completedCount;
+        
+        // ★★★ XP ОБНОВЛЯЕМ ВСЕГДА ★★★
+        update[`participantXp.${userId}`] = xpEarned;
 
         if (isFinishing || completedCount >= total) {
             update[`participantFinished.${userId}`] = true;
             update[`participantFinishedSeconds.${userId}`] = currentTime;
-            const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
-            console.log('📊 XP за тренировку:', xpEarned);
-            update[`participantXp.${userId}`] = xpEarned;
         }
 
         await firebase.firestore()
@@ -1605,13 +1609,13 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
 
         console.log('✅ Прогресс успешно обновлён в Firestore');
 
+        // ★★★ ЛОКАЛЬНЫЕ ДАННЫЕ ОБНОВЛЯЕМ ВСЕГДА ★★★
         if (sessionData) {
             sessionData.participantProgress[userId] = completedCount;
+            sessionData.participantXp[userId] = xpEarned; // ← XP ВСЕГДА
             if (isFinishing || completedCount >= total) {
                 sessionData.participantFinished[userId] = true;
                 sessionData.participantFinishedSeconds[userId] = currentTime;
-                const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
-                sessionData.participantXp[userId] = xpEarned;
             }
         }
 
@@ -2026,14 +2030,17 @@ function showCoopWaitingPage() {
     const total = coopExercises.length || 0;
     const myExercises = sessionCompleted.size;
     
-    // ★★★ XP БЕРЁМ ИЗ sessionData.participantXp (ЕСЛИ ЕСТЬ), ИНАЧЕ ВЫЧИСЛЯЕМ ★★★
+    // ★★★ XP БЕРЁМ ИЗ sessionData.participantXp (ЕСЛИ ЕСТЬ) ★★★
     const user = firebase.auth().currentUser;
     const userId = user ? user.uid : null;
     let myXpValue = 0;
     if (sessionData && userId && sessionData.participantXp && sessionData.participantXp[userId] !== undefined) {
         myXpValue = sessionData.participantXp[userId];
+        console.log(`📊 XP из sessionData: ${myXpValue}`);
     } else {
+        // Fallback: вычисляем локально
         myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+        console.log(`📊 XP вычислен локально: ${myXpValue}`);
     }
     const myTime = sessionSeconds;
     
