@@ -298,8 +298,8 @@
         </button>
     </div>
     <!-- ★★★ КНОПКИ УПРАВЛЕНИЯ ОТДЫХОМ ★★★ -->
-    <div id="sessionRestControls" style="display: none; margin-top: 0.5rem; justify-content: center; gap: 0.8rem;">
-        <button class="session-rest-control-btn" onclick="adjustRestTime(-15)">15с</button>
+    <div id="sessionRestControls" style="display: none; margin-top: 0.5rem; justify-content: center; gap: 0.5rem;">
+        <button class="session-rest-control-btn" onclick="adjustRestTime(-15)">-15с</button>
         <button class="session-rest-control-btn" onclick="adjustRestTime(15)">+15с</button>
     </div>
 </div>
@@ -1188,7 +1188,7 @@
         <!-- ★★★ ВКЛАДКА: ДРУЗЬЯ ★★★ -->
         <div id="profileTab-friends" class="profile-tab-content">
             <!-- Блок 1: Поиск -->
-            <div class="section-blockFriend" data-block-id="friends-search">
+            <div class="section-block" data-block-id="friends-search">
                 <div class="friends-list-block">
                     <div class="search-container">
                         <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
@@ -1809,7 +1809,7 @@
         </div>
         
         <!-- Кнопки -->
-        <div style="display: flex; gap: 0.8rem;">
+        <div style="display: flex; gap: 0.5rem;">
             <button class="btn btn-secondary" onclick="closeModal('paletteModal')" style="flex: 1;">Отмена</button>
             <button class="btn btn-primary" onclick="applyPaletteColor()" style="flex: 1;">Применить</button>
         </div>
