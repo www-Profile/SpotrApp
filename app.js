@@ -1043,8 +1043,6 @@ function listenSession(sessionId) {
         .catch(() => {});
 }
 
-// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
-// =================== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ СНАПШОТА ===================
 function handleSessionSnapshot(doc) {
     if (!doc.exists) {
         if (sessionListener) {
@@ -1075,17 +1073,7 @@ function handleSessionSnapshot(doc) {
         return;
     }
     
-    // ★★★ ПРОВЕРЯЕМ СТАТУС СЕССИИ ★★★
-    // Если сессия уже помечена как завершённая — показываем финиш
-    if (data.status === 'completed' && !finishPageShown) {
-        console.log('🏁 Сессия помечена как завершённая! Показываем финиш.');
-        finishPageShown = true;
-        stopSessionTimer();
-        showCoopFinishPage();
-        return;
-    }
-    
-    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В ЛОКАЛЬНЫХ ДАННЫХ ★★★
+    // ★★★ ОБНОВЛЯЕМ ЛОКАЛЬНЫЕ ДАННЫЕ ★★★
     if (!sessionData) {
         sessionData = {
             hostId: data.hostId,
@@ -1112,37 +1100,26 @@ function handleSessionSnapshot(doc) {
         coopExercises = data.exercises;
     }
     
-// ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
-updateCoopUI();
-
-// ★★★ ЕСЛИ МЫ НА СТРАНИЦЕ ОЖИДАНИЯ — ОБНОВЛЯЕМ СТАТУСЫ ДРУЗЕЙ ★★★
-const isWaitingPageActive = document.getElementById('page-coop-waiting')?.classList.contains('page-active');
-if (isWaitingPageActive) {
-    renderCoopFriendsStatus();
-}
+    // ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
+    updateCoopUI();
+    
+    // ★★★ ЕСЛИ МЫ НА СТРАНИЦЕ ОЖИДАНИЯ — ОБНОВЛЯЕМ СТАТУСЫ ДРУЗЕЙ ★★★
+    const isWaitingPageActive = document.getElementById('page-coop-waiting')?.classList.contains('page-active');
+    if (isWaitingPageActive) {
+        renderCoopFriendsStatus();
+    }
     
     // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ УЧАСТНИКИ ЗАВЕРШИЛИ ★★★
     const participants = sessionData.participants || [];
     const participantFinished = sessionData.participantFinished || {};
+    let allFinished = participants.length > 0 && participants.every(p => participantFinished[p.id] === true);
     
-    // ★★★ ВАЖНО: ИСПОЛЬЗУЕМ participants ДЛЯ ПРОВЕРКИ ★★★
-    let allFinished = false;
-    if (participants.length > 0) {
-        allFinished = participants.every(p => participantFinished[p.id] === true);
-        console.log('📊 [handleSessionSnapshot] Проверка завершения:');
-        console.log('  - Участников:', participants.length);
-        participants.forEach(p => {
-            console.log('  - ' + p.name + ' (' + p.id + '): finished=' + participantFinished[p.id]);
-        });
-        console.log('  - allFinished:', allFinished);
-    } else {
-        console.warn('⚠️ [handleSessionSnapshot] Нет участников в sessionData.participants');
-    }
-    
-    // ★★★ ЕСЛИ ВСЕ ЗАВЕРШИЛИ — ПОКАЗЫВАЕМ/ОБНОВЛЯЕМ ФИНИШ ★★★
     if (allFinished) {
         console.log('🎉 [handleSessionSnapshot] ВСЕ УЧАСТНИКИ ЗАВЕРШИЛИ!');
         stopSessionTimer();
+        
+        // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ НА СТРАНИЦЕ ФИНИША ★★★
+        renderFinishPageData(sessionData);
         
         // ★★★ ЕСЛИ СТРАНИЦА ФИНИША ЕЩЁ НЕ ПОКАЗАНА — ПОКАЗЫВАЕМ ★★★
         if (!finishPageShown) {
@@ -1151,7 +1128,6 @@ if (isWaitingPageActive) {
                 p.classList.remove('page-active');
                 p.style.display = 'none';
             });
-            
             const target = document.getElementById('page-coop-finish');
             if (target) {
                 target.classList.add('page-active');
@@ -1159,9 +1135,6 @@ if (isWaitingPageActive) {
             }
             document.getElementById('bottomNav').style.display = 'none';
         }
-        
-        // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ НА СТРАНИЦЕ ФИНИША ★★★
-        showCoopFinishPage();
         return;
     }
     
@@ -1387,7 +1360,6 @@ function renderFinishPageData(data) {
     console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
     console.log('📊 [renderFinishPageData] Полученные данные:', JSON.stringify(data, null, 2));
 
-    // Если data пустая - пробуем использовать sessionData
     if (!data || Object.keys(data).length === 0) {
         console.warn('⚠️ [renderFinishPageData] data пустая, используем sessionData');
         data = sessionData;
@@ -1407,63 +1379,41 @@ function renderFinishPageData(data) {
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
 
-    console.log('📊 [renderFinishPageData] РАСПАРСЕННЫЕ ДАННЫЕ:');
-    console.log('  - total:', total);
-    console.log('  - participants:', JSON.stringify(participants));
-    console.log('  - participantProgress:', JSON.stringify(participantProgress));
-    console.log('  - participantFinished:', JSON.stringify(participantFinished));
-    console.log('  - participantFinishedSeconds:', JSON.stringify(participantFinishedSeconds));
-    console.log('  - participantXp:', JSON.stringify(participantXp));
-    console.log('👤 [renderFinishPageData] Текущий пользователь:', currentUserId);
-
-    // ★★★ СОРТИРУЕМ: СНАЧАЛА ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ, ПОТОМ ВСЕ ОСТАЛЬНЫЕ ★★★
     const sortedParticipants = [...participants].sort((a, b) => {
         if (a.id === currentUserId) return -1;
         if (b.id === currentUserId) return 1;
         return 0;
     });
-    console.log('📊 [renderFinishPageData] Отсортированные участники:', sortedParticipants.map(p => p.name));
 
-    // ★★★ НАХОДИМ КОНТЕЙНЕР ДЛЯ ВСЕХ УЧАСТНИКОВ ★★★
     let container = document.getElementById('coopAllParticipants');
     if (!container) {
-        // Если контейнера нет — создаём его
         const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
         if (finishContent) {
             container = document.createElement('div');
             container.id = 'coopAllParticipants';
             container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
-            // Вставляем после моей статистики
             const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
             if (myStatsBlock) {
                 myStatsBlock.after(container);
             } else {
                 finishContent.appendChild(container);
             }
-            console.log('✅ [renderFinishPageData] Создан контейнер coopAllParticipants');
         } else {
             console.error('❌ [renderFinishPageData] Не найден контейнер для вставки');
             return;
         }
     }
 
-    // ★★★ РЕНДЕРИМ ВСЕХ УЧАСТНИКОВ ★★★
     let html = '';
-    sortedParticipants.forEach((p, index) => {
+    sortedParticipants.forEach((p) => {
         const isMe = p.id === currentUserId;
         const progress = participantProgress[p.id] || 0;
         const time = participantFinishedSeconds[p.id] || 0;
         const xp = participantXp[p.id] || 0;
         const name = p.name || 'Пользователь';
-        const isFinished = participantFinished[p.id] || false;
-        
-        // Определяем цвет для статуса (если нужно)
-        const accentColor = isMe ? 'var(--accent)' : 'var(--slate)';
         const icon = isMe ? 'fa-solid fa-user' : 'fa-solid fa-user';
-        
-        // ★★★ XP С ОДНИМ ЗНАКОМ ПОСЛЕ ЗАПЯТОЙ ★★★
         const xpDisplay = (isNaN(xp) ? 0 : xp).toFixed(1);
-        
+
         html += `
             <div style="width:100%;">
                 <div class="item-title" style="color:var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
@@ -1485,12 +1435,10 @@ function renderFinishPageData(data) {
                 </div>
             </div>
         `;
-        console.log('📊 [renderFinishPageData] Участник ' + name + ': ' + progress + '/' + total + ', time=' + time + ', xp=' + xpDisplay);
     });
 
     container.innerHTML = html;
     console.log('✅ [renderFinishPageData] Все участники отрендерены');
-    console.log('✅ [renderFinishPageData] ЗАВЕРШЕНА');
 }
 
 // Вспомогательная функция для форматирования времени
@@ -1507,8 +1455,6 @@ markCurrentComplete = function() {
     const isTimed = isTimeBased(repsStr);
     const key = sessionCurrentIndex;
     
-    console.log('🔥 [markCurrentComplete] НАЧАЛО, упражнение:', currentEx?.name);
-    
     // ★★★ 1. ВРЕМЕННОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × СЕКУНДЫ) ★★★
     if (isTimed) {
         const completedSets = sessionCompletedSets[key] || 0;
@@ -1524,7 +1470,14 @@ markCurrentComplete = function() {
             return;
         }
         
+        // ✅ Все подходы выполнены – засчитываем упражнение
         sessionCompleted.add(sessionCurrentIndex);
+        
+        // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
+        if (currentSessionId && sessionData) {
+            updateCoopProgress(sessionCompleted.size, false);
+        }
+        
         const isLast = sessionCurrentIndex === sessionExercises.length - 1;
         if (isLast) {
             finishTrainingSession();
@@ -1547,9 +1500,9 @@ markCurrentComplete = function() {
                 sessionCompletedSets[key] = totalSets;
                 sessionCompleted.add(sessionCurrentIndex);
                 
-                // ★★★ НАЧИСЛЯЕМ XP ЗА ВСЕ ПОДХОДЫ ★★★
-                const xpEarned = calculateExerciseXP(currentEx, totalSets);
-                if (xpEarned > 0) {
+                // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
+                if (currentSessionId && sessionData) {
+                    updateCoopProgress(sessionCompleted.size, false);
                 }
                 
                 const isLast = sessionCurrentIndex === sessionExercises.length - 1;
@@ -1570,20 +1523,17 @@ markCurrentComplete = function() {
     }
     sessionCompleted.add(sessionCurrentIndex);
     
-    // ★★★ НАЧИСЛЯЕМ XP ЗА ВСЕ ПОДХОДЫ ★★★
-    const xpEarned = calculateExerciseXP(currentEx, sessionCompletedSets[key]);
-    if (xpEarned > 0) {
+    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
+    if (currentSessionId && sessionData) {
+        updateCoopProgress(sessionCompleted.size, false);
     }
     
     const isLast = sessionCurrentIndex === sessionExercises.length - 1;
     if (isLast) {
-        console.log('🏁 [markCurrentComplete] Это последнее упражнение, вызываем finishTrainingSession');
         finishTrainingSession();
     } else {
-        console.log('⏳ [markCurrentComplete] Запускаем отдых');
         startRest();
     }
-    console.log('✅ [markCurrentComplete] ЗАВЕРШЕНА');
 };
 
 async function updateCoopProgress(completedCount, isFinishing = false) {
@@ -1604,11 +1554,10 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             update[`participantFinished.${userId}`] = true;
             update[`participantFinishedSeconds.${userId}`] = currentTime;
             
-    // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
-    const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
-    console.log('📊 XP за тренировку:', xpEarned);
-            
-            console.log('📊 XP для участника:', xpEarned);
+            // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
+            const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
+            console.log('📊 XP за тренировку:', xpEarned);
+            update[`participantXp.${userId}`] = xpEarned;
         }
 
         await firebase.firestore()
@@ -1621,11 +1570,12 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             if (isFinishing || completedCount >= total) {
                 sessionData.participantFinished[userId] = true;
                 sessionData.participantFinishedSeconds[userId] = currentTime;
-                // ★★★ РАСЧЁТ XP С УЧЁТОМ ВЫПОЛНЕННЫХ ПОДХОДОВ ★★★
-                sessionData.participantXp[userId] = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
+                const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
+                sessionData.participantXp[userId] = xpEarned;
             }
         }
 
+        // ★★★ ОБНОВЛЯЕМ UI НЕМЕДЛЕННО ★★★
         updateCoopUI();
 
     } catch (error) {
@@ -1646,20 +1596,20 @@ function showFriendSelectModal(friends) {
             <div class="scroll-wrapper">
                 <div class="modal-title">Выберите друга</div>
                 <div style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
-                    ${friends.map(f => {
-                        const level = getCurrentLevel(f.totalXp || 0).id;
-                        const xp = (f.totalXp || 0).toFixed(1);
-                        return `
-                            <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
-                                <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
-                                <div class="friend-info">
-                                    <strong>${f.displayName || 'Пользователь'}</strong>
-                                    <span>Уровень ${level} · ${xp} XP</span>
-                                </div>
-                                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-                            </div>
-                        `;
-                    }).join('')}
+${friends.map(f => {
+    const level = getCurrentLevel(f.totalXp || 0).id;
+    const xp = Math.round(f.totalXp || 0); // ← ИСПРАВЛЕНО: используем f.totalXp
+    return `
+        <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+            <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
+            <div class="friend-info">
+                <strong>${f.displayName || 'Пользователь'}</strong>
+                <span>Уровень ${level} · ${xp} XP</span>
+            </div>
+            <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    `;
+}).join('')}
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-secondary" onclick="document.getElementById('friendSelectModal').remove()" style="flex: 1;">Закрыть</button>
@@ -2038,15 +1988,10 @@ function showCoopWaitingPage() {
     const myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
     const myTime = sessionSeconds;
     
-    console.log('📊 [showCoopWaitingPage] Мои данные:');
-    console.log('  - total:', total);
-    console.log('  - myExercises:', myExercises);
-    console.log('  - myXpValue:', myXpValue);
-    console.log('  - myTime:', myTime);
-    
     document.getElementById('coopMyExercises').textContent = `${myExercises}/${total}`;
     document.getElementById('coopMyTime').textContent = formatTime(myTime);
-document.getElementById('coopMyXp').textContent = '+${(isNaN(myXpValue) ? 0 : myXpValue).toFixed(1)}';    
+    document.getElementById('coopMyXp').textContent = `+${(isNaN(myXpValue) ? 0 : myXpValue).toFixed(1)}`;
+    
     // Рендерим статусы друзей
     renderCoopFriendsStatus();
     
@@ -2055,21 +2000,16 @@ document.getElementById('coopMyXp').textContent = '+${(isNaN(myXpValue) ? 0 : my
         p.classList.remove('page-active');
         p.style.display = 'none';
     });
-    
     const target = document.getElementById('page-coop-waiting');
     if (target) {
         target.classList.add('page-active');
         target.style.display = 'block';
-        console.log('✅ [showCoopWaitingPage] Страница ожидания показана');
     }
     document.getElementById('bottomNav').style.display = 'none';
-    
-    console.log('✅ [showCoopWaitingPage] ЗАВЕРШЕНА');
 }
 
 function renderCoopFriendsStatus() {
     console.log('🔥 [renderCoopFriendsStatus] НАЧАЛО');
-    
     const container = document.getElementById('coopFriendsStatus');
     if (!container) {
         console.error('❌ [renderCoopFriendsStatus] Контейнер coopFriendsStatus не найден');
@@ -2081,45 +2021,33 @@ function renderCoopFriendsStatus() {
     const participantProgress = sessionData?.participantProgress || {};
     const total = coopExercises.length || 0;
     
-    console.log('📊 [renderCoopFriendsStatus] Участников:', participants.length);
-    console.log('📊 [renderCoopFriendsStatus] participantFinished:', participantFinished);
-    console.log('📊 [renderCoopFriendsStatus] participantProgress:', participantProgress);
-    
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
     
-    // Фильтруем только ДРУЗЕЙ (не текущего пользователя)
     const friends = participants.filter(p => p.id !== currentUserId);
     
     if (friends.length === 0) {
         container.innerHTML = `<div style="text-align:center;color:var(--slate);padding:1rem;">Нет других участников</div>`;
-        console.log('⚠️ [renderCoopFriendsStatus] Нет друзей для отображения');
         return;
     }
     
-    console.log('📊 [renderCoopFriendsStatus] Друзей для отображения:', friends.length);
-    
     let html = '';
     friends.forEach(p => {
-        const isFinished = participantFinished[p.id] === true;
         const progress = participantProgress[p.id] || 0;
-        const statusText = `${progress}/${total}`;
         const name = p.name || 'Пользователь';
-        
         html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; background:var(--white); border-radius:10px; border:1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
                 <span style="font-weight:500; color:var(--dark);">
                     👤 ${name}
                 </span>
                 <span style="font-weight:600; color:var(--slate);">
-                    ${statusText}
+                    ${progress}/${total}
                 </span>
             </div>
         `;
     });
     
     container.innerHTML = html;
-    console.log('✅ [renderCoopFriendsStatus] Статусы друзей отрендерены');
 }
 
 document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async function() {
@@ -4400,7 +4328,7 @@ function goToNextExercise() {
     
     const currentEx = sessionExercises[sessionCurrentIndex];
     const repsStr = String(currentEx?.reps || '');
-    const isTimed = isTimeBased(repsStr); // true = "Подходы × Секунды", false = "Подходы × Повторения"
+    const isTimed = isTimeBased(repsStr);
     const hasNext = sessionCurrentIndex < sessionExercises.length - 1;
     const exerciseName = currentEx?.name || 'Упражнение';
     const key = sessionCurrentIndex;
@@ -4409,13 +4337,12 @@ function goToNextExercise() {
     
     // ★★★ 3. ВРЕМЕННОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × СЕКУНДЫ) ★★★
     if (isTimed) {
-        // Показываем модалку с количеством выполненных подходов
         showConfirmModal(
             'Упражнение не завершено',
             `Вы выполнили ${completedSets} из ${totalSets} подходов. Пропустить остальные подходы?`,
             function() {
-                // Засчитываем упражнение с выполненными подходами
-                sessionCompleted.add(sessionCurrentIndex);
+                // ★★★ НЕ ДОБАВЛЯЕМ В sessionCompleted ★★★
+                // Только сохраняем выполненные подходы
                 sessionCompletedSets[key] = completedSets;
                 
                 if (hasNext) {
@@ -4423,9 +4350,7 @@ function goToNextExercise() {
                     renderSessionExercise();
                     renderSessionProgress();
                     updateSessionButtons();
-                    if (currentSessionId && sessionData) {
-                        updateCoopProgress(sessionCompleted.size, false);
-                    }
+                    // Прогресс упражнений не изменился, но если нужно обновить XP, то вызов не требуется
                 } else {
                     finishTrainingSession();
                 }
@@ -4436,21 +4361,16 @@ function goToNextExercise() {
     }
     
     // ★★★ 4. ОБЫЧНОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × ПОВТОРЕНИЯ) ★★★
-    // Показываем модалку "Пропустить упражнение?" - НЕ засчитываем
     showConfirmModal(
         'Пропустить упражнение?',
         `Вы уверены, что хотите пропустить "${exerciseName}"? Оно не будет засчитано.`,
         function() {
             // ★★★ УПРАЖНЕНИЕ НЕ ЗАСЧИТЫВАЕТСЯ ★★★
-            // Просто переходим к следующему
             if (hasNext) {
                 sessionCurrentIndex++;
                 renderSessionExercise();
                 renderSessionProgress();
                 updateSessionButtons();
-                if (currentSessionId && sessionData) {
-                    updateCoopProgress(sessionCompleted.size, false);
-                }
             } else {
                 finishTrainingSession();
             }
@@ -7309,7 +7229,7 @@ async function renderFriendsInProfile() {
             resultsDiv.innerHTML = result.data.map(u => {
                 const initial = (u.displayName || 'П')[0].toUpperCase();
                 const level = getCurrentLevel(u.totalXp || 0).id;
-                const xp = (u.totalXp || 0).toFixed(1);
+                const xp = Math.round(u.totalXp || 0);
                 let buttonHtml = '';
                 if (u.friendshipStatus === 'none') {
                     buttonHtml = `<button class="btn btn-secondary btn-sm" onclick="addFriend('${u.id}', this)">Добавить</button>`;
@@ -7361,7 +7281,7 @@ async function renderFriendsInProfile() {
             const fromUser = r.fromUser || {};
             const initial = (fromUser.displayName || 'П')[0].toUpperCase();
             const level = getCurrentLevel(fromUser.totalXp || 0).id;
-            const xp = (fromUser.totalXp || 0).toFixed(1);
+            const xp = Math.round(fromUser.totalXp || 0);
             return `<div class="friend-request-item" onclick="openFriendRequestProfile('${r.id}','${r.from}')" style="cursor:pointer;">
                 <div class="friend-avatar">${initial}</div>
                 <div class="friend-result-info">
@@ -7384,19 +7304,19 @@ async function renderFriendsInProfile() {
         // Уведомления о новых друзьях теперь показываются ТОЛЬКО в acceptFriendRequest
         // и в listenForFriendAcceptedNotifications
         
-        friendsHtml = friends.data.map(f => {
-            const initial = (f.displayName || 'П')[0].toUpperCase();
-            const level = getCurrentLevel(f.totalXp || 0).id;
-            const xp = (f.totalXp || 0).toFixed(1);
-            return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
-                <div class="friend-avatar">${initial}</div>
-                <div class="friend-info">
-                    <strong>${f.displayName || 'Пользователь'}</strong>
-                    <span>Уровень ${level} · ${xp} XP</span>
-                </div>
-                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>`;
-        }).join('');
+friendsHtml = friends.data.map(f => {
+    const initial = (f.displayName || 'П')[0].toUpperCase();
+    const level = getCurrentLevel(f.totalXp || 0).id;
+    const xp = Math.round(f.totalXp || 0); // ← ИСПРАВЛЕНО: используем f.totalXp
+    return `<div class="friend-item" onclick="openFriendProfile('${f.id}')" style="cursor:pointer;">
+        <div class="friend-avatar">${initial}</div>
+        <div class="friend-info">
+            <strong>${f.displayName || 'Пользователь'}</strong>
+            <span>Уровень ${level} · ${xp} XP</span>
+        </div>
+        <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>`;
+}).join('');
     } else {
         friendsHtml = '<div class="empty-state"><span class="empty-icon">👥</span><h3 class="empty-title">Нет друзей</h3><p class="empty-text">Добавьте друзей, чтобы соревноваться!</p></div>';
     }
