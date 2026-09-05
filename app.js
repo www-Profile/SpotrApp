@@ -14497,8 +14497,8 @@ async function renderFriendsHistory() {
                             <strong class="history-item-title" style="font-size:0.75rem;">Новый уровень</strong>
                             <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
                         </div>
-                        <div class="history-item-details" style="font-size:0.65rem; color: var(--gold); font-weight: 600;">
-                            Достиг ${level} уровня — ${levelName}
+                        <div class="history-item-details" style="font-size:0.65rem;">
+                            Достиг ${level} уровня - "${levelName}"
                         </div>
                     </div>
                 `;
@@ -14511,9 +14511,9 @@ async function renderFriendsHistory() {
                             <strong class="history-item-title" style="font-size:0.75rem;">Новое достижение</strong>
                             <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
                         </div>
-                        <div class="history-item-details" style="font-size:0.65rem; font-weight: 600;">
-                            ${achName}
-                        </div>
+            <div class="history-item-details" style="font-size:0.65rem;">
+                Получил достижение - "${achName}"
+            </div>
                     </div>
                 `;
             }
@@ -14654,14 +14654,14 @@ async function saveUserEvent(userId, type, data) {
 }
 
 /**
- * Получить события пользователя (для его друзей)
+ * Получить события пользователя (для его друзей) - БЕЗ СОРТИРОВКИ
  */
 async function getUserEvents(userId, limit = 30) {
     try {
+        // ★★★ УБИРАЕМ orderBy, ЧТОБЫ НЕ ТРЕБОВАТЬ ИНДЕКС ★★★
         const snapshot = await firebase.firestore()
             .collection('userEvents')
             .where('userId', '==', userId)
-            .orderBy('timestamp', 'desc')
             .limit(limit)
             .get();
         
@@ -14669,6 +14669,14 @@ async function getUserEvents(userId, limit = 30) {
         snapshot.forEach(doc => {
             events.push({ id: doc.id, ...doc.data() });
         });
+        
+        // ★★★ СОРТИРУЕМ ВРУЧНУЮ ★★★
+        events.sort((a, b) => {
+            const timeA = a.timestamp?.seconds || 0;
+            const timeB = b.timestamp?.seconds || 0;
+            return timeB - timeA;
+        });
+        
         return { success: true, data: events };
     } catch (error) {
         console.error('❌ Ошибка получения событий:', error);
