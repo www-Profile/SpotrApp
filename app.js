@@ -1400,17 +1400,33 @@ function renderFinishPageData(data) {
     console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
     logCoopState('renderFinishPageData (перед рендером)');
     
+    // ★★★ ПРОВЕРКА НА НАЛИЧИЕ ДАННЫХ ★★★
     if (!data || Object.keys(data).length === 0) {
         console.warn('⚠️ [renderFinishPageData] data пустая, используем sessionData');
         data = sessionData;
         if (!data) {
             console.error('❌ [renderFinishPageData] Нет данных для отображения!');
+            const container = document.getElementById('coopAllParticipants');
+            if (container) {
+                container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Нет данных для отображения</div>';
+            }
             return;
         }
     }
 
     const total = data?.totalExercises || 0;
     const participants = data?.participants || [];
+    
+    // ★★★ ПРОВЕРКА НА УЧАСТНИКОВ ★★★
+    if (!participants || participants.length === 0) {
+        console.warn('⚠️ [renderFinishPageData] Нет участников!');
+        const container = document.getElementById('coopAllParticipants');
+        if (container) {
+            container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Нет участников в тренировке</div>';
+        }
+        return;
+    }
+    
     const participantProgress = data?.participantProgress || {};
     const participantFinished = data?.participantFinished || {};
     const participantFinishedSeconds = data?.participantFinishedSeconds || {};
@@ -1587,9 +1603,9 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
 
         console.log(`📤 Отправка прогресса: пользователь ${userId}, выполнено ${completedCount}/${total}, завершение=${isFinishing}`);
 
-        // ★★★ XP ВЫЧИСЛЯЕМ ВСЕГДА, ДАЖЕ ЕСЛИ НЕ ФИНИШ ★★★
-        const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
-        console.log('📊 XP за тренировку (текущий):', xpEarned);
+        // ★★★ XP ВЫЧИСЛЯЕМ ПРАВИЛЬНО ★★★
+        const xpEarned = calculateWorkoutXp(coopExercises, sessionCompletedSets);
+        console.log('📊 XP за тренировку (правильный):', xpEarned);
 
         const update = {};
         update[`participantProgress.${userId}`] = completedCount;
@@ -1948,6 +1964,10 @@ finishTrainingSession = async function() {
     console.log('  - sessionData.participantProgress:', JSON.stringify(sessionData.participantProgress));
     console.log('  - sessionData.participantFinished:', JSON.stringify(sessionData.participantFinished));
 
+    // ★★★ ВЫЧИСЛЯЕМ XP ПРАВИЛЬНО ★★★
+    const xpEarned = calculateWorkoutXp(coopExercises, sessionCompletedSets);
+    console.log('📊 XP за тренировку (правильный):', xpEarned);
+
     // ОБНОВЛЯЕМ ПРОГРЕСС
     console.log('🔄 [finishTrainingSession] Вызов updateCoopProgress(' + completedCount + ', true)');
     await updateCoopProgress(completedCount, true);
@@ -1964,8 +1984,8 @@ finishTrainingSession = async function() {
             sessionData.participantProgress[userId] = completedCount;
             sessionData.participantFinished[userId] = true;
             sessionData.participantFinishedSeconds[userId] = sessionSeconds;
-            const completedExercises = coopExercises.filter((_, index) => index < completedCount);
-            sessionData.participantXp[userId] = calculateWorkoutXp(completedExercises);
+            // ★★★ СОХРАНЯЕМ ПРАВИЛЬНЫЙ XP ★★★
+            sessionData.participantXp[userId] = xpEarned;
         }
     }
 
@@ -2020,7 +2040,7 @@ finishTrainingSession = async function() {
         };
         checkDailyTasksAfterCoopWorkout(workoutData);
     }
-};;
+};
 
 // =================== СТРАНИЦА ОЖИДАНИЯ ОСТАЛЬНЫХ ===================
 function showCoopWaitingPage() {
@@ -2030,17 +2050,18 @@ function showCoopWaitingPage() {
     const total = coopExercises.length || 0;
     const myExercises = sessionCompleted.size;
     
-    // ★★★ XP ВЫЧИСЛЯЕМ ЛОКАЛЬНО, ЕСЛИ В sessionData НЕТ ★★★
+    // ★★★ ВЫЧИСЛЯЕМ XP ПРАВИЛЬНО ★★★
     const user = firebase.auth().currentUser;
     const userId = user ? user.uid : null;
     let myXpValue = 0;
+    
+    // Сначала проверяем sessionData
     if (sessionData && userId && sessionData.participantXp && sessionData.participantXp[userId] !== undefined) {
         myXpValue = sessionData.participantXp[userId];
         console.log(`📊 XP из sessionData: ${myXpValue}`);
     } else {
         // Вычисляем XP на основе выполненных упражнений и подходов
-        const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
-        myXpValue = calculateWorkoutXp(completedExercises, sessionCompletedSets);
+        myXpValue = calculateWorkoutXp(coopExercises, sessionCompletedSets);
         console.log(`📊 XP вычислен локально: ${myXpValue}`);
         // Обновляем sessionData, чтобы следующие вызовы использовали его
         if (sessionData && userId) {
