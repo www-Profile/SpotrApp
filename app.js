@@ -749,10 +749,8 @@ const SESSION_MAX_AGE_MS = SESSION_MAX_AGE_HOURS * 60 * 60 * 1000; // в мил�
 // =================== ЛОГИРОВАНИЕ ДЛЯ СОВМЕСТНЫХ ТРЕНИРОВОК ===================
 function logCoopState(label) {
     console.log(`%c📊 [${label}] СОСТОЯНИЕ СОВМЕСТНОЙ ТРЕНИРОВКИ`, 'font-weight:bold; font-size:14px;');
-    
     const user = firebase.auth().currentUser;
     const currentUserId = user ? user.uid : null;
-    
     console.log('  👤 Текущий пользователь:', currentUserId);
     console.log('  🆔 Session ID:', currentSessionId);
     console.log('  🏷️  Статус сессии:', sessionData?.status || 'нет данных');
@@ -760,7 +758,6 @@ function logCoopState(label) {
     console.log('  ✅ Выполнено упражнений (sessionCompleted.size):', sessionCompleted.size);
     console.log('  ⏱️  Время (сек):', sessionSeconds);
     console.log('  📦 sessionCompletedSets:', JSON.stringify(sessionCompletedSets));
-    
     if (sessionData && sessionData.participants) {
         console.log('  👥 Участники:');
         sessionData.participants.forEach(p => {
@@ -775,13 +772,8 @@ function logCoopState(label) {
     } else {
         console.warn('  ⚠️ sessionData.participants отсутствует');
     }
-    
-    // Проверяем, все ли завершили
-    if (sessionData && sessionData.participants && sessionData.participantFinished) {
-        const allFinished = sessionData.participants.every(p => sessionData.participantFinished[p.id] === true);
-        console.log('  🏁 Все завершили?', allFinished);
-    }
-    
+    const allFinished = sessionData?.participants?.every(p => sessionData.participantFinished?.[p.id] === true) || false;
+    console.log('  🏁 Все завершили?', allFinished);
     console.log('--------------------------------------------------');
 }
 
@@ -1101,7 +1093,6 @@ function handleSessionSnapshot(doc) {
     const data = doc.data();
     console.log('📄 Данные из Firestore:', JSON.stringify(data, null, 2));
     
-    // ★★★ ПРОВЕРКА ИСТЕКШЕЙ СЕССИИ ★★★
     if (isSessionExpired(data.createdAt)) {
         console.warn('⏰ Сессия истекла');
         deleteSessionIfExpired(currentSessionId, data);
@@ -1128,7 +1119,8 @@ function handleSessionSnapshot(doc) {
             participantFinished: data.participantFinished || {},
             participantFinishedSeconds: data.participantFinishedSeconds || {},
             participantXp: data.participantXp || {},
-            participantReady: data.participantReady || {}
+            participantReady: data.participantReady || {},
+            status: data.status || 'waiting'
         };
     } else {
         sessionData.participants = data.participants || [];
@@ -1137,13 +1129,14 @@ function handleSessionSnapshot(doc) {
         sessionData.participantFinishedSeconds = data.participantFinishedSeconds || {};
         sessionData.participantXp = data.participantXp || {};
         sessionData.participantReady = data.participantReady || {};
+        sessionData.status = data.status || sessionData.status;
     }
     
     if (data.exercises && data.exercises.length > 0) {
         coopExercises = data.exercises;
     }
     
-    // ★★★ ОБНОВЛЯЕМ UI С УЧАСТНИКАМИ ★★★
+    // ★★★ ОБНОВЛЯЕМ UI ★★★
     updateCoopUI();
     logCoopState('handleSessionSnapshot (после обновления)');
     
@@ -1157,7 +1150,7 @@ function handleSessionSnapshot(doc) {
     // ★★★ ПРОВЕРЯЕМ, ВСЕ ЛИ УЧАСТНИКИ ЗАВЕРШИЛИ ★★★
     const participants = sessionData.participants || [];
     const participantFinished = sessionData.participantFinished || {};
-    let allFinished = participants.length > 0 && participants.every(p => participantFinished[p.id] === true);
+    const allFinished = participants.length > 0 && participants.every(p => participantFinished[p.id] === true);
     
     if (allFinished) {
         console.log('🎉 [handleSessionSnapshot] ВСЕ УЧАСТНИКИ ЗАВЕРШИЛИ!');
@@ -1166,7 +1159,6 @@ function handleSessionSnapshot(doc) {
         // ★★★ ВСЕГДА ОБНОВЛЯЕМ ДАННЫЕ НА СТРАНИЦЕ ФИНИША ★★★
         renderFinishPageData(sessionData);
         
-        // ★★★ ЕСЛИ СТРАНИЦА ФИНИША ЕЩЁ НЕ ПОКАЗАНА — ПОКАЗЫВАЕМ ★★★
         if (!finishPageShown) {
             finishPageShown = true;
             document.querySelectorAll('.page').forEach(p => {
@@ -1229,6 +1221,7 @@ function startCoopTraining(data) {
     sessionData.participantFinished = data.participantFinished || {};
     sessionData.participantFinishedSeconds = data.participantFinishedSeconds || {};
     sessionData.participantXp = data.participantXp || {};
+    sessionData.status = data.status || 'waiting';
 
     const title = data.workoutTitle || 'Совместная тренировка';
     const category = 'Совместная';
@@ -1263,9 +1256,7 @@ function startCoopTraining(data) {
     updateSessionButtons();
     startSessionTimer();
 
-    // ★★★ ЛОГИРУЕМ НАЧАЛО ★★★
     logCoopState('startCoopTraining');
-
     setTimeout(updateCoopUI, 500);
 }
 
@@ -1308,12 +1299,12 @@ function updateCoopUI() {
         return bProg - aProg;
     });
     
-    function formatTime(seconds) {
-        if (!seconds) return null;
-        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
-        return `${mins}:${secs}`;
-    }
+function formatTime(seconds) {
+    if (!seconds) return '00:00';
+    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+}
     
     otherParticipants.forEach(p => {
         const progress = participantProgress[p.id] || 0;
@@ -1404,6 +1395,7 @@ function showCoopFinishPage() {
     }
 }
 
+// ===== 1. ИСПРАВЛЕННАЯ renderFinishPageData =====
 function renderFinishPageData(data) {
     console.log('🔥🔥🔥 [renderFinishPageData] НАЧАЛО');
     logCoopState('renderFinishPageData (перед рендером)');
@@ -1433,23 +1425,28 @@ function renderFinishPageData(data) {
         return 0;
     });
 
+    // ★★★ ВСЕГДА ПЕРЕСОЗДАЁМ КОНТЕЙНЕР, ЧТОБЫ ИЗБЕЖАТЬ СТАРЫХ ДАННЫХ ★★★
     let container = document.getElementById('coopAllParticipants');
-    if (!container) {
-        const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
-        if (finishContent) {
-            container = document.createElement('div');
-            container.id = 'coopAllParticipants';
-            container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
-            const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
-            if (myStatsBlock) {
-                myStatsBlock.after(container);
-            } else {
-                finishContent.appendChild(container);
-            }
+    if (container) {
+        container.remove();
+        container = null;
+    }
+    
+    const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
+    if (finishContent) {
+        container = document.createElement('div');
+        container.id = 'coopAllParticipants';
+        container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
+        // Вставляем после блока "Моя статистика" (если есть)
+        const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
+        if (myStatsBlock) {
+            myStatsBlock.after(container);
         } else {
-            console.error('❌ [renderFinishPageData] Не найден контейнер для вставки');
-            return;
+            finishContent.appendChild(container);
         }
+    } else {
+        console.error('❌ [renderFinishPageData] Не найден контейнер для вставки');
+        return;
     }
 
     let html = '';
@@ -1505,7 +1502,6 @@ markCurrentComplete = function() {
     const isTimed = isTimeBased(repsStr);
     const key = sessionCurrentIndex;
     
-    // ★★★ 1. ВРЕМЕННОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × СЕКУНДЫ) ★★★
     if (isTimed) {
         const completedSets = sessionCompletedSets[key] || 0;
         const totalSets = parseInt(currentEx?.sets) || 0;
@@ -1520,13 +1516,11 @@ markCurrentComplete = function() {
             return;
         }
         
-        // ✅ Все подходы выполнены – засчитываем упражнение
         sessionCompleted.add(sessionCurrentIndex);
-        
-        // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
         if (currentSessionId && sessionData) {
             updateCoopProgress(sessionCompleted.size, false);
         }
+        logCoopState('markCurrentComplete (после завершения упражнения)');
         
         const isLast = sessionCurrentIndex === sessionExercises.length - 1;
         if (isLast) {
@@ -1537,11 +1531,9 @@ markCurrentComplete = function() {
         return;
     }
     
-    // ★★★ 2. ОБЫЧНОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × ПОВТОРЕНИЯ) ★★★
     const completedSets = sessionCompletedSets[key] || 0;
     const totalSets = parseInt(currentEx?.sets) || 0;
     
-    // Если есть выполненные подходы, но не все
     if (completedSets > 0 && completedSets < totalSets) {
         showConfirmModal(
             'Упражнение не завершено',
@@ -1549,12 +1541,10 @@ markCurrentComplete = function() {
             function() {
                 sessionCompletedSets[key] = totalSets;
                 sessionCompleted.add(sessionCurrentIndex);
-                
-                // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
                 if (currentSessionId && sessionData) {
                     updateCoopProgress(sessionCompleted.size, false);
                 }
-                
+                logCoopState('markCurrentComplete (после подтверждения)');
                 const isLast = sessionCurrentIndex === sessionExercises.length - 1;
                 if (isLast) {
                     finishTrainingSession();
@@ -1567,20 +1557,14 @@ markCurrentComplete = function() {
         return;
     }
     
-    // ★★★ ВСЕ ПОДХОДЫ ВЫПОЛНЕНЫ ★★★
     if (sessionCompletedSets[key] === undefined || sessionCompletedSets[key] === 0) {
         sessionCompletedSets[key] = totalSets;
     }
     sessionCompleted.add(sessionCurrentIndex);
-    
-    // ★★★ ОБНОВЛЯЕМ ПРОГРЕСС В СОВМЕСТНОЙ ТРЕНИРОВКЕ ★★★
     if (currentSessionId && sessionData) {
         updateCoopProgress(sessionCompleted.size, false);
     }
-    if (currentSessionId && sessionData) {
-    updateCoopProgress(sessionCompleted.size, false);
-}
-logCoopState('markCurrentComplete (после завершения упражнения)');
+    logCoopState('markCurrentComplete (после завершения упражнения)');
     
     const isLast = sessionCurrentIndex === sessionExercises.length - 1;
     if (isLast) {
@@ -1609,7 +1593,6 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
         if (isFinishing || completedCount >= total) {
             update[`participantFinished.${userId}`] = true;
             update[`participantFinishedSeconds.${userId}`] = currentTime;
-            
             const xpEarned = calculateWorkoutXp(sessionExercises, sessionCompletedSets);
             console.log('📊 XP за тренировку:', xpEarned);
             update[`participantXp.${userId}`] = xpEarned;
@@ -1622,7 +1605,6 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
 
         console.log('✅ Прогресс успешно обновлён в Firestore');
 
-        // Обновляем локальные данные
         if (sessionData) {
             sessionData.participantProgress[userId] = completedCount;
             if (isFinishing || completedCount >= total) {
@@ -1633,7 +1615,6 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
             }
         }
 
-        // ★★★ ОБНОВЛЯЕМ UI И ЛОГИРУЕМ ★★★
         updateCoopUI();
         logCoopState('updateCoopProgress (после обновления)');
 
@@ -2042,20 +2023,26 @@ function showCoopWaitingPage() {
     console.log('🔥🔥🔥 [showCoopWaitingPage] НАЧАЛО');
     logCoopState('showCoopWaitingPage (перед отображением)');
     
-    // Обновляем мою статистику
     const total = coopExercises.length || 0;
     const myExercises = sessionCompleted.size;
-    const myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+    
+    // ★★★ XP БЕРЁМ ИЗ sessionData.participantXp (ЕСЛИ ЕСТЬ), ИНАЧЕ ВЫЧИСЛЯЕМ ★★★
+    const user = firebase.auth().currentUser;
+    const userId = user ? user.uid : null;
+    let myXpValue = 0;
+    if (sessionData && userId && sessionData.participantXp && sessionData.participantXp[userId] !== undefined) {
+        myXpValue = sessionData.participantXp[userId];
+    } else {
+        myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+    }
     const myTime = sessionSeconds;
     
     document.getElementById('coopMyExercises').textContent = `${myExercises}/${total}`;
     document.getElementById('coopMyTime').textContent = formatTime(myTime);
     document.getElementById('coopMyXp').textContent = `+${(isNaN(myXpValue) ? 0 : myXpValue).toFixed(1)}`;
     
-    // Рендерим статусы друзей
     renderCoopFriendsStatus();
     
-    // Переключаем на страницу ожидания
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('page-active');
         p.style.display = 'none';
@@ -2079,7 +2066,6 @@ function renderCoopFriendsStatus() {
     }
     
     const participants = sessionData?.participants || [];
-    const participantFinished = sessionData?.participantFinished || {};
     const participantProgress = sessionData?.participantProgress || {};
     const total = coopExercises.length || 0;
     
@@ -4374,7 +4360,6 @@ function goToPrevExercise() {
 }
 
 function goToNextExercise() {
-    // ★★★ 1. ЕСЛИ ТАЙМЕР ЗАПУЩЕН - ОСТАНАВЛИВАЕМ ★★★
     if (isExerciseTimerRunning) {
         clearInterval(exerciseTimerInterval);
         exerciseTimerInterval = null;
@@ -4382,7 +4367,6 @@ function goToNextExercise() {
         document.getElementById('sessionMainBtn').textContent = 'СТАРТ';
     }
     
-    // ★★★ 2. ЕСЛИ МЫ НА ОТДЫХЕ - ПРОПУСКАЕМ ★★★
     if (isResting) {
         skipRest();
         return;
@@ -4397,22 +4381,17 @@ function goToNextExercise() {
     const completedSets = sessionCompletedSets[key] || 0;
     const totalSets = parseInt(currentEx?.sets) || 0;
     
-    // ★★★ 3. ВРЕМЕННОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × СЕКУНДЫ) ★★★
     if (isTimed) {
         showConfirmModal(
             'Упражнение не завершено',
             `Вы выполнили ${completedSets} из ${totalSets} подходов. Пропустить остальные подходы?`,
             function() {
-                // ★★★ НЕ ДОБАВЛЯЕМ В sessionCompleted ★★★
-                // Только сохраняем выполненные подходы
                 sessionCompletedSets[key] = completedSets;
-                
                 if (hasNext) {
                     sessionCurrentIndex++;
                     renderSessionExercise();
                     renderSessionProgress();
                     updateSessionButtons();
-                    // Прогресс упражнений не изменился, но если нужно обновить XP, то вызов не требуется
                 } else {
                     finishTrainingSession();
                 }
@@ -4422,12 +4401,10 @@ function goToNextExercise() {
         return;
     }
     
-    // ★★★ 4. ОБЫЧНОЕ УПРАЖНЕНИЕ (ПОДХОДЫ × ПОВТОРЕНИЯ) ★★★
     showConfirmModal(
         'Пропустить упражнение?',
         `Вы уверены, что хотите пропустить "${exerciseName}"? Оно не будет засчитано.`,
         function() {
-            // ★★★ УПРАЖНЕНИЕ НЕ ЗАСЧИТЫВАЕТСЯ ★★★
             if (hasNext) {
                 sessionCurrentIndex++;
                 renderSessionExercise();
