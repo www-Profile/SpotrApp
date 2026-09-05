@@ -1612,7 +1612,7 @@ async function updateCoopProgress(completedCount, isFinishing = false) {
         // ★★★ ЛОКАЛЬНЫЕ ДАННЫЕ ОБНОВЛЯЕМ ВСЕГДА ★★★
         if (sessionData) {
             sessionData.participantProgress[userId] = completedCount;
-            sessionData.participantXp[userId] = xpEarned; // ← XP ВСЕГДА
+            sessionData.participantXp[userId] = xpEarned;
             if (isFinishing || completedCount >= total) {
                 sessionData.participantFinished[userId] = true;
                 sessionData.participantFinishedSeconds[userId] = currentTime;
@@ -2030,7 +2030,7 @@ function showCoopWaitingPage() {
     const total = coopExercises.length || 0;
     const myExercises = sessionCompleted.size;
     
-    // ★★★ XP БЕРЁМ ИЗ sessionData.participantXp (ЕСЛИ ЕСТЬ) ★★★
+    // ★★★ XP ВЫЧИСЛЯЕМ ЛОКАЛЬНО, ЕСЛИ В sessionData НЕТ ★★★
     const user = firebase.auth().currentUser;
     const userId = user ? user.uid : null;
     let myXpValue = 0;
@@ -2038,9 +2038,14 @@ function showCoopWaitingPage() {
         myXpValue = sessionData.participantXp[userId];
         console.log(`📊 XP из sessionData: ${myXpValue}`);
     } else {
-        // Fallback: вычисляем локально
-        myXpValue = calculateWorkoutXp(sessionExercises.filter((_, index) => sessionCompleted.has(index)));
+        // Вычисляем XP на основе выполненных упражнений и подходов
+        const completedExercises = sessionExercises.filter((_, index) => sessionCompleted.has(index));
+        myXpValue = calculateWorkoutXp(completedExercises, sessionCompletedSets);
         console.log(`📊 XP вычислен локально: ${myXpValue}`);
+        // Обновляем sessionData, чтобы следующие вызовы использовали его
+        if (sessionData && userId) {
+            sessionData.participantXp[userId] = myXpValue;
+        }
     }
     const myTime = sessionSeconds;
     
