@@ -1441,12 +1441,25 @@ function renderFinishPageData(data) {
         return 0;
     });
 
-    // ★★★ ВСЕГДА ПЕРЕСОЗДАЁМ КОНТЕЙНЕР, ЧТОБЫ ИЗБЕЖАТЬ СТАРЫХ ДАННЫХ ★★★
-    let container = document.getElementById('coopAllParticipants');
-    if (container) {
-        container.remove();
-        container = null;
+let container = document.getElementById('coopAllParticipants');
+if (!container) {
+    // Создаём только если нет
+    container = document.createElement('div');
+    container.id = 'coopAllParticipants';
+    container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
+    const finishContent = document.querySelector('.finish-content');
+    if (finishContent) {
+        const btn = document.getElementById('coopFinishDoneBtn');
+        if (btn) {
+            finishContent.insertBefore(container, btn);
+        } else {
+            finishContent.appendChild(container);
+        }
     }
+} else {
+    // Очищаем содержимое, но НЕ УДАЛЯЕМ сам контейнер
+    container.innerHTML = '';
+}
     
     const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
     if (finishContent) {
