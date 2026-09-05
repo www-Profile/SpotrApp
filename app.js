@@ -1441,41 +1441,27 @@ function renderFinishPageData(data) {
         return 0;
     });
 
-let container = document.getElementById('coopAllParticipants');
-if (!container) {
-    // Создаём только если нет
-    container = document.createElement('div');
-    container.id = 'coopAllParticipants';
-    container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
-    const finishContent = document.querySelector('.finish-content');
-    if (finishContent) {
-        const btn = document.getElementById('coopFinishDoneBtn');
-        if (btn) {
-            finishContent.insertBefore(container, btn);
-        } else {
-            finishContent.appendChild(container);
-        }
-    }
-} else {
-    // Очищаем содержимое, но НЕ УДАЛЯЕМ сам контейнер
-    container.innerHTML = '';
-}
-    
-    const finishContent = document.querySelector('.finish-content') || document.querySelector('.finish-stats')?.parentNode;
-    if (finishContent) {
+    // ★★★ ПОЛУЧАЕМ ИЛИ СОЗДАЁМ КОНТЕЙНЕР (ТОЛЬКО ОДИН РАЗ) ★★★
+    let container = document.getElementById('coopAllParticipants');
+    if (!container) {
         container = document.createElement('div');
         container.id = 'coopAllParticipants';
         container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
-        // Вставляем после блока "Моя статистика" (если есть)
-        const myStatsBlock = finishContent.querySelector('#coopMyExercises')?.closest('div');
-        if (myStatsBlock) {
-            myStatsBlock.after(container);
+        const finishContent = document.querySelector('.finish-content');
+        if (finishContent) {
+            const btn = document.getElementById('coopFinishDoneBtn');
+            if (btn) {
+                finishContent.insertBefore(container, btn);
+            } else {
+                finishContent.appendChild(container);
+            }
         } else {
-            finishContent.appendChild(container);
+            console.error('❌ [renderFinishPageData] Не найден контейнер .finish-content');
+            return;
         }
     } else {
-        console.error('❌ [renderFinishPageData] Не найден контейнер для вставки');
-        return;
+        // ★★★ ОЧИЩАЕМ СОДЕРЖИМОЕ, НО НЕ УДАЛЯЕМ САМ КОНТЕЙНЕР ★★★
+        container.innerHTML = '';
     }
 
     let html = '';
