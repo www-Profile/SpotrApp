@@ -4004,11 +4004,6 @@ body.theme-dark-mode .btn-danger {
     color: var(--light-grey);
 }
 
-/* Hero страница */
-body.theme-dark-mode .hero {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-}
-
 body.theme-dark-mode .hero-title {
     background: var(--accent);
     -webkit-background-clip: text;
@@ -4047,11 +4042,6 @@ body.theme-dark-mode .settings-item-task .fa-square-check {
 
 body.theme-dark-mode .settings-item-task .fa-square {
     color: var(--border-color) !important;
-}
-
-/* Страница загрузки */
-body.theme-dark-mode #page-loading .hero {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 body.theme-dark-mode #page-loading .hero-title {
