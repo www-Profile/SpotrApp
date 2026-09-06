@@ -744,21 +744,8 @@
                         </div>
                     </div>
 
-                    <div class="section-block" data-block-id="history">
-                        <div class="section-header">
-                            <h2 class="section-title">История тренировок</h2>
-                            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                            <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
-                        </div>
-                        <div class="section-body">
-                            <div class="scroll-wrapper" id="workoutHistoryWrapper">
-                                <div id="workoutHistory" class="history-list"></div>
-                            </div>
-                        </div>
-                    </div>
-
 <!-- Блок: Нагрузочный индекс по неделям -->
-<div class="section-block" data-block-id="weekly-load" id="weekly-load-block" style="display:none;">
+<div class="section-block" data-block-id="weekly-load" id="weekly-load-block">
     <div class="section-header">
         <h2 class="section-title">Нагрузочный индекс</h2>
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
@@ -778,88 +765,18 @@
     </div>
 </div>
 
-<!-- ===== ДЕМО-БЛОК: НАГРУЗОЧНЫЙ ИНДЕКС (ДЛЯ НЕ-PREMIUM) ===== -->
-<div class="section-block" data-block-id="weekly-load-demo" id="weekly-load-demo-block">
-    <div class="section-header" id="weeklyLoadDemoHeader">
-        <h2 class="section-title">Нагрузочный индекс</h2>
-        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-        <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
-    </div>
-    <div class="section-body">
-        <div class="weekly-load">
-            <!-- Навигация по месяцам (только текст, без кнопок) -->
-            <div class="weekly-load-naw">
-                <span style="font-size:0.8rem; color:var(--slate);"><i class="fa-solid fa-chevron-left"></i></span>
-                <span id="weeklyLoadDemoTitle" class="weekly-load-naw-title">Сентябрь</span>
-                <span style="font-size:0.8rem; color:var(--slate);"><i class="fa-solid fa-chevron-right"></i></span>
-            </div>
-            
-            <!-- Демо-диаграмма -->
-            <div class="weekly-load-Chart" id="weeklyLoadDemoChart" style="cursor: pointer; " onclick="handlePremiumClick()">
-                <div style="display:flex; align-items:flex-end; gap:0.5rem; height:160px; padding:0rem 0rem 0.3rem; justify-content:center;">
-                    <!-- Столбик 1 -->
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                        <span class="weekly-load-value">28</span>
-                        <div class="weekly-load-bar" style="height:70px;">
-                            <div class="weekly-load-fill" style="height:70%;"></div>
+                    <div class="section-block" data-block-id="history">
+                        <div class="section-header">
+                            <h2 class="section-title">История тренировок</h2>
+                            <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
-                        <span class="weekly-load-label">01.09-07.09</span>
-                    </div>
-                    
-                    <!-- Столбик 2 -->
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                        <span class="weekly-load-value">45</span>
-                        <div class="weekly-load-bar" style="height:110px;">
-                            <div class="weekly-load-fill" style="height:100%;"></div>
+                        <div class="section-body">
+                            <div class="scroll-wrapper" id="workoutHistoryWrapper">
+                                <div id="workoutHistory" class="history-list"></div>
+                            </div>
                         </div>
-                        <span class="weekly-load-label">08.09-14.09</span>
                     </div>
-                    
-                    <!-- Столбик 3 -->
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                        <span class="weekly-load-value">12</span>
-                        <div class="weekly-load-bar" style="height:35px;">
-                            <div class="weekly-load-fill" style="height:40%;"></div>
-                        </div>
-                        <span class="weekly-load-label">15.09-21.09</span>
-                    </div>
-                    
-                    <!-- Столбик 4 -->
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                        <span class="weekly-load-value">63</span>
-                        <div class="weekly-load-bar" style="height:145px;">
-                            <div class="weekly-load-fill" style="height:100%;"></div>
-                        </div>
-                        <span class="weekly-load-label">22.09-28.09</span>
-                    </div>
-                    
-                    <!-- Столбик 5 -->
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                        <span class="weekly-load-value">8</span>
-                        <div class="weekly-load-bar" style="height:25px;">
-                            <div class="weekly-load-fill" style="height:30%;"></div>
-                        </div>
-                        <span class="weekly-load-label">29.09-05.10</span>
-                    </div>
-                </div>
-                
-                <!-- Информация о нагрузке -->
-                <div class="weekly-load-info">
-                    <span>Всего: 156</span>
-                    <span>Средний: 31</span>
-                    <span>Макс: 63</span>
-                    <span>Минимум: 8</span>
-                </div>
-            </div>
-            
-            <!-- Баннер PREMIUM -->
-            <div class="weekly-load-premium-banner">
-                <i class="fa-solid fa-crown" style="color: var(--accent);"></i> <strong>Купите PREMIUM</strong>, чтобы видеть реальную нагрузку
-            </div>
-        </div>
-    </div>
-</div>
-
                 </div>
             </div>
             <div id="statsEditButtons" style="margin-top: 0.5rem; width: 100%;">
@@ -1308,9 +1225,10 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (5 ШАГОВ) ★★★ -->
         <div class="step-dots">
             <div class="step-dot active"></div>
+            <div class="step-dot"></div>
             <div class="step-dot"></div>
             <div class="step-dot"></div>
             <div class="step-dot"></div>
@@ -1321,7 +1239,9 @@
                 <label class="form-label-large">Как вас зовут?</label>
                 <div class="input-with-btn">
                     <input type="text" id="regName" class="form-input" placeholder="Введите ваше имя" maxlength="30" required />
-                    <button type="submit" class="btn-submit-arrow" id="registerStep1Btn">›</button>
+                    <button type="submit" class="btn-submit-arrow" id="registerStep1Btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </form>
         </div>
@@ -1333,10 +1253,11 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (5 ШАГОВ) ★★★ -->
         <div class="step-dots">
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
+            <div class="step-dot"></div>
             <div class="step-dot"></div>
             <div class="step-dot"></div>
         </div>
@@ -1346,7 +1267,9 @@
                 <label class="form-label-large">Ваша почта</label>
                 <div class="input-with-btn">
                     <input type="email" id="regEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
-                    <button type="submit" class="btn-submit-arrow" id="registerStep2Btn">›</button>
+                    <button type="submit" class="btn-submit-arrow" id="registerStep2Btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </form>
         </div>
@@ -1358,11 +1281,12 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (5 ШАГОВ) ★★★ -->
         <div class="step-dots">
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
+            <div class="step-dot"></div>
             <div class="step-dot"></div>
         </div>
         
@@ -1371,7 +1295,9 @@
                 <label class="form-label-large">Придумайте пароль</label>
                 <div class="input-with-btn">
                     <input type="password" id="regPassword" class="form-input" placeholder="Минимум 6 символов" maxlength="20" required />
-                    <button type="submit" class="btn-submit-arrow" id="registerStep3Btn">›</button>
+                    <button type="submit" class="btn-submit-arrow" id="registerStep3Btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </form>
         </div>
@@ -1383,8 +1309,41 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (5 ШАГОВ) ★★★ -->
         <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+        </div>
+        
+<div class="auth-card">
+    <div style="text-align: center; margin-top: -2rem;">
+        <div style="font-size: 4rem; margin-bottom: 0.5rem;">📧</div>
+        <p style="color: var(--slate); font-size: 0.9rem; margin-bottom: 1rem;">На вашу почту пришло письмо.</p>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 0.5rem; width: 100%;">
+        <span class="input-with-text">
+            Я подтвердил(а) почту
+        </span>
+        <button class="btn-submit-arrow" id="registerVerifyBtn" style="flex-shrink: 0;">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+    </div>
+</div>
+
+<!-- ===== СТРАНИЦА: ВЫБОР ИНВЕНТАРЯ (ШАГ 5) ===== -->
+<div id="page-inventory" class="page" style="display:none;">
+    <div class="auth-container">
+        <h1 class="auth-title">SportApp</h1>
+        
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (ВСЕ 5 АКТИВНЫ) ★★★ -->
+        <div class="step-dots">
+            <div class="step-dot active"></div>
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
@@ -1392,11 +1351,31 @@
         </div>
         
         <div class="auth-card">
-            <div style="text-align: center; margin-top: -2rem;">
-                <div style="font-size: 4rem">📧</div>
-                <p style="color: var(--slate); font-size: 0.9rem;">На вашу почту пришло письмо.</p>
-            </div>
-            <button class="btn btn-primary" id="registerVerifyBtn" style="margin-top: 0.5rem;">Продолжить</button>
+            <form id="inventoryForm" novalidate>
+                <label class="form-label-large">Какой инвентарь у вас есть?</label>
+                
+                <div class="inventory-grid">
+                    <button type="button" class="inventory-btn" data-inventory="dumbbells" onclick="toggleInventory(this)">
+                        <span class="inventory-name">Гантели</span>
+                    </button>
+                    <button type="button" class="inventory-btn" data-inventory="barbell" onclick="toggleInventory(this)">
+                        <span class="inventory-name">Штанга</span>
+                    </button>
+                    <button type="button" class="inventory-btn" data-inventory="mat" onclick="toggleInventory(this)">
+                        <span class="inventory-name">Коврик</span>
+                    </button>
+                    <button type="button" class="inventory-btn" data-inventory="pullup" onclick="toggleInventory(this)">
+                        <span class="inventory-name">Турник</span>
+                    </button>
+                </div>
+                
+                <div class="input-with-btn" style="margin-top: 0.5rem;">
+                    <span style="flex: 1; font-size: 0.8rem; color: var(--slate); text-align: center;" id="selectedInventoryText">Ничего из перечисленного</span>
+                    <button type="submit" class="btn-submit-arrow" id="inventorySubmitBtn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -1406,7 +1385,7 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (2 ШАГА) ★★★ -->
         <div class="step-dots">
             <div class="step-dot active"></div>
             <div class="step-dot"></div>
@@ -1417,7 +1396,9 @@
                 <label class="form-label-large">Ваша почта</label>
                 <div class="input-with-btn">
                     <input type="email" id="loginEmail" class="form-input" placeholder="example@mail.ru" maxlength="50" required />
-                    <button type="submit" class="btn-submit-arrow" id="loginStep1Btn">›</button>
+                    <button type="submit" class="btn-submit-arrow" id="loginStep1Btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </form>
             <p class="auth-switch" style="visibility: hidden; margin-top: 0.8rem; height: 1.6rem;">Забыли пароль? <a >Восстановить</a></p>
@@ -1430,7 +1411,7 @@
     <div class="auth-container">
         <h1 class="auth-title">SportApp</h1>
         
-        <!-- ★★★ ПОЛОСКИ ШАГОВ ★★★ -->
+        <!-- ★★★ ПОЛОСКИ ШАГОВ (2 ШАГА) ★★★ -->
         <div class="step-dots">
             <div class="step-dot active"></div>
             <div class="step-dot active"></div>
@@ -1441,12 +1422,14 @@
                 <label class="form-label-large">Ваш пароль</label>
                 <div class="input-with-btn">
                     <input type="password" id="loginPassword" class="form-input" placeholder="Введите пароль" maxlength="20" required />
-                    <button type="submit" class="btn-submit-arrow" id="loginStep2Btn">›</button>
+                    <button type="submit" class="btn-submit-arrow" id="loginStep2Btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </form>
-<p class="auth-switch" id="forgotPasswordLink" style="visibility: hidden; margin-top: 0.8rem; height: 1.6rem;">
-    Забыли пароль? <a href="#" onclick="sendPasswordReset()">Восстановить</a>
-</p>
+            <p class="auth-switch" id="forgotPasswordLink" style="visibility: hidden; margin-top: 0.8rem; height: 1.6rem;">
+                Забыли пароль? <a href="#" onclick="sendPasswordReset()">Восстановить</a>
+            </p>
         </div>
     </div>
 </div>
@@ -1646,13 +1629,6 @@
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
             </div>
             
-            <!-- Строка 3: Статистика -->
-            <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Статистика</div>
-                <div class="premium-table-cell premium-table-cell-center">Базовая</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенная</div>
-            </div>
-            
             <!-- Строка 4: Совместные тренировки -->
             <div class="premium-table-row">
                 <div class="premium-table-cell premium-table-cell-left">Совместные трени</div>
@@ -1695,7 +1671,7 @@
 </div>
 
 <!-- ★★★ СЧЕТЧИК PREMIUM ★★★ -->
-<div style="text-align:center; padding:0.2rem 0 0.5rem 0; font-size:0.8rem; color:var(--slate); border-top:1px solid var(--light-grey);">
+<div class="premium-people">
     <span id="premiumCounter">PREMIUM оформили: 0 человек</span>
 </div>
         
@@ -1739,12 +1715,6 @@
             </div>
             
             <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Статистика</div>
-                <div class="premium-table-cell premium-table-cell-center">Базовая</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенная</div>
-            </div>
-            
-            <div class="premium-table-row">
                 <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
                 <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
@@ -1764,7 +1734,7 @@
         </div>
 
         <!-- ★★★ СЧЕТЧИК PREMIUM ★★★ -->
-<div style="text-align:center; padding:0.2rem 0 ; font-size:0.8rem; color:var(--slate); border-top:1px solid var(--light-grey);">
+<div class="premium-people">
     <span id="premiumCounter">PREMIUM оформили: 0 человек</span>
 </div>
         

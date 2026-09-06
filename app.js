@@ -2712,7 +2712,7 @@ function clearSeenNotifications() {
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'weekly-load', 'world-leaderboard', 'friends-leaderboard'],
+statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело']
     };
@@ -6123,42 +6123,80 @@ firebase.auth().onAuthStateChanged(async (user) => {
                 console.warn('Ошибка перезагрузки пользователя:', e); 
             }
             
-            // Проверка подтверждения почты
-if (!user.emailVerified) {
-    // ★★★ ЕСЛИ ПОЧТА НЕ ПОДТВЕРЖДЕНА - ПРОВЕРЯЕМ ВРЕМЯ ★★★
-    const pendingTime = localStorage.getItem('pendingVerification_' + user.uid);
-    if (pendingTime) {
-        const elapsed = Date.now() - parseInt(pendingTime);
-        if (elapsed > 300000) {
-            // Прошло больше 5 минут - удаляем аккаунт
-            try {
-                await firebase.firestore().collection('users').doc(user.uid).delete();
-                await user.delete();
-                localStorage.removeItem('pendingVerification_' + user.uid);
-                showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
-                showHero();  // ← ПОКАЗЫВАЕМ ПРИВЕТСТВИЕ
+            // ===== ПРОВЕРКА ПОДТВЕРЖДЕНИЯ ПОЧТЫ =====
+            if (!user.emailVerified) {
+                console.log('📧 Почта не подтверждена, проверяем таймер удаления...');
+                
+                // ★★★ ПРОВЕРЯЕМ В FIRESTORE ★★★
+                try {
+                    const pendingDoc = await firebase.firestore()
+                        .collection('pendingDeletions')
+                        .doc(user.uid)
+                        .get();
+                    
+                    if (pendingDoc.exists) {
+                        const data = pendingDoc.data();
+                        const deleteAt = data.deleteAt?.toDate?.() || new Date(data.deleteAt);
+                        
+                        if (deleteAt && new Date() > deleteAt) {
+                            // Прошло больше 5 минут - удаляем аккаунт
+                            console.log('⏰ Время подтверждения истекло, удаляем аккаунт...');
+                            try {
+                                // Удаляем данные пользователя из Firestore
+                                await firebase.firestore().collection('users').doc(user.uid).delete();
+                                // Удаляем запись о pending
+                                await pendingDoc.ref.delete();
+                                // Удаляем сам аккаунт
+                                await user.delete();
+                                localStorage.removeItem('pendingVerification_' + user.uid);
+                                showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
+                                showHero();
+                                return;
+                            } catch (e) {
+                                console.warn('Ошибка удаления просроченного аккаунта:', e);
+                                // Если не удалось удалить - всё равно показываем страницу входа
+                                showHero();
+                                return;
+                            }
+                        } else {
+                            console.log('⏳ Осталось времени:', Math.round((deleteAt - new Date()) / 1000), 'сек');
+                        }
+                    } else {
+                        // ★★★ ЕСЛИ НЕТ ЗАПИСИ В FIRESTORE - СОЗДАЁМ ★★★
+                        console.log('📝 Создаём запись о pending в Firestore');
+                        scheduleAccountDeletion(user);
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка проверки pending:', error);
+                    // В случае ошибки - показываем страницу подтверждения
+                }
+                
+                // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ПРИВЕТСТВИЯ ★★★
+                isDataLoaded = false;
+                document.querySelectorAll('.page').forEach(p => {
+                    p.style.display = 'none';
+                    p.classList.remove('page-active');
+                });
+                if (bottomNav) bottomNav.style.display = 'none';
+                
+                showHero();
+                clearAuthFields();
                 return;
-            } catch (e) {
-                console.warn('Ошибка удаления просроченного аккаунта:', e);
             }
-        }
-    }
-    
-    // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ПРИВЕТСТВИЯ ★★★
-    isDataLoaded = false;
-    document.querySelectorAll('.page').forEach(p => {
-        p.style.display = 'none';
-        p.classList.remove('page-active');
-    });
-    if (bottomNav) bottomNav.style.display = 'none';
-    
-    showHero();  // ← ПОКАЗЫВАЕМ ПРИВЕТСТВИЕ
-    
-    clearAuthFields();
-    return;
-}
             
-            // ★★★ ПРОВЕРЯЕМ ФЛАГ ★★★
+            // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - УДАЛЯЕМ ИЗ PENDING ★★★
+            try {
+                await firebase.firestore()
+                    .collection('pendingDeletions')
+                    .doc(user.uid)
+                    .delete();
+                localStorage.removeItem('pendingVerification_' + user.uid);
+                console.log('✅ Запись о pending удалена (почта подтверждена)');
+            } catch (e) {
+                // Игнорируем ошибку, если записи нет
+            }
+            
+            // ★★★ ПРОВЕРЯЕМ ФЛАГ ЗАГРУЗКИ ★★★
             if (isDataLoaded) {
                 console.log('⚠️ Данные уже загружены, пропускаем');
                 return;
@@ -6252,7 +6290,6 @@ if (!user.emailVerified) {
             if (bottomNav) bottomNav.style.display = 'none';
             
             showHero();
-            
             clearAuthFields();
         }
     } catch (error) {
@@ -6433,49 +6470,92 @@ document.getElementById('registerFormStep3')?.addEventListener('submit', async f
         // ★★★ ЗАПУСКАЕМ ТАЙМЕР УДАЛЕНИЯ ★★★
         scheduleAccountDeletion(result.user);
         
+        // ★★★ ПЕРЕХОДИМ НА ШАГ 4 (ПОДТВЕРЖДЕНИЕ ПОЧТЫ) ★★★
         switchToPage('page-register-verify');
         
-        showToast('📧 Письмо отправлено на ' + registerData.email);
         registerData = { name: '', email: '', password: '' };
         
     } catch (error) {
         let message = 'Ошибка регистрации';
         const emailInput = document.getElementById('regEmail');
+        const passwordInputLocal = document.getElementById('regPassword');
+        
+        // ★★★ ОЧИЩАЕМ ОШИБКИ СО ВСЕХ ПОЛЕЙ ★★★
+        emailInput.classList.remove('error');
+        passwordInputLocal.classList.remove('error');
         
         switch (error.code) {
             case 'auth/email-already-in-use':
-                message = 'Эта почта уже используется';
+                message = 'Эта почта уже зарегистрирована. Войдите в аккаунт.';
                 emailInput.classList.add('error');
+                
+                // Очищаем данные регистрации
+                registerData = { name: '', email: '', password: '' };
+                
+                // Переключаемся на страницу входа
+                setTimeout(() => {
+                    // Скрываем все страницы
+                    document.querySelectorAll('.page').forEach(p => {
+                        p.classList.remove('page-active');
+                        p.style.display = 'none';
+                    });
+                    
+                    // Показываем страницу входа (шаг 1)
+                    const loginPage = document.getElementById('page-login');
+                    if (loginPage) {
+                        loginPage.classList.add('page-active');
+                        loginPage.style.display = 'block';
+                    }
+                    
+                    // Очищаем поля входа
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginPassword').value = '';
+                    
+                    // Устанавливаем email в поле входа для удобства
+                    if (registerData.email) {
+                        document.getElementById('loginEmail').value = registerData.email;
+                    }
+                    
+                    clearAuthFields();
+                }, 1500);
+                
                 break;
+                
             case 'auth/invalid-email':
                 message = 'Неверный формат почты';
                 emailInput.classList.add('error');
                 break;
+                
             case 'auth/weak-password':
                 message = 'Пароль должен быть минимум 6 символов';
-                passwordInput.classList.add('error');
+                passwordInputLocal.classList.add('error');
                 break;
+                
             case 'auth/network-request-failed':
                 message = 'Проверьте интернет-соединение';
                 break;
+                
             case 'auth/too-many-requests':
                 message = 'Слишком много попыток. Подождите.';
                 break;
+                
             case 'auth/operation-not-allowed':
                 message = 'Регистрация временно отключена';
                 break;
+                
             default:
                 message = error.message || 'Произошла ошибка, попробуйте позже';
         }
         
         showToast('❌ ' + message);
         btn.disabled = false;
+        
     } finally {
         isRegistering = false;
     }
 });
 
-// Шаг 4: Проверка подтверждения почты
+// ★★★ ОБРАБОТЧИК ШАГА 4 (ПОДТВЕРЖДЕНИЕ ПОЧТЫ) ★★★
 document.getElementById('registerVerifyBtn')?.addEventListener('click', async function() {
     const btn = this;
     
@@ -6498,30 +6578,20 @@ document.getElementById('registerVerifyBtn')?.addEventListener('click', async fu
             // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - УДАЛЯЕМ МЕТКУ ★★★
             localStorage.removeItem('pendingVerification_' + user.uid);
             
-            showToast('✅ Почта подтверждена!');
+            // ★★★ ПЕРЕХОДИМ НА ШАГ 5 (ВЫБОР ИНВЕНТАРЯ) ★★★
+            switchToPage('page-inventory');
             
-            switchToPage('page-loading');
-            document.getElementById('bottomNav').style.display = 'none';
-            
+            // Загружаем сохранённый выбор инвентаря
             setTimeout(() => {
-                switchToPage('page-workouts');
-                document.getElementById('bottomNav').style.display = 'block';
-                refreshNotificationData();
-                
-                setTimeout(() => {
-                    document.querySelectorAll('.section-block').forEach(block => block.classList.add('open'));
-                    saveBlocksState();
-                }, 100);
-                
-                setTimeout(() => {
-                    startTutorial();
-                }, 1000);
-            }, 500);
+                loadInventorySelection();
+            }, 100);
+            
+            btn.disabled = false;
             
         } else {
             const sent = await resendVerificationEmail();
             if (sent) {
-                showToast('⚠️ Подтвердите почту! У вас 5 минут.');
+                showToast('⚠️ Подтвердите почту!');
             }
             btn.disabled = false;
         }
@@ -6533,8 +6603,20 @@ document.getElementById('registerVerifyBtn')?.addEventListener('click', async fu
             showToast('❌ Ошибка проверки почты');
         }
         btn.disabled = false;
-        btn.textContent = 'Продолжить';
     }
+});
+
+// ★★★ ОБРАБОТЧИК ШАГА 5 (ВЫБОР ИНВЕНТАРЯ) ★★★
+document.getElementById('inventoryForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Сохраняем выбор
+    localStorage.setItem('userInventory', JSON.stringify(selectedInventory));
+    console.log('📦 Выбранный инвентарь:', selectedInventory);
+    
+    // ★★★ ПЕРЕХОДИМ НА СТРАНИЦУ ЗАГРУЗКИ ★★★
+    switchToPage('page-loading');
+    document.getElementById('bottomNav').style.display = 'none';
 });
 
 // =================== ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
@@ -6569,7 +6651,7 @@ async function resendVerificationEmail() {
         await user.sendEmailVerification();
         localStorage.setItem('lastVerificationSent', String(Date.now()));
         
-        // ★★★ ОБНОВЛЯЕМ ТАЙМЕР УДАЛЕНИЯ ★★★
+        // ★★★ ОБНОВЛЯЕМ ТАЙМЕР УДАЛЕНИЯ В FIRESTORE ★★★
         refreshDeletionTimer(user);
         
         showToast('📧 Письмо отправлено на ' + user.email);
@@ -6587,70 +6669,100 @@ async function resendVerificationEmail() {
     }
 }
 
-// =================== АВТОУДАЛЕНИЕ НЕПОДТВЕРЖДЁННЫХ АККАУНТОВ ===================
+// =================== АВТОУДАЛЕНИЕ НЕПОДТВЕРЖДЁННЫХ АККАУНТОВ (ЧЕРЕЗ FIRESTORE) ===================
 
 /**
- * Запускает таймер на удаление аккаунта через 5 минут
- * Если пользователь подтвердит почту раньше - таймер отменяется
+ * Запускает механизм удаления аккаунта через 5 минут
+ * Теперь удаление происходит через Firestore, даже если браузер закрыт
  */
 function scheduleAccountDeletion(user) {
     if (!user) return;
     
-    // Сохраняем время создания в localStorage
     const creationTime = Date.now();
+    const deleteAt = creationTime + 300000; // +5 минут
+    
+    // ★★★ СОХРАНЯЕМ ДАННЫЕ В FIRESTORE ★★★
+    firebase.firestore().collection('pendingDeletions').doc(user.uid).set({
+        userId: user.uid,
+        email: user.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        deleteAt: new Date(deleteAt),
+        pendingVerification: true
+    });
+    
+    // ★★★ ТАКЖЕ СОХРАНЯЕМ В LOCALSTORAGE ДЛЯ БЫСТРОЙ ПРОВЕРКИ ★★★
     localStorage.setItem('pendingVerification_' + user.uid, String(creationTime));
     
-    // Запускаем проверку через 5 минут (300000 мс)
-    setTimeout(async () => {
-        try {
-            // Проверяем, не подтверждена ли уже почта
-            await user.reload();
-            
-            if (user.emailVerified) {
-                // Почта подтверждена - удаляем метку
-                localStorage.removeItem('pendingVerification_' + user.uid);
-                console.log('✅ Почта подтверждена, аккаунт сохранён');
-                return;
-            }
-            
-            // Проверяем, не удалили ли уже аккаунт
-            const pendingTime = localStorage.getItem('pendingVerification_' + user.uid);
-            if (!pendingTime) return;
-            
-            // Проверяем, прошло ли 5 минут
-            const elapsed = Date.now() - parseInt(pendingTime);
-            if (elapsed < 300000) return; // Если меньше 5 минут - пропускаем
-            
-            // Удаляем аккаунт
-            console.log('⏰ Прошло 5 минут, почта не подтверждена. Удаляем аккаунт...');
-            
-            // Сначала удаляем данные пользователя из Firestore
-            try {
-                await firebase.firestore().collection('users').doc(user.uid).delete();
-            } catch (e) {
-                console.warn('Ошибка удаления данных из Firestore:', e);
-            }
-            
-            // Удаляем сам аккаунт
-            await user.delete();
-            
-            localStorage.removeItem('pendingVerification_' + user.uid);
-            console.log('🗑️ Аккаунт удалён (почта не подтверждена за 5 минут)');
-            
-            // Показываем уведомление, если пользователь всё ещё на странице
-            showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
-            
-            // Перекидываем на страницу регистрации
-            setTimeout(() => {
-                showRegister();
-            }, 1000);
-            
-        } catch (error) {
-            // Если пользователь уже удалён или ошибка - просто игнорируем
-            console.log('ℹ️ Аккаунт уже удалён или произошла ошибка:', error.message);
-            localStorage.removeItem('pendingVerification_' + user.uid);
+    console.log('⏰ Запланировано удаление аккаунта через 5 минут (сохранено в Firestore)');
+}
+
+/**
+ * Проверяет и удаляет просроченные аккаунты
+ * Вызывается при загрузке приложения и периодически
+ */
+async function checkAndDeleteExpiredAccounts() {
+    try {
+        const now = new Date();
+        
+        // ★★★ ИЩЕМ ПРОСРОЧЕННЫЕ ЗАПИСИ В FIRESTORE ★★★
+        const snapshot = await firebase.firestore()
+            .collection('pendingDeletions')
+            .where('deleteAt', '<=', now)
+            .get();
+        
+        if (snapshot.empty) {
+            console.log('ℹ️ Нет просроченных аккаунтов для удаления');
+            return;
         }
-    }, 300000); // 5 минут
+        
+        console.log(`🗑️ Найдено ${snapshot.size} просроченных аккаунтов`);
+        
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const userId = data.userId;
+            
+            try {
+                // ★★★ ПРОВЕРЯЕМ, НЕ ПОДТВЕРЖДЕНА ЛИ ПОЧТА ★★★
+                const userRecord = await firebase.auth().getUser(userId);
+                
+                if (userRecord.emailVerified) {
+                    // Почта подтверждена - удаляем запись о pending
+                    await doc.ref.delete();
+                    localStorage.removeItem('pendingVerification_' + userId);
+                    console.log(`✅ Пользователь ${userId} подтвердил почту, запись удалена`);
+                    continue;
+                }
+                
+                // ★★★ УДАЛЯЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ★★★
+                console.log(`🗑️ Удаляем просроченный аккаунт: ${userId}`);
+                
+                // Удаляем из Firestore
+                await firebase.firestore().collection('users').doc(userId).delete();
+                
+                // Удаляем самого пользователя
+                await firebase.auth().deleteUser(userId);
+                
+                // Удаляем запись о pending
+                await doc.ref.delete();
+                localStorage.removeItem('pendingVerification_' + userId);
+                
+                console.log(`✅ Аккаунт ${userId} удалён (почта не подтверждена за 5 минут)`);
+                
+            } catch (error) {
+                if (error.code === 'auth/user-not-found') {
+                    // Пользователь уже удалён - просто удаляем запись
+                    await doc.ref.delete();
+                    localStorage.removeItem('pendingVerification_' + userId);
+                    console.log(`ℹ️ Пользователь ${userId} уже удалён, запись очищена`);
+                } else {
+                    console.error(`❌ Ошибка удаления аккаунта ${userId}:`, error);
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка проверки просроченных аккаунтов:', error);
+    }
 }
 
 /**
@@ -6658,9 +6770,27 @@ function scheduleAccountDeletion(user) {
  */
 function refreshDeletionTimer(user) {
     if (!user) return;
+    
     // Обновляем время в localStorage
     localStorage.setItem('pendingVerification_' + user.uid, String(Date.now()));
-    console.log('🔄 Таймер удаления обновлён');
+    
+    // ★★★ ОБНОВЛЯЕМ В FIRESTORE ★★★
+    const deleteAt = new Date(Date.now() + 300000);
+    firebase.firestore().collection('pendingDeletions').doc(user.uid).update({
+        deleteAt: deleteAt,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {
+        // Если документа нет - создаём
+        firebase.firestore().collection('pendingDeletions').doc(user.uid).set({
+            userId: user.uid,
+            email: user.email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            deleteAt: deleteAt,
+            pendingVerification: true
+        });
+    });
+    
+    console.log('🔄 Таймер удаления обновлён (сохранено в Firestore)');
 }
 
 // =================== ВХОД (ПОШАГОВЫЙ) ===================
@@ -6915,6 +7045,9 @@ async function logout() {
 }
 
 function enterApp() {
+    // ★★★ ПРОВЕРЯЕМ ПРОСРОЧЕННЫЕ АККАУНТЫ ПРИ ВХОДЕ ★★★
+    checkAndDeleteExpiredAccounts();
+    
     // Закрываем страницу загрузки
     const loadingPage = document.getElementById('page-loading');
     if (loadingPage) {
@@ -6934,9 +7067,8 @@ function enterApp() {
         saveBlocksState();
     }, 100);
 
-    // ★★★ ИСПРАВЛЕНО: ЗАПУСКАЕМ ТУТОРИАЛ ТОЛЬКО ЕСЛИ НУЖНО ★★★
     if (window._tutorialNeeded && !isTutorialCompleted()) {
-       // setTimeout(() => startTutorial(), 1000);
+        // setTimeout(() => startTutorial(), 1000);
     }
 
     if (!navigator.onLine) {
@@ -8668,15 +8800,10 @@ function updatePremiumUI() {
 }
 
 function updateWeeklyLoadBlocks() {
-    const hasPremiumAccess = hasPremium();
-    const demoBlock = document.getElementById('weekly-load-demo-block');
+    // Просто показываем блок, без проверки Premium
     const originalBlock = document.getElementById('weekly-load-block');
-    
-    if (demoBlock) {
-        demoBlock.style.display = hasPremiumAccess ? 'none' : 'block';
-    }
     if (originalBlock) {
-        originalBlock.style.display = hasPremiumAccess ? 'block' : 'none';
+        originalBlock.style.display = 'block';
     }
 }
 
@@ -8918,13 +9045,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // ★★★ 13. ИНИЦИАЛИЗИРУЕМ ВЫБОР ВРЕМЕНИ ОТДЫХА ★★★
     initRestTimePicker();
 
-    updateWeeklyLoadDemoTitle();
     updateWeeklyLoadBlocks();
 
         // ★★★ ОБНОВЛЯЕМ СЧЕТЧИК ПРИ ЗАГРУЗКЕ ★★★
     setTimeout(async () => {
         await updatePremiumCounter();
     }, 3000);
+
+        // ★★★ ПРОВЕРЯЕМ ПРОСРОЧЕННЫЕ АККАУНТЫ ПРИ ЗАГРУЗКЕ ★★★
+    setTimeout(async () => {
+        await checkAndDeleteExpiredAccounts();
+    }, 2000);
+    
+    // ★★★ ПРОВЕРЯЕМ КАЖДЫЕ 60 СЕКУНД ★★★
+    setInterval(async () => {
+        await checkAndDeleteExpiredAccounts();
+    }, 60000); // Каждую минуту
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -9158,7 +9294,6 @@ async function deleteAccount() {
 
         localStorage.clear();
 
-        showToast('✅ Аккаунт удалён');
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -9469,7 +9604,7 @@ window.statsEditor = new PageEditor({
     ],
     defaultLayout: {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'history', 'weekly-load-demo', 'weekly-load', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         worldStatsBlocksContainer: ['world-leaderboard', 'friends-leaderboard']
@@ -12435,7 +12570,7 @@ function renderWeeklyLoadChart(weeklyData, weeks) {
     // ★★★ ВЫБИРАЕМ ЦВЕТ ФОНА СТОЛБИКА ★★★
     const barBgColor = isDarkMode ? 'var(--accent-dark)' : 'var(--accent-light)';
 
-    let html = `<div style="position:relative; padding:0rem 0.3rem;  background-image: 
+    let html = `<div style="position:relative; padding:0.5rem;  background-image: 
         linear-gradient(rgba(200,200,200,0.15) 1px, transparent 1px),
         linear-gradient(90deg, rgba(200,200,200,0.15) 1px, transparent 1px);
         background-size: 20px 20px; border-radius:12px; min-height:${chartHeight + 40}px;">`;
@@ -12483,14 +12618,7 @@ function renderWeeklyLoadChart(weeklyData, weeks) {
 }
 
 async function loadPremiumStats() {
-    if (!hasPremium()) {
-        const container = document.getElementById('weeklyLoadChart');
-        if (container) container.innerHTML = '';
-        const block = document.getElementById('weekly-load-block');
-        if (block) block.style.display = 'none';
-        return;
-    }
-
+    // ★★★ УБИРАЕМ ПРОВЕРКУ PREMIUM ★★★
     const user = await getFirebaseUser();
     if (!user) return;
 
@@ -12515,12 +12643,10 @@ async function loadPremiumStats() {
         }
     });
 
-    // ★★★ ТЕКУЩИЙ МЕСЯЦ ★★★
     const now = new Date();
     const offset = window._monthOffset || 0;
     now.setMonth(now.getMonth() + offset);
     
-    // ★★★ ТОЧНЫЕ ГРАНИЦЫ МЕСЯЦА ★★★
     const monthStart = new Date(now);
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
@@ -12531,7 +12657,6 @@ async function loadPremiumStats() {
     monthEnd.setDate(monthEnd.getDate() - 1);
     monthEnd.setHours(23, 59, 59, 999);
     
-    // ★★★ РАСШИРЕННЫЙ ДИАПАЗОН ДЛЯ ЗАХВАТА ПЕРЕСЕКАЮЩИХ НЕДЕЛЬ ★★★
     const startDate = new Date(now);
     startDate.setDate(1);
     startDate.setDate(startDate.getDate() - 7);
@@ -12544,11 +12669,9 @@ async function loadPremiumStats() {
 
     const weeks = getWeeksInRange(startDate, endDate);
 
-    // ★★★ ФИЛЬТРУЕМ НЕДЕЛИ: ОСТАВЛЯЕМ ТОЛЬКО ТЕ, КОТОРЫЕ ПЕРЕСЕКАЮТСЯ С МЕСЯЦЕМ ★★★
     const filteredWeeks = weeks.filter(week => {
         const weekStart = week.start;
         const weekEnd = week.end;
-        // Проверяем, есть ли пересечение с месяцем
         return weekStart <= monthEnd && weekEnd >= monthStart;
     });
 
@@ -14175,16 +14298,6 @@ function updateDailyProgressForExercise(exerciseName, totalReps) {
     return progress;
 }
 
-function updateWeeklyLoadDemoTitle() {
-    const titleEl = document.getElementById('weeklyLoadDemoTitle');
-    if (!titleEl) return;
-    
-    const now = new Date();
-    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-    titleEl.textContent = monthNames[now.getMonth()];
-}
-
 // =================== ИСТОРИЯ ДРУЗЕЙ ===================
 
 // Переменные для фильтра
@@ -14828,3 +14941,116 @@ async function updatePremiumCounter() {
         return 0;
     }
 }
+
+// =================== СТРАНИЦА: ВЫБОР ИНВЕНТАРЯ ===================
+
+// Массив выбранного инвентаря
+let selectedInventory = [];
+
+/**
+ * Переключить выбор инвентаря
+ */
+function toggleInventory(btn) {
+    const inventory = btn.dataset.inventory;
+    const index = selectedInventory.indexOf(inventory);
+    
+    if (index !== -1) {
+        // Убираем выделение
+        selectedInventory.splice(index, 1);
+        btn.classList.remove('selected');
+    } else {
+        // Добавляем выделение
+        selectedInventory.push(inventory);
+        btn.classList.add('selected');
+    }
+    
+    // Обновляем текст
+    updateInventoryText();
+}
+
+/**
+ * Обновить текст с выбранным инвентарём
+ */
+function updateInventoryText() {
+    const textEl = document.getElementById('selectedInventoryText');
+    if (!textEl) return;
+    
+    if (selectedInventory.length === 0) {
+        textEl.textContent = 'Ничего из перечисленного';
+        return;
+    }
+    
+    const names = {
+        'dumbbells': 'Гантели',
+        'barbell': 'Штанга',
+        'mat': 'Коврик',
+        'pullup': 'Турник'
+    };
+    
+    const selectedNames = selectedInventory.map(item => names[item] || item);
+    textEl.textContent = selectedNames.join(' · ');
+}
+
+/**
+ * Показать страницу выбора инвентаря (для вызова через консоль)
+ */
+function showInventoryPage() {
+    // Сбрасываем выбор
+    selectedInventory = [];
+    document.querySelectorAll('.inventory-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    updateInventoryText();
+    
+    // Показываем страницу
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('page-active');
+        p.style.display = 'none';
+    });
+    
+    const target = document.getElementById('page-inventory');
+    if (target) {
+        target.classList.add('page-active');
+        target.style.display = 'block';
+    }
+    
+    // Скрываем нижнюю навигацию
+    document.getElementById('bottomNav').style.display = 'none';
+}
+
+// ★★★ ОБРАБОТЧИК ФОРМЫ ★★★
+document.getElementById('inventoryForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Сохраняем выбор
+    localStorage.setItem('userInventory', JSON.stringify(selectedInventory));
+    console.log('📦 Выбранный инвентарь:', selectedInventory);
+    
+    // Здесь можно перейти на следующую страницу
+    // Например: switchToPage('page-workouts');
+});
+
+// ★★★ ВОССТАНАВЛИВАЕМ СОХРАНЁННЫЙ ВЫБОР ПРИ ЗАГРУЗКЕ ★★★
+function loadInventorySelection() {
+    const saved = localStorage.getItem('userInventory');
+    if (saved) {
+        try {
+            const items = JSON.parse(saved);
+            if (Array.isArray(items)) {
+                selectedInventory = items;
+                // Отмечаем кнопки
+                document.querySelectorAll('.inventory-btn').forEach(btn => {
+                    if (items.includes(btn.dataset.inventory)) {
+                        btn.classList.add('selected');
+                    }
+                });
+                updateInventoryText();
+            }
+        } catch (e) {}
+    }
+}
+
+// Загружаем сохранённый выбор при инициализации
+document.addEventListener('DOMContentLoaded', function() {
+    loadInventorySelection();
+});
