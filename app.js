@@ -3146,7 +3146,8 @@ async function syncUserProfile() {
             avatar: 'bodybuilding',
             level: 1,
             totalXp: 0,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(), // ← ЗАПЯТАЯ!
+            tutorialCompleted: false
         };
         await saveUserProfile(user.uid, newProfile);
         return { success: true, data: newProfile, isNew: true };
@@ -6272,6 +6273,12 @@ firebase.auth().onAuthStateChanged(async (user) => {
             loadPremiumStats();
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
+// ★★★ ЗАПУСКАЕМ ТУТОРИАЛ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ★★★
+if (window._tutorialNeeded && !isTutorialCompleted()) {
+    console.log('🎓 Запускаем обучение для нового пользователя');
+    // Ждём, пока страница загрузится, и запускаем туториал
+    setTimeout(() => startTutorial(), 1500);
+}
 
             if (typeof syncPendingWorkouts === 'function') {
                 syncPendingWorkouts();
@@ -7068,7 +7075,7 @@ function enterApp() {
     }, 100);
 
     if (window._tutorialNeeded && !isTutorialCompleted()) {
-        // setTimeout(() => startTutorial(), 1000);
+        setTimeout(() => startTutorial(), 1000);
     }
 
     if (!navigator.onLine) {
