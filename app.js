@@ -8478,7 +8478,7 @@ const tutorialSteps = [
     {
         id: 13,
         page: 'profile',
-        highlight: ['.profile-card', '.level-block', '.profile-tab-btn[data-tab="my"]'],
+        highlight: ['.profile-card'],
         text: 'Это ваш профиль, в нем есть система уровней.\nТренируйтесь, получайте XP и повышайте свой уровень.\nСоревнуйтесь с друзьями и другими пользователями!'
     },
 {
@@ -8547,8 +8547,8 @@ const tutorialSteps = [
     {
         id: 17,
         page: 'profile',
-        highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block', '.scroll-wrapper'],
-        text: 'Здесь вы можете находить друзей, отправлять им заявки и добавлять их в друзья.',
+        highlight: ['.profile-tab-btn[data-tab="friends"]', '.friends-list-block'],
+        text: 'Здесь вы можете находить друзей, отправлять им заявки и добавлять их в друзья. Также вы можете смотреть историю друзей, их выполненные тренировки и достижения.',
         action: () => {
             switchProfileTab('friends');
             renderFriendsInProfile();
@@ -8558,7 +8558,7 @@ const tutorialSteps = [
         id: 18,
         page: 'workouts',
         highlight: null,
-        text: 'Тренируйтесь с умом и достигайте целей!',
+        text: 'Желаем отличной тренировки! Если не знаете, с чего начать, начните с выполнения заданий.',
         isLast: true,
         action: () => {
             activeWorkoutsTab = 'ready';
@@ -8574,7 +8574,13 @@ function hasPremium() {
     return localStorage.getItem(PREMIUM_KEY) === 'true';
 }
 
+// В функцию openPremiumModal() добавить:
 function openPremiumModal() {
+    // ★★★ ОБНОВЛЯЕМ СЧЕТЧИК ПРИ ОТКРЫТИИ МОДАЛКИ ★★★
+    setTimeout(async () => {
+        await updatePremiumCounter();
+    }, 100);
+    
     openModal('premiumModal');
 }
 
@@ -8601,22 +8607,18 @@ function buyPremium() {
     // ★★★ ОБНОВЛЯЕМ СТРАНИЦУ ТРЕНИРОВОК (ЕСЛИ ОНА АКТИВНА) ★★★
     const workoutsPage = document.getElementById('page-workouts');
     if (workoutsPage && workoutsPage.classList.contains('page-active')) {
-        // Перерендериваем каталог упражнений
         if (typeof renderExerciseListPageContent === 'function') {
             renderExerciseListPageContent();
         }
-        // Обновляем премиум-блоки
         updatePremiumUI();
     }
     
     // ★★★ ОБНОВЛЯЕМ СТАТИСТИКУ (ЕСЛИ ОНА АКТИВНА) ★★★
     const statsPage = document.getElementById('page-stats');
     if (statsPage && statsPage.classList.contains('page-active')) {
-        // Перезагружаем статистику, чтобы показать нагрузочный индекс
         if (typeof loadPremiumStats === 'function') {
             loadPremiumStats();
         }
-        // Обновляем видимость блоков
         updateWeeklyLoadBlocks();
     }
     
@@ -8628,6 +8630,18 @@ function buyPremium() {
             renderExerciseListPageContent();
         }
     }
+    
+    // ★★★ СОХРАНЯЕМ PREMIUM В FIRESTORE И ОБНОВЛЯЕМ СЧЕТЧИК ★★★
+    (async function() {
+        const user = await getFirebaseUser();
+        if (user) {
+            await updateUserProfile(user.uid, { premium: true });
+            console.log('✅ PREMIUM сохранен в Firestore');
+            
+            // ★★★ ОБНОВЛЯЕМ СЧЕТЧИК ★★★
+            await updatePremiumCounter();
+        }
+    })();
     
     // ★★★ ПОКАЗЫВАЕМ УВЕДОМЛЕНИЕ ★★★
     showToast('👑 Поздравляем! PREMIUM активирован!');
@@ -8802,7 +8816,7 @@ function toggleEditPages() {
     const current = localStorage.getItem(EDIT_PAGES_KEY) !== 'false';
     const newState = !current;
     showConfirmModal(
-        newState ? 'Включить редактирование страниц?' : 'Выключить редактирование страниц?',
+        newState ? 'Включить ред. страниц?' : 'Выключить ред. страниц?',
         newState
             ? 'Кнопки "Редактировать страницу" снова появятся в статистике и тренировках.'
             : 'Кнопки "Редактировать страницу" будут скрыты в статистике и тренировках.',
@@ -8819,7 +8833,7 @@ function toggleEditWorkout() {
     const current = localStorage.getItem(EDIT_WORKOUT_KEY) !== 'false';
     const newState = !current;
     showConfirmModal(
-        newState ? 'Включить редактирование тренировок?' : 'Выключить редактирование тренировок?',
+        newState ? 'Включить ред. тренировок?' : 'Выключить ред. тренировок?',
         newState
             ? 'Кнопка "Редактировать тренировку" снова появится на странице деталей тренировки.'
             : 'Кнопка "Редактировать тренировку" будет скрыта на странице деталей тренировки.',
@@ -8904,9 +8918,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ★★★ 13. ИНИЦИАЛИЗИРУЕМ ВЫБОР ВРЕМЕНИ ОТДЫХА ★★★
     initRestTimePicker();
 
-
     updateWeeklyLoadDemoTitle();
     updateWeeklyLoadBlocks();
+
+        // ★★★ ОБНОВЛЯЕМ СЧЕТЧИК ПРИ ЗАГРУЗКЕ ★★★
+    setTimeout(async () => {
+        await updatePremiumCounter();
+    }, 3000);
 });
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ С ПАРОЛЕМ ===================
@@ -8921,11 +8939,11 @@ function showConfirmWithPasswordModal(title, message, onConfirm, confirmText = '
         <div class="modal-content" style="max-width:420px; width:95%;">
             <div class="modal-title">${title}</div>
             <p class="modal-text">${message}</p>
-            <div class="form-group" style="text-align:left; margin-bottom:1rem;">
+            <div class="form-group" style="text-align:left; margin-bottom:0.5rem;">
                 <label class="form-label">Введите пароль</label>
                 <input type="password" id="confirmPassword" class="form-input" placeholder="Пароль" autocomplete="new-password" />
             </div>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-danger" id="confirmYes" style="flex:1;">${confirmText}</button>
                 <button class="btn btn-primary" id="confirmNo" style="flex:1;">Нет</button>
             </div>
@@ -8979,7 +8997,7 @@ function showConfirmModal(title, message, onConfirm, confirmText = 'Да') {
         <div class="modal-content">
             <div class="modal-title">${title}</div>
             <p class="modal-text">${message}</p>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-danger" id="confirmYes" style="flex:1;">${confirmText}</button>
                 <button class="btn btn-primary" id="confirmNo" style="flex:1;">Нет</button>
             </div>
@@ -10339,7 +10357,7 @@ function editEmail() {
                 <label class="form-label">Пароль для подтверждения</label>
                 <input type="password" id="emailConfirmPassword" class="form-input" placeholder="Введите пароль" maxlength="20" />
             </div>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-secondary" id="editEmailCancel" style="flex:1;">Отмена</button>
                 <button class="btn btn-primary" id="editEmailSave" style="flex:1;">Сохранить</button>
             </div>
@@ -10468,7 +10486,7 @@ function showEmailVerificationModal(newEmail) {
                     Вам пришло письмо на <strong>${newEmail}</strong>
                 </p>
             </div>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-secondary" id="emailVerifyCancel" style="flex:1;">Отмена</button>
                 <button class="btn btn-primary" id="emailVerifyConfirm" style="flex:1;">Продолжить</button>
             </div>
@@ -10587,7 +10605,7 @@ function editPassword() {
                 <label class="form-label">Подтвердите новый пароль</label>
                 <input type="password" id="confirmPasswordInput" class="form-input" placeholder="Повторите новый пароль" maxlength="20" />
             </div>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-secondary" id="editPasswordCancel" style="flex:1;">Отмена</button>
                 <button class="btn btn-primary" id="editPasswordSave" style="flex:1;">Сохранить</button>
             </div>
@@ -13196,7 +13214,7 @@ function openTaskHelpModal(taskId) {
             <p class="modal-text" style="margin:0.5rem 0 1.5rem 0; text-align:center;">
                 Выполните ${task.target} ${task.unit}
             </p>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button class="btn btn-secondary" id="taskHelpCancel" style="flex:1;">Отмена</button>
                 <button class="btn btn-primary" id="taskHelpStart" style="flex:1;">Перейти</button>
             </div>
@@ -14454,70 +14472,90 @@ async function renderFriendsHistory() {
         let html = '';
         let currentFriend = '';
         
-        allItems.forEach(item => {
-            // Заголовок с именем друга
-            if (currentFriend !== item.friendId) {
-                currentFriend = item.friendId;
-                html += `
-                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.3rem;">
-                        <div class="friend-avatar" style="width:32px; height:32px; font-size:0.8rem;">${item.friendAvatar}</div>
-                        <span style="font-weight:600; font-size:0.9rem; color:var(--dark);">${item.friendName}</span>
-                    </div>
-                `;
-            }
-            
-            const relativeDate = formatRelativeDateFromTimestamp(item.timestamp);
-            
-            if (item.type === 'workout') {
-                // Тренировка
-                const w = item.data;
-                const totalEx = w.exercises?.length || 0;
-                const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
-                const xpEarned = w.xpEarned || 0;
-                const minutes = Math.floor((w.durationSeconds || 0) / 60);
-                
-                html += `
-                    <div class="history-item">
-                        <div class="history-item-header">
-                            <strong class="history-item-title" style="font-size:0.75rem;">${w.title || 'Тренировка'}</strong>
-                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
-                        </div>
-                        <div class="history-item-details" style="font-size:0.65rem;">
-                            ${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP
-                        </div>
-                    </div>
-                `;
-            } else if (item.type === 'level_up') {
-                // Новый уровень
-                const level = item.data.level || '?';
-                const levelName = item.data.levelName || '';
-                html += `
-                    <div class="history-item" style="border-left-color: var(--gold);">
-                        <div class="history-item-header">
-                            <strong class="history-item-title" style="font-size:0.75rem;">Новый уровень</strong>
-                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
-                        </div>
-                        <div class="history-item-details" style="font-size:0.65rem;">
-                            Достиг ${level} уровня - "${levelName}"
-                        </div>
-                    </div>
-                `;
-            } else if (item.type === 'achievement_unlocked') {
-                // Новое достижение
-                const achName = item.data.achievementName || 'Достижение';
-                html += `
-                    <div class="history-item" style="border-left-color: var(--gold);">
-                        <div class="history-item-header">
-                            <strong class="history-item-title" style="font-size:0.75rem;">Новое достижение</strong>
-                            <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
-                        </div>
-            <div class="history-item-details" style="font-size:0.65rem;">
-                Получил достижение - "${achName}"
+allItems.forEach(item => {
+    // Если это новый пользователь — закрываем старую группу и открываем новую
+    if (currentFriend !== item.friendId) {
+        // Закрываем предыдущую группу и контейнер событий
+        if (currentFriend !== '') {
+            html += `</div></div>`; // Закрываем events и group
+        }
+        
+        currentFriend = item.friendId;
+        
+        // Открываем новую группу
+        html += `<div class="friend-history-group">`;
+        
+        // Аватар + имя
+        html += `
+            <div class="friend-history-header">
+                <div class="friend-history-avatar">${item.friendAvatar}</div>
+                <span class="friend-history-name">${item.friendName}</span>
             </div>
-                    </div>
-                `;
-            }
-        });
+        `;
+        
+        // Открываем контейнер событий
+        html += `<div class="friend-history-events">`;
+    }
+    
+    const relativeDate = formatRelativeDateFromTimestamp(item.timestamp);
+    
+    if (item.type === 'workout') {
+        // Тренировка
+        const w = item.data;
+        const totalEx = w.exercises?.length || 0;
+        const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
+        const xpEarned = w.xpEarned || 0;
+        const minutes = Math.floor((w.durationSeconds || 0) / 60);
+        
+        html += `
+            <div class="history-item">
+                <div class="history-item-header">
+                    <strong class="history-item-title" style="font-size:0.75rem;">${w.title || 'Тренировка'}</strong>
+                    <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
+                </div>
+                <div class="history-item-details" style="font-size:0.65rem;">
+                    ${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP
+                </div>
+            </div>
+        `;
+    } else if (item.type === 'level_up') {
+        // Новый уровень
+        const level = item.data.level || '?';
+        const levelName = item.data.levelName || '';
+        html += `
+            <div class="history-item" style="border-left-color: var(--gold);">
+                <div class="history-item-header">
+                    <strong class="history-item-title" style="font-size:0.75rem;">Новый уровень</strong>
+                    <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
+                </div>
+                <div class="history-item-details" style="font-size:0.65rem;">
+                    Достиг ${level} уровня - "${levelName}"
+                </div>
+            </div>
+        `;
+    } else if (item.type === 'achievement_unlocked') {
+        // Новое достижение
+        const achName = item.data.achievementName || 'Достижение';
+        html += `
+            <div class="history-item" style="border-left-color: var(--gold);">
+                <div class="history-item-header">
+                    <strong class="history-item-title" style="font-size:0.75rem;">Новое достижение</strong>
+                    <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
+                </div>
+                <div class="history-item-details" style="font-size:0.65rem;">
+                    Получил достижение - "${achName}"
+                </div>
+            </div>
+        `;
+    }
+});
+
+// Закрываем последнюю группу после цикла
+if (currentFriend !== '') {
+    html += `</div></div>`; // Закрываем events и group
+}
+
+container.innerHTML = html;
         
         container.innerHTML = html;
         
@@ -14732,5 +14770,61 @@ async function getFriendsEvents() {
     } catch (error) {
         console.error('❌ Ошибка получения событий друзей:', error);
         return { success: false, error: error.message };
+    }
+}
+
+// =================== СЧЕТЧИК PREMIUM ПОЛЬЗОВАТЕЛЕЙ ===================
+async function getPremiumUsersCount() {
+    try {
+        const snapshot = await firebase.firestore()
+            .collection('users')
+            .get();
+        
+        let premiumCount = 0;
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.premium === true) {
+                premiumCount++;
+            }
+        });
+        
+        return premiumCount;
+    } catch (error) {
+        console.error('Ошибка подсчета PREMIUM пользователей:', error);
+        return 0;
+    }
+}
+
+async function updatePremiumCounter() {
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            console.warn('⚠️ Пользователь не авторизован');
+            return 0;
+        }
+        
+        const snapshot = await firebase.firestore()
+            .collection('users')
+            .get();
+        
+        let premiumCount = 0;
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.premium === true) {
+                premiumCount++;
+            }
+        });
+        
+        // ★★★ ОБНОВЛЯЕМ ВСЕ ЭЛЕМЕНТЫ С СЧЕТЧИКОМ ★★★
+        const counterElements = document.querySelectorAll('#premiumCounter');
+        counterElements.forEach(el => {
+            el.textContent = `PREMIUM оформили: ${premiumCount} человек`;
+        });
+        
+        console.log(`📊 PREMIUM пользователей: ${premiumCount}`);
+        return premiumCount;
+    } catch (error) {
+        console.error('Ошибка обновления счетчика PREMIUM:', error);
+        return 0;
     }
 }

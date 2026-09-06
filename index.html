@@ -641,7 +641,7 @@
                 <h1 class="dashboard-title">СТАТИСТИКА</h1>
             </header>
 
-            <div class="tabs" style="margin-bottom:0.3rem;">
+            <div class="tabs">
                 <button class="tab-btn" data-tab="world">Мировая</button>
                 <button class="tab-btn tab-btn-active" data-tab="personal">Личная</button>
             </div>
@@ -1234,7 +1234,7 @@
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <div class="section-body">
-        <div id="friendsHistoryContainer" class="scroll-wrapper" style="display:flex; flex-direction:column; gap:0.5rem; padding: 0.2rem 0; max-height: 500px">
+        <div id="friendsHistoryContainer" class="scroll-wrapper" style="display:flex; flex-direction:column; gap:0.5rem; max-height: 500px">
             <!-- Сюда будет рендериться история друзей -->
         </div>
                 <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
@@ -1693,6 +1693,11 @@
         <div class="premium-price-period">скидка 17,6% · 74 ₽/мес</div>
     </div>
 </div>
+
+<!-- ★★★ СЧЕТЧИК PREMIUM ★★★ -->
+<div style="text-align:center; padding:0.2rem 0 0.5rem 0; font-size:0.8rem; color:var(--slate); border-top:1px solid var(--light-grey);">
+    <span id="premiumCounter">PREMIUM оформили: 0 человек</span>
+</div>
         
         <!-- Кнопки -->
         <div class="premium-buttons">
@@ -1757,11 +1762,15 @@
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Расширенные</div>
             </div>
         </div>
+
+        <!-- ★★★ СЧЕТЧИК PREMIUM ★★★ -->
+<div style="text-align:center; padding:0.2rem 0 ; font-size:0.8rem; color:var(--slate); border-top:1px solid var(--light-grey);">
+    <span id="premiumCounter">PREMIUM оформили: 0 человек</span>
+</div>
         
         <!-- Текст "У вас есть PREMIUM" -->
-        <div style="text-align: center; padding: 0.5rem 0 1rem 0;">
+        <div style="text-align: center; margin-bottom: 0.5rem;">
             <div style="font-size: 1rem; font-weight: 700; color: var(--accent);">У вас есть PREMIUM!</div>
-            <div style="font-size: 0.7rem; color: var(--slate); margin-top: 0.2rem;">Все преимущества уже доступны</div>
         </div>
         
         <!-- Кнопка -->
@@ -1902,7 +1911,7 @@
             </div>
         </div>
         
-        <div style="display:flex; gap:0.8rem; margin-top:0.5rem;">
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
             <button class="btn btn-secondary" id="exerciseUniversalCancelBtn" style="flex:1;">Отмена</button>
             <button class="btn btn-primary" id="exerciseUniversalSaveBtn" style="flex:1;">Сохранить</button>
         </div>
