@@ -4674,12 +4674,16 @@ body.theme-dark-mode .weekly-load-value {
 }
 
 .friend-history-group {
-    background: var(--light);
+    background: none;
     border-radius: 16px;
     padding: 0.4rem;
     margin-bottom: 0rem;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     border: 1px solid var(--light-grey);
+}
+
+.theme-dark-mode .friend-history-group {
+    border: 1px solid var(--border-color);
 }
 
 .friend-history-header {
@@ -4704,10 +4708,18 @@ body.theme-dark-mode .weekly-load-value {
     text-transform: uppercase;
 }
 
+.theme-dark-mode .friend-history-avatar {
+    background: var(--accent-dark);
+}
+
 .friend-history-name {
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--dark);
+}
+
+.theme-dark-mode .friend-history-name {
+    color: var(--text-primary);
 }
 
 .friend-history-events {
