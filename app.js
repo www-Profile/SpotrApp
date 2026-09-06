@@ -6273,12 +6273,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
             loadPremiumStats();
 
             window._tutorialNeeded = profile && profile.tutorialCompleted === false;
-// ★★★ ЗАПУСКАЕМ ТУТОРИАЛ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ★★★
-if (window._tutorialNeeded && !isTutorialCompleted()) {
-    console.log('🎓 Запускаем обучение для нового пользователя');
-    // Ждём, пока страница загрузится, и запускаем туториал
-    setTimeout(() => startTutorial(), 1500);
-}
 
             if (typeof syncPendingWorkouts === 'function') {
                 syncPendingWorkouts();
@@ -7074,8 +7068,10 @@ function enterApp() {
         saveBlocksState();
     }, 100);
 
+    // ★★★ ЗАПУСКАЕМ ТУТОРИАЛ ТОЛЬКО ПОСЛЕ НАЖАТИЯ КНОПКИ ★★★
     if (window._tutorialNeeded && !isTutorialCompleted()) {
-        setTimeout(() => startTutorial(), 1000);
+        console.log('🎓 Запускаем обучение после нажатия кнопки "Начать тренироваться"');
+        setTimeout(() => startTutorial(), 500);
     }
 
     if (!navigator.onLine) {
