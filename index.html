@@ -701,7 +701,7 @@
                             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
                             <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
-                        <div class="section-body">
+                        <div class="section-body" onclick="openMuscleGroupsModal('muscles')">
                             <div id="exerciseMuscleStats" class="stat-list"></div>
                         </div>
                     </div>
@@ -712,7 +712,7 @@
                             <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
                             <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
                         </div>
-                        <div class="section-body">
+                        <div class="section-body" onclick="openMuscleGroupsModal('categories')">
                             <div id="categoriesStats" class="stat-list"></div>
                         </div>
                     </div>
@@ -727,7 +727,7 @@
                             <div class="calendar-container" id="calendarContainer">
                                 <div class="calendar-nav">
                                     <button id="prevMonth" class="btn-calendar-nav"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <span id="currentMonthYear">Август 2026</span>
+                                    <span id="currentMonthYear" class="weekly-load-naw-title">Август 2026</span>
                                     <button id="nextMonth" class="btn-calendar-nav"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
                                 <div class="calendar-grid">
@@ -751,13 +751,14 @@
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
         <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
     </div>
-    <div class="section-body">
+    <!-- ★★★ ДОБАВЛЯЕМ onclick ★★★ -->
+    <div class="section-body" onclick="openMuscleGroupsModal('weeklyLoad')">
         <div class="weekly-load">
         <!-- Навигация по месяцам -->
         <div class="weekly-load-naw">
-            <button onclick="changeWeeklyLoadMonth(-1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="event.stopPropagation(); changeWeeklyLoadMonth(-1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-left"></i></button>
             <span id="weeklyLoadTitle" class="weekly-load-naw-title">Январь</span>
-            <button onclick="changeWeeklyLoadMonth(1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-right"></i></button>
+            <button onclick="event.stopPropagation(); changeWeeklyLoadMonth(1)" class="btn-calendar-nav"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <!-- Диаграмма -->
         <div id="weeklyLoadChart" class="weekly-load-Chart"></div>
@@ -975,93 +976,112 @@
                 </div>
             </div>
 
-            <!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ===== -->
-            <div class="section-block" id="settings-block-main">
-                <div class="section-header">
-                    <h2 class="section-title">Дополнительные настройки</h2>
-                    <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-                <div class="section-body">
-                    <div class="settings-block">
-                        <div class="settings-item" onclick="handlePremiumClick()">
-                            <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
-                            <div class="settings-info">
-                                <div class="settings-title">PREMIUM</div>
-                                <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                        
-                        <div class="settings-item" onclick="openColorModal()">
-                            <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
-                            <div class="settings-info">
-                                <div class="settings-title">Акцентный цвет</div>
-                                <div class="settings-desc" id="colorStatus">Красный</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-
-                        <div class="settings-item" onclick="toggleThemeModal()">
-                            <div class="settings-icon" id="themeIcon">
-                                <i class="fa-solid fa-sun"></i>
-                            </div>
-                            <div class="settings-info">
-                                <div class="settings-title">Тема приложения</div>
-                                <div class="settings-desc" id="themeStatus">Светлая</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                        
-                        <div class="settings-item" onclick="restartTutorial()">
-                            <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
-                            <div class="settings-info">
-                                <div class="settings-title">Обучение</div>
-                                <div class="settings-desc">По использованию приложения</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-
-                        <div class="settings-item" onclick="toggleAchievementsVisibility()">
-                            <div class="settings-icon" id="achievementsIcon">
-                                <i class="fa-solid fa-award"></i>
-                            </div>
-                            <div class="settings-info">
-                                <div class="settings-title">Достижения</div>
-                                <div class="settings-desc" id="achievementsStatus">Показаны</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-
-                        <!-- ВСТАВЬТЕ ЭТОТ ПУНКТ В БЛОК ДОПОЛНИТЕЛЬНЫХ НАСТРОЕК -->
-<div class="settings-item" onclick="toggleFriendsHistoryVisibility()">
-    <div class="settings-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-    <div class="settings-info">
-        <div class="settings-title">История друзей</div>
-        <div class="settings-desc" id="friendsHistoryStatus">Показана</div>
+<!-- ===== НАСТРОЙКИ ===== -->
+<div class="section-block" id="settings-block-main">
+    <div class="section-header">
+        <h2 class="section-title">Настройки</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
-    <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-</div>
-                        
-                        <div class="settings-item" onclick="toggleEditPages()">
-                            <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                            <div class="settings-info">
-                                <div class="settings-title">Редактирование страниц</div>
-                                <div class="settings-desc" id="editPagesStatus">Включено</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                        
-                        <div class="settings-item" onclick="toggleEditWorkout()">
-                            <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                            <div class="settings-info">
-                                <div class="settings-title">Редактирование тренировок</div>
-                                <div class="settings-desc" id="editWorkoutStatus">Включено</div>
-                            </div>
-                            <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                    </div>
+    <div class="section-body">
+        <div class="settings-block">
+            <div class="settings-item" onclick="handlePremiumClick()">
+                <div class="settings-icon"><i class="fa-solid fa-crown"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">PREMIUM</div>
+                    <div class="settings-desc" id="premiumStatus">Откройте все особые тренировки</div>
                 </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
+            
+            <div class="settings-item" onclick="openColorModal()">
+                <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Акцентный цвет</div>
+                    <div class="settings-desc" id="colorStatus">Красный</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <div class="settings-item" onclick="toggleThemeModal()">
+                <div class="settings-icon" id="themeIcon">
+                    <i class="fa-solid fa-sun"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="settings-title">Тема приложения</div>
+                    <div class="settings-desc" id="themeStatus">Светлая</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+                        <div class="settings-item" onclick="toggleLanguageModal()">
+                <div class="settings-icon"><i class="fa-solid fa-earth-americas"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Язык приложения</div>
+                    <div class="settings-desc" id="languageStatus">Русский</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="settings-item" onclick="restartTutorial()">
+                <div class="settings-icon"><i class="fa-regular fa-circle-question"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Обучение</div>
+                    <div class="settings-desc">По использованию приложения</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ ===== -->
+<div class="section-block" id="settings-block-extra">
+    <div class="section-header">
+        <h2 class="section-title">Дополнительные настройки</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="section-body">
+        <div class="settings-block">
+            <div class="settings-item" onclick="toggleAchievementsVisibility()">
+                <div class="settings-icon" id="achievementsIcon">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="settings-title">Достижения</div>
+                    <div class="settings-desc" id="achievementsStatus">Показаны</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <div class="settings-item" onclick="toggleFriendsHistoryVisibility()">
+                <div class="settings-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">История друзей</div>
+                    <div class="settings-desc" id="friendsHistoryStatus">Показана</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="settings-item" onclick="toggleEditPages()">
+                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Редактирование страниц</div>
+                    <div class="settings-desc" id="editPagesStatus">Включено</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="settings-item" onclick="toggleEditWorkout()">
+                <div class="settings-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                <div class="settings-info">
+                    <div class="settings-title">Редактирование тренировок</div>
+                    <div class="settings-desc" id="editWorkoutStatus">Включено</div>
+                </div>
+                <button class="settings-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- ===== НЕВОЗВРАТНЫЕ НАСТРОЙКИ ===== -->
             <div class="section-block" id="dangerSettings">
@@ -1442,6 +1462,64 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+<!-- ===== МОДАЛКА: УПРАЖНЕНИЯ ПО ГРУППАМ МЫШЦ ===== -->
+<div id="muscleGroupsModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 480px; width: 95%; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-title" id="muscleModalTitle">Упражнения по группам мышц</div>
+
+        <!-- ★★★ ОПИСАНИЕ (заполняется из JS) ★★★ -->
+        <p class="modal-text" id="muscleModalText1"></p>
+        <p class="modal-text" id="muscleModalText2"></p>
+        <p class="modal-text" id="muscleModalText3"></p>
+
+        <button class="btn btn-primary" onclick="closeModal('muscleGroupsModal')">
+            Понятно
+        </button>
+    </div>
+</div>
+
+    <!-- ===== МОДАЛКА: ВЫБОР ЯЗЫКА ===== -->
+<div id="languageModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-title">Язык приложения</div>
+        <p class="modal-text" style="margin-bottom: 1rem;">
+            Выберите язык интерфейса.
+        </p>
+        
+        <div class="theme-options-container">
+            <!-- Русский -->
+            <div class="language-option language-option-active" data-language="ru" onclick="selectLanguage('ru')">
+                <div class="language-icon">
+                    <span>🇷🇺</span>
+                </div>
+                <div class="theme-option-info">
+                    <div class="settings-title">Русский</div>
+                    <div class="settings-desc">Русский язык интерфейса</div>
+                </div>
+                <div class="theme-option-check">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+            
+            <!-- Английский -->
+            <div class="language-option" data-language="en" onclick="selectLanguage('en')">
+                <div class="language-icon">
+                    <span>🇺🇸</span>
+                </div>
+                <div class="theme-option-info">
+                    <div class="settings-title">English</div>
+                    <div class="settings-desc">English interface</div>
+                </div>
+                <div class="theme-option-check">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="applyLanguage()">Готово</button>
+    </div>
+</div>
 
 <!-- ===== МОДАЛКА: ПЕРВЫЕ ЗАДАНИЯ ===== -->
 <div id="taskHelpModal" class="modal-overlay" style="display:none;">

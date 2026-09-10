@@ -9028,6 +9028,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Загрузка настройки видимости достижений
     loadAchievementsVisibility();
 
+    updateLanguageUI();
+
     // Загружаем задания
     loadTasks();
     loadDailyTasks();
@@ -10860,20 +10862,20 @@ const ACHIEVEMENTS_CONFIG = [
         id: 'marathoner',
         icon: 'fa-solid fa-dumbbell',
         name: 'Марафонец',
-        description: 'Выполнить 50 тренировок',
+        description: 'Выполнить 100 тренировок',  // ← ИЗМЕНЕНО (было 50)
         check: async (userId, profile, workouts) => {
             const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
-            return filtered.length >= 50;
+            return filtered.length >= 100;  // ← ИЗМЕНЕНО (было 50)
         }
     },
     {
         id: 'unstoppable',
         icon: 'fa-solid fa-fire',
         name: 'Неудержимый',
-        description: 'Выполнить 14 дневную серию тренировок',
+        description: 'Выполнить 21 дневную серию тренировок',  // ← ИЗМЕНЕНО (было 14)
         check: async (userId, profile, workouts) => {
             const streak = profile.streakDays || 0;
-            return streak >= 14;
+            return streak >= 21;  // ← ИЗМЕНЕНО (было 14)
         }
     },
     {
@@ -11009,45 +11011,45 @@ function openAchievementsModal() {
             let progress = '';
             let isUnlocked = achievements[ach.id] === true;
             // Для каждого достижения вычисляем прогресс (для отображения в модалке)
-            switch (ach.id) {
-case 'friendly': {
-    const friends = profile.friends || [];
-    progress = `${friends.length}/10`;
-    break;
-}
-case 'marathoner': {
-    const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
-    progress = `${filtered.length}/50`;
-    break;
-}
-case 'unstoppable': {
-    const streak = profile.streakDays || 0;
-    progress = `${streak}/14`;
-    break;
-}
-case 'ironEndurance': {
-    const totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
-    const minutes = Math.floor(totalSeconds / 60);
-    progress = `${minutes}/1000`;
-    break;
-}
-case 'masterOfStyles': {
-    const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
-    const counts = {};
-    categories.forEach(c => counts[c] = 0);
-    workouts.forEach(w => {
-        const icon = getWorkoutIcon(w);
-        const cat = getCategoryByIcon(icon);
-        if (cat && counts[cat] !== undefined) {
-            counts[cat] = (counts[cat] || 0) + 1;
-        }
-    });
-    const done = categories.filter(c => (counts[c] || 0) >= 10).length;
-    progress = `${done}/${categories.length}`;
-    break;
-}
-                default: progress = '';
+switch (ach.id) {
+    case 'friendly': {
+        const friends = profile.friends || [];
+        progress = `${friends.length}/10`;
+        break;
+    }
+    case 'marathoner': {
+        const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
+        progress = `${filtered.length}/100`;  // ← ИЗМЕНЕНО (было /50)
+        break;
+    }
+    case 'unstoppable': {
+        const streak = profile.streakDays || 0;
+        progress = `${streak}/21`;  // ← ИЗМЕНЕНО (было /14)
+        break;
+    }
+    case 'ironEndurance': {
+        const totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+        const minutes = Math.floor(totalSeconds / 60);
+        progress = `${minutes}/1000`;
+        break;
+    }
+    case 'masterOfStyles': {
+        const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
+        const counts = {};
+        categories.forEach(c => counts[c] = 0);
+        workouts.forEach(w => {
+            const icon = getWorkoutIcon(w);
+            const cat = getCategoryByIcon(icon);
+            if (cat && counts[cat] !== undefined) {
+                counts[cat] = (counts[cat] || 0) + 1;
             }
+        });
+        const done = categories.filter(c => (counts[c] || 0) >= 10).length;
+        progress = `${done}/${categories.length}`;
+        break;
+    }
+    default: progress = '';
+}
             progressList.push({
                 ...ach,
                 unlocked: isUnlocked,
@@ -12689,11 +12691,11 @@ async function loadPremiumStats() {
 
     renderWeeklyLoadChart(filteredLoads, filteredWeeks);
 
-    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-    const titleEl = document.getElementById('weeklyLoadTitle');
-    if (titleEl) {
-        titleEl.textContent = monthNames[now.getMonth()];
-    }
+const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const titleEl = document.getElementById('weeklyLoadTitle');
+if (titleEl) {
+    titleEl.textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+}
 
     const block = document.getElementById('weekly-load-block');
     if (block) block.style.display = 'block';
@@ -12773,11 +12775,11 @@ function changeWeeklyLoadMonth(delta) {
 
         renderWeeklyLoadChart(filteredLoads, filteredWeeks);
 
-        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-        const titleEl = document.getElementById('weeklyLoadTitle');
-        if (titleEl) {
-            titleEl.textContent = monthNames[now.getMonth()];
-        }
+const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const titleEl = document.getElementById('weeklyLoadTitle');
+if (titleEl) {
+    titleEl.textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+}
     });
 }
 
@@ -14578,7 +14580,7 @@ async function renderFriendsHistory() {
                 <div class="empty-state">
                     <span class="empty-icon">📋</span>
                     <h3 class="empty-title">Нет активности</h3>
-                    <p class="empty-text">Пока нет активности ${friendName}</p>
+                    <p class="empty-text">Пока нет активности ${friendName}.</p>
                 </div>
             `;
             return;
@@ -15057,3 +15059,146 @@ function loadInventorySelection() {
 document.addEventListener('DOMContentLoaded', function() {
     loadInventorySelection();
 });
+
+// =================== УПРАВЛЕНИЕ ЯЗЫКОМ ===================
+
+// Ключ для localStorage
+const LANGUAGE_KEY = 'appLanguage';
+
+// ★★★ ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ВРЕМЕННОГО ВЫБОРА ★★★
+let tempLanguage = null;
+
+/**
+ * Получить текущий язык приложения
+ */
+function getLanguage() {
+    return localStorage.getItem(LANGUAGE_KEY) || 'ru';
+}
+
+/**
+ * Обновить UI статуса языка в настройках
+ */
+function updateLanguageUI() {
+    const lang = getLanguage();
+    const statusEl = document.getElementById('languageStatus');
+    if (statusEl) {
+        statusEl.textContent = lang === 'ru' ? 'Русский' : 'English';
+    }
+}
+
+/**
+ * Открыть модальное окно выбора языка
+ */
+function toggleLanguageModal() {
+    const currentLang = getLanguage();
+    
+    // ★★★ СОХРАНЯЕМ ТЕКУЩИЙ ЯЗЫК КАК ВРЕМЕННЫЙ ★★★
+    tempLanguage = currentLang;
+    
+document.querySelectorAll('#languageModal .language-option').forEach(el => {
+    el.classList.remove('language-option-active');
+});
+
+const selectedOption = document.querySelector(`#languageModal .language-option[data-language="${currentLang}"]`);
+if (selectedOption) {
+    selectedOption.classList.add('language-option-active');
+}
+    
+    openModal('languageModal');
+}
+
+/**
+ * Выбрать язык (временно, без сохранения)
+ */
+function selectLanguage(lang) {
+    // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
+    tempLanguage = lang;
+    
+document.querySelectorAll('#languageModal .language-option').forEach(el => {
+    el.classList.remove('language-option-active');
+});
+
+const selectedOption = document.querySelector(`#languageModal .language-option[data-language="${lang}"]`);
+if (selectedOption) {
+    selectedOption.classList.add('language-option-active');
+}
+}
+
+/**
+ * ★★★ ПРИМЕНИТЬ ЯЗЫК (ПРИ НАЖАТИИ "ГОТОВО") ★★★
+ * Логика смены языка не реализована — только сохранение выбора.
+ */
+function applyLanguage() {
+    if (tempLanguage) {
+        const currentLang = getLanguage();
+        
+        // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛСЯ ЛИ ЯЗЫК ★★★
+        if (tempLanguage !== currentLang) {
+            // Язык реально изменился - сохраняем
+            localStorage.setItem(LANGUAGE_KEY, tempLanguage);
+            
+            // ★★★ ОБНОВЛЯЕМ UI ★★★
+            updateLanguageUI();
+            
+            // ★★★ ПОКАЗЫВАЕМ ТОСТ ТОЛЬКО ПРИ РЕАЛЬНОМ ИЗМЕНЕНИИ ★★★
+            const langName = tempLanguage === 'ru' ? 'Русский' : 'English';
+            showToast(`✅ Язык изменён на ${langName}`);
+            console.log(`✅ Применён язык: ${langName}`);
+        } else {
+            console.log('ℹ️ Язык не изменился');
+        }
+    }
+    
+    // Закрываем модалку
+    closeModal('languageModal');
+}
+
+// =================== МОДАЛКА: УПРАЖНЕНИЯ ПО ГРУППАМ МЫШЦ ===================
+
+// ★★★ КОНФИГУРАЦИЯ ТЕКСТОВ ДЛЯ РАЗНЫХ БЛОКОВ ★★★
+const MUSCLE_MODAL_CONFIG = {
+    muscles: {
+        title: 'Упражнения по группам мышц',
+        text1: 'Этот блок показывает, сколько упражнений вы выполнили на каждую группу мышц за всё время тренировок.',
+        text2: 'Это помогает понять, какие мышцы вы прорабатываете чаще, а какие - отстают и требуют больше внимания.',
+        text3: 'Если какая-то группа мышц заполнена слабо - добавьте в свою программу больше упражнений на неё. Так вы сделаете тренировки сбалансированными и будете развиваться равномерно.'
+    },
+    categories: {
+        title: 'Тренировки по категориям',
+        text1: 'Этот блок показывает, сколько тренировок вы выполнили по каждой категории за всё время.',
+        text2: 'Это помогает понять, какие типы тренировок вы выбираете чаще, а какие - остаются без внимания.',
+        text3: 'Если какая-то категория заполнена слабо - попробуйте добавить её в свой план. Разнообразие тренировок помогает развиваться гармонично и не застревать на одном месте.'
+    },
+    // ★★★ НОВЫЙ БЛОК: НАГРУЗОЧНЫЙ ИНДЕКС ★★★
+    weeklyLoad: {
+        title: 'Нагрузочный индекс',
+        text1: 'Этот блок показывает, насколько интенсивно вы тренировались каждую неделю месяца.',
+        text2: 'Индекс рассчитывается из количества подходов, повторений и общей длительности тренировок. Чем выше индекс - тем больше нагрузки получил ваш организм.',
+        text3: 'Следите за тем, чтобы нагрузка росла постепенно. Резкие скачки могут привести к перетренированности, а слишком низкий индекс - к застою в прогрессе.'
+    }
+};
+
+/**
+ * Открыть модалку с описанием блока статистики
+ * @param {string} type - тип блока: 'muscles' или 'categories'
+ */
+function openMuscleGroupsModal(type = 'muscles') {
+    // ★★★ БЕРЁМ ТЕКСТЫ ИЗ КОНФИГА ★★★
+    const config = MUSCLE_MODAL_CONFIG[type] || MUSCLE_MODAL_CONFIG.muscles;
+
+    // ★★★ ПОДСТАВЛЯЕМ ТЕКСТЫ В МОДАЛКУ ★★★
+    const titleEl = document.getElementById('muscleModalTitle');
+    const text1El = document.getElementById('muscleModalText1');
+    const text2El = document.getElementById('muscleModalText2');
+    const text3El = document.getElementById('muscleModalText3');
+
+    if (titleEl) titleEl.textContent = config.title;
+    if (text1El) text1El.textContent = config.text1;
+    if (text2El) text2El.textContent = config.text2;
+    if (text3El) text3El.textContent = config.text3;
+
+    openModal('muscleGroupsModal');
+}
+
+// Экспорт в window для вызова из консоли и из HTML
+window.openMuscleGroupsModal = openMuscleGroupsModal;
