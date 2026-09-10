@@ -4715,7 +4715,6 @@ body.theme-dark-mode .inventory-btn .inventory-name {
 
 body.theme-dark-mode .inventory-btn.selected {
     border-color: var(--accent);
-    background: var(--accent-dark);
 }
 
 body.theme-dark-mode .inventory-btn.selected .inventory-name {
@@ -4733,6 +4732,7 @@ body.theme-dark-mode .inventory-btn.selected .inventory-name {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    padding: 1rem 1rem 1.4rem 1rem;
 }
 
 body.theme-dark-mode .language-icon {

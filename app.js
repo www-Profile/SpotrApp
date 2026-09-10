@@ -2646,20 +2646,6 @@ function hideNotification() {
     }, 400);
 }
 
-function markNotificationSeen(id) {
-    const seen = JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-    if (!seen.includes(id)) {
-        seen.push(id);
-        localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(seen));
-    }
-}
-
-function clearSeenNotifications() {
-    localStorage.removeItem(NOTIFICATIONS_KEY);
-    localStorage.removeItem('shownFriendRequests');
-    console.log('✅ История уведомлений очищена');
-}
-
 function showFriendRequestNotification(icon, text, requestId) {
     const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
     if (shownRequests.includes(requestId) || shownThisSession.has(requestId)) {
@@ -3236,30 +3222,6 @@ async function deleteWorkoutFromFirestore(workoutId) {
 
 // ===================УПРАВЛЕНИЕ ЦВЕТОМ ===================
 let tempColor = null;
-
-function openColorModal() {
-    const currentColor = localStorage.getItem('themeColor') || 'red';
-    tempColor = currentColor;
-    
-    // ★★★ УБИРАЕМ КАСТОМНЫЕ CSS-ПЕРЕМЕННЫЕ, ЧТОБЫ ВИДЕТЬ РЕАЛЬНЫЙ ЦВЕТ ★★★
-    document.body.style.removeProperty('--accent');
-    document.body.style.removeProperty('--accent-dark');
-    document.body.style.removeProperty('--accent-light');
-    
-    // ★★★ ПРИМЕНЯЕМ СТАНДАРТНЫЙ ЦВЕТ ЧЕРЕЗ КЛАСС ★★★
-    document.body.className = 'theme-' + currentColor;
-    
-    const isDarkMode = localStorage.getItem('appThemeMode') === 'dark' || 
-                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDarkMode) {
-        document.body.classList.add('theme-dark-mode');
-    }
-    
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.classList.toggle('color-btn-active', btn.dataset.color === currentColor);
-    });
-    openModal('colorModal');
-}
 
 function selectColor(color) {
     // ★★★ СОХРАНЯЕМ ТОЛЬКО В ВРЕМЕННУЮ ПЕРЕМЕННУЮ ★★★
@@ -6051,6 +6013,8 @@ if (currentLevel.id > prevLevel) {
     loadAchievementsVisibility();
     document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
     
+await loadInventoryFromProfile();
+
     try {
         const results = await checkAllAchievements(user.uid);
         if (results) {
@@ -6315,32 +6279,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
 });
 
 // ===================ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ===================
-function showRegister() {
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('page-active');
-        p.style.display = ''; // Убираем инлайн display
-    });
-    const registerPage = document.getElementById('page-register');
-    if (registerPage) {
-        registerPage.classList.add('page-active');
-        registerPage.style.display = 'block'; // Явно показываем
-    }
-    clearAuthFields();
-}
-
-function showLogin() {
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('page-active');
-        p.style.display = '';
-    });
-    const loginPage = document.getElementById('page-login');
-    if (loginPage) {
-        loginPage.classList.add('page-active');
-        loginPage.style.display = 'block';
-    }
-    clearAuthFields();
-}
-
 function showHero() {
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('page-active');
@@ -9033,6 +8971,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Загружаем задания
     loadTasks();
     loadDailyTasks();
+
+    updateInventoryStatus();
 
     // Инициализация ежедневных заданий
     setTimeout(async () => {
@@ -13315,53 +13255,6 @@ async function openDayWorkoutsModal(year, month, day) {
     openModal('dayWorkoutsModal');
 }
 
-function openTaskHelpModal(taskId) {
-    const task = dailyTasksList.find(t => t.id === taskId);
-    if (!task) {
-        showToast('⚠️ Задание не найдено');
-        return;
-    }
-
-    // Проверяем, не выполнено ли уже
-    if (task.completed) {
-        showToast('ℹ️ Задание уже выполнено');
-        return;
-    }
-
-    // Создаём модалку-подсказку
-    const oldModal = document.getElementById('taskHelpModal');
-    if (oldModal) oldModal.remove();
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'taskHelpModal';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width:400px; width:95%;">
-            <div style="text-align:center; font-size:2.5rem; margin-bottom:0.5rem;">${task.icon ? `<i class="${task.icon}"></i>` : '🏋️'}</div>
-            <div class="modal-title">${task.name}</div>
-            <p class="modal-text" style="margin:0.5rem 0 1.5rem 0; text-align:center;">
-                Выполните ${task.target} ${task.unit}
-            </p>
-            <div style="display:flex; gap:0.5rem;">
-                <button class="btn btn-secondary" id="taskHelpCancel" style="flex:1;">Отмена</button>
-                <button class="btn btn-primary" id="taskHelpStart" style="flex:1;">Перейти</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    document.getElementById('taskHelpCancel').addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    document.getElementById('taskHelpStart').addEventListener('click', () => {
-        modal.remove();
-        // Убеждаемся, что страница загружена
-        setTimeout(() => {
-            startTaskSession(taskId);
-        }, 100);
-    });
-}
 
 function openDailyTaskHelpModal(taskId) {
     const task = dailyTasksList.find(t => t.id === taskId);
@@ -14953,27 +14846,6 @@ async function updatePremiumCounter() {
 let selectedInventory = [];
 
 /**
- * Переключить выбор инвентаря
- */
-function toggleInventory(btn) {
-    const inventory = btn.dataset.inventory;
-    const index = selectedInventory.indexOf(inventory);
-    
-    if (index !== -1) {
-        // Убираем выделение
-        selectedInventory.splice(index, 1);
-        btn.classList.remove('selected');
-    } else {
-        // Добавляем выделение
-        selectedInventory.push(inventory);
-        btn.classList.add('selected');
-    }
-    
-    // Обновляем текст
-    updateInventoryText();
-}
-
-/**
  * Обновить текст с выбранным инвентарём
  */
 function updateInventoryText() {
@@ -15024,15 +14896,25 @@ function showInventoryPage() {
 }
 
 // ★★★ ОБРАБОТЧИК ФОРМЫ ★★★
-document.getElementById('inventoryForm')?.addEventListener('submit', function(e) {
+document.getElementById('inventoryForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
-    // Сохраняем выбор
+
     localStorage.setItem('userInventory', JSON.stringify(selectedInventory));
-    console.log('📦 Выбранный инвентарь:', selectedInventory);
-    
-    // Здесь можно перейти на следующую страницу
-    // Например: switchToPage('page-workouts');
+
+    // ★★★ СОХРАНЯЕМ В FIRESTORE ★★★
+    try {
+        const user = await getFirebaseUser();
+        if (user) {
+            await updateUserProfile(user.uid, {
+                inventory: selectedInventory
+            });
+        }
+    } catch (error) {
+        console.warn('Ошибка сохранения инвентаря:', error);
+    }
+
+    switchToPage('page-loading');
+    document.getElementById('bottomNav').style.display = 'none';
 });
 
 // ★★★ ВОССТАНАВЛИВАЕМ СОХРАНЁННЫЙ ВЫБОР ПРИ ЗАГРУЗКЕ ★★★
@@ -15202,3 +15084,134 @@ function openMuscleGroupsModal(type = 'muscles') {
 
 // Экспорт в window для вызова из консоли и из HTML
 window.openMuscleGroupsModal = openMuscleGroupsModal;
+
+// =================== ИНВЕНТАРЬ (МОДАЛКА В НАСТРОЙКАХ) ===================
+
+/**
+ * Открыть модалку "Инвентарь" в настройках
+ */
+function openInventoryModal() {
+    // ★★★ СИНХРОНИЗИРУЕМ СОСТОЯНИЕ КНОПОК С ТЕКУЩИМ ВЫБОРОМ ★★★
+    document.querySelectorAll('#inventoryModal .inventory-btn').forEach(btn => {
+        const inventory = btn.dataset.inventory;
+        if (selectedInventory.includes(inventory)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    openModal('inventoryModal');
+}
+
+
+/**
+ * Сохранить выбор инвентаря из модалки
+ */
+async function saveInventoryFromModal() {
+    // ★★★ СОХРАНЯЕМ В localStorage ★★★
+    localStorage.setItem('userInventory', JSON.stringify(selectedInventory));
+    console.log('📦 Сохранённый инвентарь:', selectedInventory);
+
+    // ★★★ ОБНОВЛЯЕМ СТАТУС В НАСТРОЙКАХ ★★★
+    updateInventoryStatus();
+
+    // ★★★ СОХРАНЯЕМ В FIRESTORE ★★★
+    try {
+        const user = await getFirebaseUser();
+        if (user) {
+            await updateUserProfile(user.uid, {
+                inventory: selectedInventory
+            });
+            console.log('✅ Инвентарь сохранён в Firestore');
+        }
+    } catch (error) {
+        console.warn('⚠️ Не удалось сохранить инвентарь в Firestore:', error);
+    }
+
+    showToast('✅ Инвентарь сохранён');
+    closeModal('inventoryModal');
+}
+
+/**
+ * Обновить статус инвентаря в настройках (текст под пунктом)
+ */
+function updateInventoryStatus() {
+    const statusEl = document.getElementById('inventoryStatus');
+    if (!statusEl) return;
+
+    if (selectedInventory.length === 0) {
+        statusEl.textContent = 'Ничего из перечисленного';
+        return;
+    }
+
+    const names = {
+        'dumbbells': 'Гантели',
+        'barbell': 'Штанга',
+        'mat': 'Коврик',
+        'pullup': 'Турник'
+    };
+
+    const selectedNames = selectedInventory.map(item => names[item] || item);
+    statusEl.textContent = selectedNames.join(' · ');
+}
+
+/**
+ * ★★★ ОБНОВЛЯЕМ ФУНКЦИЮ toggleInventory ★★★
+ * Она уже есть, но добавим обновление текста в модалке
+ */
+function toggleInventory(btn) {
+    const inventory = btn.dataset.inventory;
+    const index = selectedInventory.indexOf(inventory);
+
+    if (index !== -1) {
+        // Убираем выделение
+        selectedInventory.splice(index, 1);
+        btn.classList.remove('selected');
+    } else {
+        // Добавляем выделение
+        selectedInventory.push(inventory);
+        btn.classList.add('selected');
+    }
+
+    // ★★★ ОБНОВЛЯЕМ ОБА ТЕКСТА: И В РЕГИСТРАЦИИ, И В МОДАЛКЕ ★★★
+    updateInventoryText();          // для шага 5 регистрации
+}
+
+/**
+ * ★★★ ЗАГРУЗКА ИНВЕНТАРЯ ИЗ FIRESTORE ПРИ СТАРТЕ ★★★
+ * Вызывается при загрузке профиля
+ */
+async function loadInventoryFromProfile() {
+    try {
+        const user = await getFirebaseUser();
+        if (!user) return;
+
+        const profileResult = await getUserProfile(user.uid);
+        if (profileResult.success && profileResult.data.inventory) {
+            // ★★★ ВОССТАНАВЛИВАЕМ ВЫБОР ИЗ ПРОФИЛЯ ★★★
+            selectedInventory = profileResult.data.inventory;
+
+            // Сохраняем в localStorage для быстрого доступа
+            localStorage.setItem('userInventory', JSON.stringify(selectedInventory));
+
+            // Обновляем UI
+            document.querySelectorAll('.inventory-btn').forEach(btn => {
+                if (selectedInventory.includes(btn.dataset.inventory)) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+
+            updateInventoryText();
+            updateInventoryStatus();
+        }
+    } catch (error) {
+        console.warn('⚠️ Ошибка загрузки инвентаря из профиля:', error);
+    }
+}
+
+// Экспорт в window
+window.openInventoryModal = openInventoryModal;
+window.saveInventoryFromModal = saveInventoryFromModal;
