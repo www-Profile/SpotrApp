@@ -649,6 +649,75 @@
             <!-- Мировая статистика -->
             <div id="stats-world" class="stats-tab-content">
                 <div id="worldStatsBlocksContainer">
+<!-- Блок: Глобальные агрегаты -->
+        <div class="stats-summary" data-stat-id="cards" id="globalStatsContainer">
+            <div class="stat-card" data-stat-id="minutes">
+                <div class="stat-label">Минут</div>
+                <div class="stat-number" id="globalTotalMinutes">—</div>
+            </div>
+            <div class="stat-card" data-stat-id="workouts">
+                <div class="stat-label">Тренировок</div>
+                <div class="stat-number" id="globalTotalWorkouts">—</div>
+            </div>
+            <div class="stat-card" data-stat-id="exercises">
+                <div class="stat-label">Упражнений</div>
+                <div class="stat-number" id="globalTotalExercises">—</div>
+            </div>
+        </div>
+    <!-- Плашка — отдельный сортируемый блок -->
+    <div class="stats-banner" data-stat-id="users">
+        <div class="stats-banner-icon">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stats-banner-text">
+            <span class="stats-banner-title">В SportApp уже тренируются</span>
+            <span class="stats-banner-value"><span id="globalTotalUsers">—</span> пользователей</span>
+        </div>
+    </div>
+
+    <!-- Блок: Достижения сообщества -->
+<div class="section-block" data-block-id="community-achievements">
+    <div class="section-header">
+        <h2 class="section-title">Редкость достижений</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
+    </div>
+    <div class="section-body" onclick="openMuscleGroupsModal('communityAchievements')">
+        <div class="community-achievements-grid" id="communityAchievementsContainer">
+            <div class="community-achievement-tile" data-achievement="friendly">
+                <div class="community-achievement-icon locked">
+                    <i class="fa-solid fa-user-group"></i>
+                </div>
+                <div class="community-achievement-percent" id="communityPercFriendly">—</div>
+            </div>
+            <div class="community-achievement-tile" data-achievement="marathoner">
+                <div class="community-achievement-icon locked">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+                <div class="community-achievement-percent" id="communityPercMarathoner">—</div>
+            </div>
+            <div class="community-achievement-tile" data-achievement="unstoppable">
+                <div class="community-achievement-icon locked">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div class="community-achievement-percent" id="communityPercUnstoppable">—</div>
+            </div>
+            <div class="community-achievement-tile" data-achievement="ironEndurance">
+                <div class="community-achievement-icon locked">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div class="community-achievement-percent" id="communityPercIronEndurance">—</div>
+            </div>
+            <div class="community-achievement-tile" data-achievement="masterOfStyles">
+                <div class="community-achievement-icon locked">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="community-achievement-percent" id="communityPercMasterOfStyles">—</div>
+            </div>
+        </div>
+    </div>
+</div>
+
                     <div class="section-block" data-block-id="world-leaderboard">
                         <div class="section-header">
                             <h2 class="section-title">Рейтинг пользователей</h2>
@@ -693,6 +762,7 @@
                         <span class="stat-number" id="totalExercises">0</span>
                     </div>
                 </div>
+
 
                 <div id="statsBlocksContainer">
                     <div class="section-block" data-block-id="muscles">

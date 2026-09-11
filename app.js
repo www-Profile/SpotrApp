@@ -2698,9 +2698,11 @@ function clearSeenNotifications() {
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
-        categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело']
+        categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
+        globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
+        worldStatsBlocksContainer: ['community-achievements','world-leaderboard', 'friends-leaderboard']
     };
 }
 
@@ -3535,15 +3537,17 @@ function updateStats(tab) {
     statsUpdatePending = true;
     
     try {
-        if (currentTab === 'world') {
-            loadWorldLeaderboard();
-            loadFriendsLeaderboard();
-            setTimeout(() => {
-                applySavedWorldStatsOrder();
-                statsUpdatePending = false;
-                console.log('✅ [updateStats] Мировая статистика обновлена');
-            }, 200);
-        } else {
+if (currentTab === 'world') {
+    loadGlobalStats();
+    loadGlobalUsersCount();           // из прошлого шага
+    loadCommunityAchievements();      // ← ★★★ ДОБАВИЛИ ★★★
+    loadWorldLeaderboard();
+    loadFriendsLeaderboard();
+    setTimeout(() => {
+        applySavedWorldStatsOrder();
+        statsUpdatePending = false;
+    }, 200);
+} else {
             loadStats();
             loadPremiumStats
             setTimeout(() => {
@@ -9545,6 +9549,7 @@ window.statsEditor = new PageEditor({
         { id: 'exerciseMuscleStats', dataAttr: 'muscleName', handle: '.stat-item' },
         { id: 'categoriesStats', dataAttr: 'categoryName', handle: '.stat-item' },
         // Мировая статистика
+        { id: 'globalStatsContainer', dataAttr: 'statId', handle: '.stat-card' },  // ★ ДОБАВИЛИ
         { id: 'worldStatsBlocksContainer', dataAttr: 'blockId', handle: '.section-drag' }
     ],
     defaultLayout: {
@@ -9552,7 +9557,8 @@ window.statsEditor = new PageEditor({
         statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
-        worldStatsBlocksContainer: ['world-leaderboard', 'friends-leaderboard']
+        globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
+        worldStatsBlocksContainer: ['community-achievements', 'world-leaderboard', 'friends-leaderboard']
     }
 });
 // ===================ЕДИНЫЙ РЕДАКТОР тренировок ===================
@@ -15051,12 +15057,18 @@ const MUSCLE_MODAL_CONFIG = {
         text2: 'Это помогает понять, какие типы тренировок вы выбираете чаще, а какие - остаются без внимания.',
         text3: 'Если какая-то категория заполнена слабо - попробуйте добавить её в свой план. Разнообразие тренировок помогает развиваться гармонично и не застревать на одном месте.'
     },
-    // ★★★ НОВЫЙ БЛОК: НАГРУЗОЧНЫЙ ИНДЕКС ★★★
     weeklyLoad: {
         title: 'Нагрузочный индекс',
         text1: 'Этот блок показывает, насколько интенсивно вы тренировались каждую неделю месяца.',
         text2: 'Индекс рассчитывается из количества подходов, повторений и общей длительности тренировок. Чем выше индекс - тем больше нагрузки получил ваш организм.',
         text3: 'Следите за тем, чтобы нагрузка росла постепенно. Резкие скачки могут привести к перетренированности, а слишком низкий индекс - к застою в прогрессе.'
+    },
+    // ★★★ НОВЫЙ БЛОК: РЕДКОСТЬ ДОСТИЖЕНИЙ ★★★
+    communityAchievements: {
+        title: 'Редкость достижений',
+        text1: 'Этот блок показывает, у какого процента пользователей SportApp есть каждое достижение.',
+        text2: 'Золотая иконка - достижение есть у вас. Серая иконка - вы его ещё не получили. Процент рядом показывает, насколько достижение распространено среди всех пользователей.',
+        text3: 'Чем меньше процент - тем реже встречается достижение. Соберите все пять и станьте одним из немногих, кто прошёл весь путь!'
     }
 };
 
@@ -15215,3 +15227,217 @@ async function loadInventoryFromProfile() {
 // Экспорт в window
 window.openInventoryModal = openInventoryModal;
 window.saveInventoryFromModal = saveInventoryFromModal;
+
+// =================== ГЛОБАЛЬНЫЕ АГРЕГАТЫ ===================
+async function loadGlobalStats() {
+    const container = document.getElementById('globalStatsContainer');
+    if (!container) return;
+
+    const ids = ['globalTotalMinutes', 'globalTotalWorkouts', 'globalTotalExercises'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '...';
+    });
+
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '—';
+            });
+            return;
+        }
+
+        // ★★★ СЧИТАЕМ ТРЕНИРОВКИ / МИНУТЫ / УПРАЖНЕНИЯ ★★★
+        const workoutsSnapshot = await firebase.firestore()
+            .collection('workouts')
+            .get();
+
+        let totalWorkouts = 0;
+        let totalMinutes = 0;
+        let totalExercises = 0;
+
+        workoutsSnapshot.forEach(doc => {
+            const data = doc.data();
+
+            // Исключаем зарядку и одиночные упражнения
+            const icon = data.icon || 'bodybuilding';
+            if (icon === 'charging' || data.isSingle === true) return;
+
+            totalWorkouts++;
+            totalMinutes += Math.floor((data.durationSeconds || 0) / 60);
+
+            if (Array.isArray(data.exercises)) {
+                totalExercises += data.exercises.filter(e => e.completed === true).length;
+            }
+        });
+
+        // ★★★ ОБНОВЛЯЕМ UI ★★★
+        const minutesEl = document.getElementById('globalTotalMinutes');
+        const workoutsEl = document.getElementById('globalTotalWorkouts');
+        const exercisesEl = document.getElementById('globalTotalExercises');
+
+        if (minutesEl) minutesEl.textContent = formatBigNumber(totalMinutes);
+        if (workoutsEl) workoutsEl.textContent = formatBigNumber(totalWorkouts);
+        if (exercisesEl) exercisesEl.textContent = formatBigNumber(totalExercises);
+
+        console.log(`📊 Глобальные агрегаты: ${totalWorkouts} трен., ${totalMinutes} мин, ${totalExercises} упр.`);
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки глобальных агрегатов:', error);
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '—';
+        });
+    }
+}
+
+// Форматирование больших чисел: 1234 → 1 234, 12345 → 12,3K, 1234567 → 1,2M
+function formatBigNumber(num) {
+    if (num === undefined || num === null || isNaN(num)) return '0';
+    const n = Number(num);
+    if (n < 1000) return String(n);
+    if (n < 10000) return n.toLocaleString('ru-RU');
+    if (n < 1000000) return (n / 1000).toFixed(1).replace('.', ',') + 'K';
+    return (n / 1000000).toFixed(1).replace('.', ',') + 'M';
+}
+
+// =================== ПЛАШКА: ПОЛЬЗОВАТЕЛИ ===================
+async function loadGlobalUsersCount() {
+    const el = document.getElementById('globalTotalUsers');
+    if (!el) return;
+    el.textContent = '...';
+
+    try {
+        const user = await getFirebaseUser();
+        if (!user) { el.textContent = '—'; return; }
+
+        let total = 0;
+
+        // ★★★ ПРОБУЕМ count() ★★★
+        try {
+            const snap = await firebase.firestore()
+                .collection('users')
+                .count()
+                .get();
+            total = snap.data().count;
+        } catch (e) {
+            // ★★★ FALLBACK: обычный get() ★★★
+            console.warn('count() не сработал, используем get():', e);
+            const snap = await firebase.firestore()
+                .collection('users')
+                .get();
+            total = snap.size;
+        }
+
+        el.textContent = formatBigNumber(total);
+        console.log(`👥 Всего пользователей: ${total}`);
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки пользователей:', error);
+        el.textContent = '—';
+    }
+}
+
+// =================== ДОСТИЖЕНИЯ СООБЩЕСТВА ===================
+async function loadCommunityAchievements() {
+    const container = document.getElementById('communityAchievementsContainer');
+    if (!container) return;
+
+    const achievementsMap = {
+        friendly: 'communityPercFriendly',
+        marathoner: 'communityPercMarathoner',
+        unstoppable: 'communityPercUnstoppable',
+        ironEndurance: 'communityPercIronEndurance',
+        masterOfStyles: 'communityPercMasterOfStyles'
+    };
+
+    // Показываем загрузку
+    Object.values(achievementsMap).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '...';
+    });
+
+    try {
+        const user = await getFirebaseUser();
+        if (!user) {
+            Object.values(achievementsMap).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '—';
+            });
+            return;
+        }
+
+        // ★★★ 1. ПОЛУЧАЕМ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ★★★
+        const snapshot = await firebase.firestore()
+            .collection('users')
+            .get();
+
+        const totalUsers = snapshot.size;
+
+        if (totalUsers === 0) {
+            Object.values(achievementsMap).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '0%';
+            });
+            return;
+        }
+
+        // ★★★ 2. СЧИТАЕМ СКОЛЬКО У КОГО ЕСТЬ + СВОИ ДОСТИЖЕНИЯ ★★★
+        const counts = {
+            friendly: 0,
+            marathoner: 0,
+            unstoppable: 0,
+            ironEndurance: 0,
+            masterOfStyles: 0
+        };
+
+        let myAchievements = {};
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const ach = data.achievements || {};
+
+            // Если это текущий пользователь — сохраняем его достижения
+            if (doc.id === user.uid) {
+                myAchievements = ach;
+            }
+
+            for (const key in counts) {
+                if (ach[key] === true) {
+                    counts[key]++;
+                }
+            }
+        });
+
+        // ★★★ 3. ОБНОВЛЯЕМ ПРОЦЕНТЫ И ЦВЕТ ИКОНОК ★★★
+        for (const [key, count] of Object.entries(counts)) {
+            const percent = Math.round((count / totalUsers) * 100);
+            const elId = achievementsMap[key];
+            const el = document.getElementById(elId);
+
+            // Обновляем процент
+            if (el) el.textContent = percent + '%';
+
+            // ★★★ ОБНОВЛЯЕМ ЦВЕТ ИКОНКИ ★★★
+            const tile = el?.closest('.community-achievement-tile');
+            const icon = tile?.querySelector('.community-achievement-icon');
+            if (icon) {
+                const hasIt = myAchievements[key] === true;
+                icon.classList.toggle('unlocked', hasIt);
+                icon.classList.toggle('locked', !hasIt);
+            }
+        }
+
+        console.log(`🏆 Достижения сообщества (${totalUsers} юзеров):`, counts);
+        console.log(`🏆 Мои достижения:`, myAchievements);
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки достижений сообщества:', error);
+        Object.values(achievementsMap).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '—';
+        });
+    }
+}
