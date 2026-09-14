@@ -1,5 +1,5 @@
 <!DOCTYPE html>   
-<html lang="ru">
+<html lang="ru"> 
 <head> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -89,6 +89,14 @@
                                     <div class="item-info">
                                         <h3 class="item-title">Всё тело</h3>
                                         <p class="item-desc">Комплекс · Все мышцы · Тонус</p>
+                                    </div>
+                                    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="item-card" data-category="ГТО" onclick="loadGTOSelectGender('ГТО')">
+                                    <div class="item-icon"><img src="images/WholeBody.png"></div>
+                                    <div class="item-info">
+                                        <h3 class="item-title">ГТО</h3>
+                                        <p class="item-desc">Нормативы · Ступени · Зачёт</p>
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
@@ -665,7 +673,9 @@
             </div>
         </div>
     <!-- Плашка — отдельный сортируемый блок -->
+     <div class="section-block">
     <div class="stats-banner" data-stat-id="users">
+
         <div class="stats-banner-icon">
             <i class="fa-solid fa-users"></i>
         </div>
@@ -673,6 +683,7 @@
             <span class="stats-banner-title">В SportApp уже тренируются</span>
             <span class="stats-banner-value"><span id="globalTotalUsers">—</span> пользователей</span>
         </div>
+    </div>
     </div>
 
     <!-- Блок: Достижения сообщества -->
@@ -748,6 +759,7 @@
 
             <!-- Личная статистика -->
             <div id="stats-personal" class="stats-tab-content stats-tab-content-active">
+                <div class="section-block">
                 <div class="stats-summary" id="statsSummary">
                     <div class="stat-card" data-stat-id="minutes">
                         <span class="stat-label">Минут</span>
@@ -761,6 +773,7 @@
                         <span class="stat-label">Упражнений</span>
                         <span class="stat-number" id="totalExercises">0</span>
                     </div>
+                </div>
                 </div>
 
 
@@ -881,6 +894,7 @@
 
         <!-- ★★★ ВКЛАДКА: МОЙ ★★★ -->
         <div id="profileTab-my" class="profile-tab-content profile-tab-content-active">
+            <div class="section-block">
             <div class="profile-card">
                 <div class="profile-avatar"><span id="profileInitials">А</span></div>
                 <h2 class="profile-name" id="profileName">Пользователь</h2>
@@ -959,6 +973,7 @@
                         <button class="btn btn-primary" id="saveProfileBtn" style="flex:1;">Сохранить</button>
                     </div>
                 </div>
+            </div>
             </div>
 
            <!-- ===== ЗАДАНИЯ ===== -->
@@ -1533,6 +1548,34 @@
     </div>
 </div>
 
+<!-- ===== СТРАНИЦА: ГТО — ВЫБОР ПОЛА ===== -->
+<div id="page-gto-gender" class="page">
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">ТРЕНИРОВКА</h1>
+        </header>
+        <h3 class="section-title">Выберите пол</h3>
+        <div class="item-grid">
+            <div class="item-card" onclick="selectGTOGender('Женский')">
+                <div class="item-icon"><img src="images/woman.png"></div>
+                <div class="item-info">
+                    <h3 class="item-title">Женский</h3>
+                    <p class="item-desc">Нормативы для женщин</p>
+                </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="item-card" onclick="selectGTOGender('Мужской')">
+                <div class="item-icon"><img src="images/men.png"></div>
+                <div class="item-info">
+                    <h3 class="item-title">Мужской</h3>
+                    <p class="item-desc">Нормативы для мужчин</p>
+                </div>
+                <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </main>
+</div>
+
     <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
     <nav class="bottom-nav" id="bottomNav" style="display:none;">
         <div class="nav-items">
@@ -1818,7 +1861,7 @@
             
             <!-- Строка 4: Совместные тренировки -->
             <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Совместные трени</div>
+                <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
                 <div class="premium-table-cell premium-table-cell-center">Я + 1 Друг</div>
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Я + 3 Друга</div>
             </div>
@@ -1846,20 +1889,21 @@
             <div class="premium-price-value">90 ₽</div>
             <div class="premium-price-period">/ месяц</div>
         </div>
+        <div class="premium-price-period">1080 ₽ / год</div>
     </div>
     <div class="premium-price-card premium-price-card-yearly">
         <div class="premium-price-label">Годовой</div>
         <div class="premium-price-row">
-            <div class="premium-price-value">890 ₽</div>
-            <div class="premium-price-period">/ год</div>
+            <div class="premium-price-value">80 ₽</div>
+            <div class="premium-price-period">/ мес</div>
         </div>
-        <div class="premium-price-period">скидка 17,6% · 74 ₽/мес</div>
+        <div class="premium-price-period">скидка 11% · 960 ₽ / год</div>
     </div>
 </div>
 
 <!-- ★★★ СЧЕТЧИК PREMIUM ★★★ -->
 <div class="premium-people">
-    <span id="premiumCounter">PREMIUM оформили: 0 человек</span>
+    <span id="premiumCounter">PREMIUM оформили: 0 пользователей</span>
 </div>
         
         <!-- Кнопки -->

@@ -1,6 +1,6 @@
 /* ===================RESET И ОСНОВНЫЕ СТИЛИ ==================== */
 * {   
-    margin: 0;
+    margin: 0; 
     padding: 0;
     box-sizing: border-box;
 }
@@ -98,6 +98,7 @@ body {
 .section-block {
     background: var(--light);
     border-radius: 16px;
+    margin: 0 0 0.5rem 0;
 }
 
 .section-header {
@@ -891,7 +892,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 1rem 0rem 1rem 0rem;
 }
 
 .history-item {
@@ -2079,6 +2079,10 @@ body.theme-dark-mode .btn-submit-arrow {
     background: var(--accent);
 }
 
+.progress-dash-current {
+    background: var(--accent-light);
+}
+
 .session-bg {
     flex: 1;
     background: var(--light);
@@ -2778,7 +2782,7 @@ body.theme-dark-mode .tutorial-highlight .custom-workout .btn-primary {
 
 .premium-price-label {
     font-size: 0.7rem;
-    color: var(--slate);
+    color: var(--dark);
     font-weight: 600;
 }
 
@@ -4503,12 +4507,12 @@ body.theme-dark-mode .dayWorkoutsList {
     display: flex;
     justify-content: space-between;
     margin-top: 0.5rem;
-    padding: 0.3rem 0.5rem;
+    padding: 0.3rem 1rem;
     font-size: 0.6rem;
     color: var(--slate);
     background: var(--white);
-    border-radius: 6px;
-    border-top: 1px solid var(--light-grey);
+    border-radius: 8px;
+    border: 1px solid var(--light-grey);
 }
 
 /* ===== ТЁМНАЯ ТЕМА ===== */
