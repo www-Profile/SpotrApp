@@ -214,6 +214,11 @@ body {
     border: 1.5px solid var(--light-grey);
 }
 
+body.theme-dark-mode .item-card-light {
+    background: var(--bg-primary);
+    border: 1.5px solid var(--border-color);
+}
+
 .item-icon {
     width: 60px;
     height: 60px;
@@ -4881,8 +4886,8 @@ body.theme-dark-mode .muscle-modal-text strong {
 }
 
 .stats-banner-icon {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     background: var(--accent-light);
     color: var(--accent);
@@ -5014,7 +5019,6 @@ body.theme-dark-mode .community-achievement-percent {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
 }
 
 .community-goal-row {
@@ -5065,7 +5069,7 @@ body.theme-dark-mode .community-goal-icon {
 }
 
 .community-goal-progress {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--accent);
     white-space: nowrap;
@@ -5077,7 +5081,6 @@ body.theme-dark-mode .community-goal-icon {
     background: var(--light-grey);
     border-radius: 5px;
     overflow: hidden;
-    margin-bottom: 0.3rem;
 }
 
 .community-goal-fill {
