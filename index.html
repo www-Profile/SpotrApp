@@ -92,14 +92,6 @@
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
-                                <div class="item-card" data-category="ГТО" onclick="loadGTOSelectGender('ГТО')">
-                                    <div class="item-icon"><img src="images/WholeBody.png"></div>
-                                    <div class="item-info">
-                                        <h3 class="item-title">ГТО</h3>
-                                        <p class="item-desc">Нормативы · Ступени · Зачёт</p>
-                                    </div>
-                                    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,14 +137,6 @@
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
-                                <div class="item-card" data-category="Растяжка позвоночника">
-                                    <div class="item-icon"><img src="images/stretching.png"></div>
-                                    <div class="item-info">
-                                        <h3 class="item-title">Растяжка позвоночника</h3>
-                                        <p class="item-desc">Вис · Наклоны · Скручивания</p>
-                                    </div>
-                                    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -166,7 +150,7 @@
                         </div>
                         <div class="section-body">
                             <div class="item-grid" id="catalogGridPremium">
-                                <div class="item-card premium-card" data-category="Кроссфит" onclick="checkPremiumAndNavigate('Кроссфит')">
+                                <div class="item-card premium-card" data-category="Кроссфит">
                                     <div class="item-icon"><img src="images/crossfit.png"></div>
                                     <div class="item-info">
                                         <h3 class="item-title">Кроссфит</h3>
@@ -174,7 +158,15 @@
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
-                                <div class="item-card premium-card" data-category="Мужская сила" onclick="checkPremiumAndNavigate('Мужская сила')">
+                                <div class="item-card" data-category="ГТО">
+                                    <div class="item-icon"><img src="images/WholeBody.png"></div>
+                                    <div class="item-info">
+                                        <h3 class="item-title">ГТО</h3>
+                                        <p class="item-desc">Нормативы · Ступени · Зачёт</p>
+                                    </div>
+                                    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="item-card premium-card" data-category="Мужская сила">
                                     <div class="item-icon"><img src="images/men.png"></div>
                                     <div class="item-info">
                                         <h3 class="item-title">Мужская сила</h3>
@@ -182,11 +174,19 @@
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
-                                <div class="item-card premium-card" data-category="Женское счастье" onclick="checkPremiumAndNavigate('Женское счастье')">
+                                <div class="item-card premium-card" data-category="Женское счастье">
                                     <div class="item-icon"><img src="images/woman.png"></div>
                                     <div class="item-info">
                                         <h3 class="item-title">Женское счастье</h3>
                                         <p class="item-desc">Грация · Тонус · Гармония</p>
+                                    </div>
+                                    <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="item-card premium-card" data-category="Растяжка позвоночника">
+                                    <div class="item-icon"><img src="images/stretching.png"></div>
+                                    <div class="item-info">
+                                        <h3 class="item-title">Растяжка позвоночника</h3>
+                                        <p class="item-desc">Вис · Наклоны · Скручивания</p>
                                     </div>
                                     <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
@@ -657,6 +657,7 @@
             <!-- Мировая статистика -->
             <div id="stats-world" class="stats-tab-content">
                 <div id="worldStatsBlocksContainer">
+
 <!-- Блок: Глобальные агрегаты -->
         <div class="stats-summary" data-stat-id="cards" id="globalStatsContainer">
             <div class="stat-card" data-stat-id="minutes">
@@ -672,19 +673,53 @@
                 <div class="stat-number" id="globalTotalExercises">—</div>
             </div>
         </div>
-    <!-- Плашка — отдельный сортируемый блок -->
-     <div class="section-block">
-    <div class="stats-banner" data-stat-id="users">
 
+                   <!-- Пляшки -->          
+    <div class="stats-banner">
+        <div class="stats-banner-icon" style="font-size: 1.5rem;"><i class="fa-solid fa-earth-americas"></i></div>
+        <div class="stats-banner-text">
+            <span class="stats-banner-title">SportApp - это больше, чем приложение</span>
+            <span class="stats-banner-value">Ты часть сообщества, которое становится сильнее каждый день.</span>
+        </div>
+    </div>
+
+    <div class="stats-banner" data-stat-id="users">
         <div class="stats-banner-icon">
             <i class="fa-solid fa-users"></i>
         </div>
         <div class="stats-banner-text">
             <span class="stats-banner-title">В SportApp уже тренируются</span>
-            <span class="stats-banner-value"><span id="globalTotalUsers">—</span> пользователей</span>
+            <span class="stats-banner-value"><span id="globalTotalUsers">—</span> пользователей.</span>
         </div>
     </div>
+
+<!-- Блок: Общая цель сообщества -->
+<div class="section-block" data-block-id="community-goal" style="cursor: pointer;">
+    <div class="section-header">
+        <h2 class="section-title">Общая цель сообщества</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
     </div>
+    <div class="section-body" style="box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);" onclick="openCommunityGoalModal()">
+        <div class="community-goal">
+            <div class="community-goal-row">
+                <div class="community-goal-icon">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+                <div class="community-goal-content">
+                    <div class="community-goal-text">
+                        <span class="community-goal-title" id="communityGoalTitle"></span>
+                        <span class="community-goal-progress" id="communityGoalProgress">0 / 50</span>
+                    </div>
+                    <div class="community-goal-bar">
+                        <div class="community-goal-fill" id="communityGoalFill" style="width:0%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="community-goal-hint">Награды получат только ТОП-10 пользователей.</div>
+        </div>
+    </div>
+</div>
 
     <!-- Блок: Достижения сообщества -->
 <div class="section-block" data-block-id="community-achievements">
@@ -835,7 +870,7 @@
         <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
     </div>
     <!-- ★★★ ДОБАВЛЯЕМ onclick ★★★ -->
-    <div class="section-body" onclick="openMuscleGroupsModal('weeklyLoad')">
+    <div class="section-body" style="box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);" onclick="openMuscleGroupsModal('weeklyLoad')">
         <div class="weekly-load">
         <!-- Навигация по месяцам -->
         <div class="weekly-load-naw">
@@ -1219,7 +1254,7 @@
         <!-- ★★★ ВКЛАДКА: ДРУЗЬЯ ★★★ -->
         <div id="profileTab-friends" class="profile-tab-content">
             <!-- Блок 1: Поиск -->
-            <div class="section-block" data-block-id="friends-search">
+            <div class="section-block" style="box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);" data-block-id="friends-search">
                 <div class="friends-list-block">
                     <div class="search-container">
                         <input type="text" id="searchInput" class="search-input" placeholder="Поиск по имени..." />
@@ -1585,6 +1620,27 @@
         </div>
     </nav>
 
+<!-- ===== МОДАЛКА: ОБЩАЯ ЦЕЛЬ СООБЩЕСТВА ===== -->
+<div id="communityGoalModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 480px; width: 95%; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-title">Общая цель сообщества</div>
+
+<p class="modal-text" style="margin-bottom: 0.5rem;">Как только сообщество достигнет цели - топ-10 вкладчиков получат награду. Награда: <span id="communityGoalRewardText">+? XP</span></p>
+
+        <!-- ★★★ РЕЙТИНГ ТОП-10 ★★★ -->
+        <div class="section-title" style="text-align:left; margin-bottom:0.3rem;">Топ-10 вкладчиков:</div>
+        <div class="scroll-wrapper" style="max-height: 40vh; margin-bottom: 1rem; border-radius: 16px;">
+            <div id="communityGoalTop" class="item-grid"></div>
+        </div>
+
+        <p class="modal-text">Тренируйтесь и приближайте общую цель вместе с другими!</p>
+
+        <button class="btn btn-primary" onclick="closeModal('communityGoalModal')">
+            Понятно
+        </button>
+    </div>
+</div>
+
     <!-- ===== МОДАЛКА: ИНВЕНТАРЬ ===== -->
 <div id="inventoryModal" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-width: 420px; width: 95%;">
@@ -1743,7 +1799,7 @@
             </div>
         </div>
         <p class="modal-text" style="margin-bottom: 0.5rem;">
-            Это основная статистика, по которой работает рейнтинг пользователей, 
+            Это основная статистика, по которой работает рейтинг пользователей, 
             с помощью него вы можете соревноваться с друзьями!
             Продолжайте тренироваться, чтобы достигать новых вершин!
         </p>
@@ -2104,8 +2160,8 @@
         
         <!-- ★★★ КИЛОГРАММ С КНОПКАМИ ★★★ -->
         <div class="form-group" id="universalWeightGroup" style="text-align:left;">
-            <label class="form-label">Килограммы</label>
-            <div class="weight-picker" style="display:flex; align-items:center; gap:0.5rem; justify-content:center;">
+            <label class="form-label">Килограммы</label><label class="form-label-small">две гантели или одна штанга</label>
+            <div class="weight-picker" style="display:flex; align-items:center; gap:0.5rem; justify-content:center; margin-top: 0.5rem;">
                 <button type="button" class="weight-btn" onclick="adjustUniversalWeight(-0.5)">-0.5</button>
                 <span id="exerciseUniversalWeightDisplay" class="weight-text">0</span>
                 <button type="button" class="weight-btn" onclick="adjustUniversalWeight(0.5)">+0.5</button>
