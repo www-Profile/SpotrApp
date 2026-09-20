@@ -1136,6 +1136,11 @@ body.theme-dark-mode .item-card-light {
     padding: 0.5rem 1rem 1rem;
     margin: 0.2rem 0 1rem 0;
     cursor: pointer;
+    border: 1.5px solid var(--light-grey);
+}
+
+body.theme-dark-mode .level-block {
+    border: 1.5px solid var(--border-color);
 }
 
 .level-header {
@@ -1684,7 +1689,7 @@ body.theme-dark-mode .item-card-light {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    background: var(--white);
+    background: none;
     border-radius: 16px;
 }
 
@@ -2005,7 +2010,7 @@ body.theme-dark-mode .btn-submit-arrow {
 /* ===================РЕДАКТИРОВАНИЕ СТРАНИЦ ==================== */
 .editing .section-block {
     border: 2px dashed transparent;
-    padding: 1rem 1rem 0.6rem;
+    padding: 0.5rem;
 }
 
 .editing .section-block:hover {
@@ -3249,6 +3254,11 @@ textarea.error {
     background: var(--light);
     padding: 0.5rem;
     border-radius: 12px;
+    border:1px solid var(--light-grey);
+}
+
+body.theme-dark-mode .rules-list {
+    border:1px solid var(--border-color);
 }
 
 .rule-item {
@@ -3502,11 +3512,6 @@ body.theme-dark-mode .item-icon span {
     color: var(--accent);
 }
 
-/* ★★★ БЛОК ВЫБОРА ЗНАЧКА ★★★ */
-body.theme-dark-mode .icon-picker {
-    background: var(--bg-secondary);
-}
-
 body.theme-dark-mode .icon-option {
     background: var(--bg-secondary);
     border-color: var(--border-color);
@@ -3514,7 +3519,6 @@ body.theme-dark-mode .icon-option {
 
 body.theme-dark-mode .icon-option-active {
     border-color: var(--accent);
-    background: var(--bg-accent-light);
 }
 
 body.theme-dark-mode .icon-option img {
@@ -4880,7 +4884,6 @@ body.theme-dark-mode .muscle-modal-text strong {
     padding: 0.5rem;
     border-radius: 10px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    border-left: 3px solid var(--accent);
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
 }
@@ -5019,6 +5022,7 @@ body.theme-dark-mode .community-achievement-percent {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
+    gap: 0.1rem;
 }
 
 .community-goal-row {
@@ -5063,7 +5067,7 @@ body.theme-dark-mode .community-goal-icon {
 }
 
 .community-goal-title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--dark);
 }
@@ -5111,4 +5115,53 @@ body.theme-dark-mode .community-goal-bar {
 
 #communityGoalTop .item-info {
     text-align: left;
+}
+
+/* =================== СЕРИЯ ТРЕНИРОВОК =================== */
+.profile-card {
+    position: relative;   /* ← ОБЯЗАТЕЛЬНО для позиционирования */
+}
+
+.profile-streak {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    z-index: 2;
+}
+
+.profile-streak i {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+/* Если серия = 0 — приглушённый цвет */
+.profile-streak.zero {
+    color: var(--light-grey);
+}
+
+.profile-streak.zero i {
+    color: var(--light-grey);
+}
+
+/* Тёмная тема */
+body.theme-dark-mode .profile-streak {
+    color: var(--accent);
+}
+
+body.theme-dark-mode .profile-streak i {
+    color: var(--accent);
+}
+
+body.theme-dark-mode .profile-streak.zero {
+    color: var(--border-color);
+}
+
+body.theme-dark-mode .profile-streak.zero i {
+    color: var(--border-color);
 }

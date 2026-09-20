@@ -921,6 +921,9 @@
         <div id="profileTab-my" class="profile-tab-content profile-tab-content-active">
             <div class="section-block">
             <div class="profile-card">
+                <div class="profile-streak" id="profileStreak" onclick="openStreakModal()">
+                    <span id="profileStreakValue">0</span><i class="fa-solid fa-fire"></i>
+                </div>
                 <div class="profile-avatar"><span id="profileInitials">А</span></div>
                 <h2 class="profile-name" id="profileName">Пользователь</h2>
 
@@ -1609,6 +1612,28 @@
             <button class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i></button>
         </div>
     </nav>
+
+    <!-- ===== МОДАЛКА: СЕРИЯ ТРЕНИРОВОК ===== -->
+<div id="streakModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 420px; width: 95%;">
+        <div class="modal-title">Серия тренировок</div>
+
+<div style="text-align: center; margin: 1rem 0; display: flex; align-items: center; justify-content: center; gap: 0.8rem;">
+    <div style="font-size: 3rem; font-weight: 700; color: var(--accent); line-height: 1;" id="streakModalValue">0</div>
+    <div style="font-size: 3rem; color: var(--accent); line-height: 1;">
+        <i class="fa-solid fa-fire"></i>
+    </div>
+</div>
+
+        <p class="modal-text" id="streakModalText1">Тренируйтесь каждый день, чтобы увеличить серию.</p>
+        <p class="modal-text" id="streakModalText2">Если пропустить день — серия сбросится.</p>
+        <p class="modal-text" id="streakModalText3">За длинные серии вы получаете достижения и XP.</p>
+
+        <button class="btn btn-primary" onclick="closeModal('streakModal')">
+            Понятно
+        </button>
+    </div>
+</div>
 
 <!-- ===== МОДАЛКА: ОБЩАЯ ЦЕЛЬ СООБЩЕСТВА ===== -->
 <div id="communityGoalModal" class="modal-overlay" style="display:none;">
@@ -2299,7 +2324,7 @@
             </p>
 
             <div style="text-align: left; margin-bottom: 1rem;">
-                <p class="item-title" style="margin-left: 0.5rem;">Я обещаю:</p>
+                <p class="section-title" style="margin-left: 0.5rem;">Я обещаю:</p>
                 <div class="rules-list">
                     <label class="rule-item">
                         <input type="checkbox" class="rule-checkbox" data-rule="1">

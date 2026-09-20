@@ -839,64 +839,11 @@ const DISPLAY_CATEGORIES = ['Руки', 'Плечи', 'Пресс', 'Грудь'
 
 // =================== ПОЛУЧЕНИЕ ИКОНКИ ТРЕНИРОВКИ ===================
 function getWorkoutIcon(workout) {
-    // 1. Если у тренировки есть icon - используем его
+    // Если у тренировки есть icon — возвращаем его
     if (workout.icon) return workout.icon;
     
-    // 2. Если есть категория - определяем по ней
-    if (workout.category) {
-const categoryToIcon = {
-    'Руки': 'bodybuilding',
-    'Плечи': 'shoulder',
-    'Пресс': 'press',
-    'Грудь': 'breast',
-    'Спина': 'back',
-    'Ноги': 'legs',
-    'Всё тело': 'WholeBody',
-    'Кардио': 'cardio',
-    'Гибкость': 'stretching',
-    'Зарядка': 'charging',
-    'Пилатес': 'Pilates',
-    'Кроссфит': 'crossfit',
-    'Мужская сила': 'men',
-    'Женское счастье': 'woman',
-    'Растяжка позвоночника': 'stretching', // ← ДОБАВИТЬ
-    'ГТО': 'WholeBody'  // ← ДОБАВИТЬ
-};
-        if (categoryToIcon[workout.category]) {
-            return categoryToIcon[workout.category];
-        }
-    }
-    
-    // 3. По названию
-    const title = workout.title || '';
-const titleToIcon = {
-    'Руки': 'bodybuilding',
-    'Плечи': 'shoulder',
-    'Пресс': 'press',
-    'Грудь': 'breast',
-    'Спина': 'back',
-    'Ноги': 'legs',
-    'Всё тело': 'WholeBody',
-    'Кардио': 'cardio',
-    'Растяжка': 'stretching',
-    'Зарядка': 'charging',
-    'Пилатес': 'Pilates',
-    'Кроссфит': 'crossfit',
-    'Мужская сила': 'men',
-    'Женское счастье': 'woman',
-    'Растяжка позвоночника': 'stretching', // ← ДОБАВИТЬ
-    'ГТО': 'WholeBody',  // ← ДОБАВИТЬ
-};
-    for (const [key, icon] of Object.entries(titleToIcon)) {
-        if (title.includes(key)) return icon;
-    }
-    
-    // 4. По первому упражнению (как fallback)
-    if (workout.exercises && workout.exercises.length > 0) {
-        return getExerciseIcon(workout.exercises[0].name);
-    }
-    
-    return 'bodybuilding';
+    // Если нет — возвращаем null (ничего не показываем)
+    return null;
 }
 
 // ===================ЕДИНАЯ СИСТЕМА УПРАВЛЕНИЯ ВКЛАДКАМИ ===================
@@ -1578,7 +1525,7 @@ function startCoopTraining(data) {
     sessionSeconds = 0;
     sessionWorkoutTitle = title + ' (совместно)';
     sessionCategory = category;
-    sessionWorkoutIcon = 'bodybuilding';
+    sessionWorkoutIcon = null;
 
     closeModal('sessionExitModal');
     window.navigateTo('training-session');
@@ -2485,12 +2432,12 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
         console.log('📝 [coopFinishDoneBtn] Подготовка данных тренировки');
         const workoutExercises = sessionExercises.map((ex, index) => ({
             ...ex,
-            icon: ex.icon || 'bodybuilding',
+            icon: ex.icon || null,
             completed: sessionCompleted.has(index)
         }));
         console.log('🔥 [coopFinishDoneBtn] workoutExercises.length:', workoutExercises.length);
 
-        const workoutIcon = sessionWorkoutIcon || 'bodybuilding';
+        const workoutIcon = sessionWorkoutIcon || null;
         const finalCategory = sessionCategory || 'Без категории';
         const xpEarned = calculateWorkoutXp(workoutExercises.filter((_, index) => sessionCompleted.has(index)));
         console.log('🔥 [coopFinishDoneBtn] workoutIcon:', workoutIcon);
@@ -2578,7 +2525,7 @@ await updateAchievementsAfterWorkout();
     sessionSeconds = 0;
     sessionWorkoutTitle = '';
     sessionCategory = '';
-    sessionWorkoutIcon = 'bodybuilding';
+    sessionWorkoutIcon = null;
     currentSessionId = null;
     isHost = false;
     sessionData = null;
@@ -3198,7 +3145,7 @@ function addPendingWorkout(workoutData) {
     const pending = getPendingWorkouts();
     workoutData._localId = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
     if (!workoutData.category) workoutData.category = 'Без категории';
-    if (!workoutData.icon) workoutData.icon = 'bodybuilding'; // ← ДОБАВИТЬ
+workoutData.icon = workoutData.icon || null;
     pending.push(workoutData);
     savePendingWorkouts(pending);
 }
@@ -3228,7 +3175,7 @@ const result = await saveWorkoutToFirestore(user.uid, {
     exercises: workout.exercises,
     xpEarned: workout.xpEarned,
     category: workout.category || 'Без категории',
-    icon: workout.icon || 'bodybuilding' // ← ДОБАВИТЬ
+    icon: workout.icon || null
 });
             if (result.success) {
                 const profileResult = await getUserProfile(user.uid);
@@ -3515,7 +3462,7 @@ async function saveWorkoutToFirestore(userId, workoutData) {
             exercises: workoutData.exercises || [],
             xpEarned: workoutData.xpEarned || 0,
             category: workoutData.category || 'Без категории',
-            icon: workoutData.icon || 'bodybuilding',  // ← ДОБАВИТЬ
+            icon: workoutData.icon || null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -4027,7 +3974,7 @@ if (exercisesData['Особые'] && exercisesData['Особые']['ГТО'] && 
         'Мужская сила': 'men', 'Женское счастье': 'woman',
         'Растяжка позвоночника': 'stretching', 'ГТО': 'bodybuilding'
     };
-    const icon = CATEGORY_ICON_MAP[category] || 'bodybuilding';
+    const icon = CATEGORY_ICON_MAP[category] || null;
 
     const container = document.getElementById('levelsContainer');
 
@@ -4071,7 +4018,7 @@ if (category === 'ГТО' && params.gtoGender) {
                 isPremium: ${isPremium},
                 gtoGender: '${params.gtoGender || ''}'
             })">
-                <div class="item-icon"><img src="images/${icon}.png"></div>
+                <div class="item-icon">${icon ? `<img src="images/${icon}.png">` : ''}</div>
                 <div class="item-info">
                     <h3 class="item-title">${displayName}</h3>
                     <p class="item-desc">${levelDescs[index] || ''} · ${count} упражнений</p>
@@ -4131,7 +4078,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
 
     let exercises = [];
     let displayTitle = '';
-    let workoutIcon = 'bodybuilding';
+    let workoutIcon = null;
 
     if (isCustom && id) {
         const workout = getWorkoutById(id);
@@ -4139,7 +4086,7 @@ function loadWorkoutDetail(category, level, isCustom, id, parentCategory, isPrem
             exercises = workout.exercises || [];
             displayTitle = workout.title;
             currentCategory = workout.title;
-            workoutIcon = workout.icon || 'bodybuilding';
+            workoutIcon = workout.icon || null;
         } else {
             console.warn('⚠️ Тренировка не найдена по id:', id);
             showToast('⚠️ Тренировка не найдена');
@@ -4231,7 +4178,7 @@ if (category === 'ГТО' && gtoGender && exercisesData['Особые'] && exerc
             'Растяжка позвоночника': 'stretching',
             'ГТО': 'WholeBody'
         };
-        workoutIcon = CATEGORY_ICON_MAP[category] || 'bodybuilding';
+        workoutIcon = CATEGORY_ICON_MAP[category] || null;
     }
 
     _quickEditExercises = exercises;
@@ -4333,7 +4280,7 @@ if (category === 'ГТО' && gtoGender && exercisesData['Особые'] && exerc
                 const workout = getWorkoutById(currentWorkoutId);
                 if (workout) {
                     sessionExercises = workout.exercises || [];
-                    finalWorkoutIcon = workout.icon || 'bodybuilding';
+                    finalWorkoutIcon = workout.icon || null;
                     workoutId = currentWorkoutId;
                     workoutTitle = workout.title || currentCategory;
                 }
@@ -4352,7 +4299,7 @@ if (category === 'ГТО' && gtoGender && exercisesData['Особые'] && exerc
             }
 
             if (currentIsCustom && currentWorkoutId) {
-                resolvedCategory = ICON_TO_CATEGORY[finalWorkoutIcon] || 'Всё тело';
+                resolvedCategory = finalWorkoutIcon ? (ICON_TO_CATEGORY[finalWorkoutIcon] || 'Всё тело') : 'Без категории';
             } else if (category === 'ГТО') {
                 // ★★★ ГТО — относим к категории "ГТО" ★★★
                 resolvedCategory = 'ГТО';
@@ -4532,7 +4479,7 @@ let sessionTimerInterval = null;
 let sessionSeconds = 0;
 let sessionWorkoutTitle = '';
 let sessionCategory = '';
-let sessionWorkoutIcon = 'bodybuilding'; // ← ДОБАВИТЬ
+let sessionWorkoutIcon = null;
 
 function startTrainingSession(exercises, title, category, workoutIcon) {
     // Сброс совместных данных
@@ -4567,7 +4514,7 @@ function startTrainingSession(exercises, title, category, workoutIcon) {
     sessionSeconds = 0;
     sessionWorkoutTitle = title;
     sessionCategory = category || 'Без категории';
-    sessionWorkoutIcon = workoutIcon || 'bodybuilding';
+    sessionWorkoutIcon = workoutIcon || null;
 
     // Загружаем время отдыха
     let savedRestTime = 30;
@@ -5664,7 +5611,7 @@ function loadEditPage(category, isCustom, id, level, exercises) {
                 }
             }
             if (!iconToSet) {
-                iconToSet = defaultIconMap[category] || 'bodybuilding';
+                iconToSet = defaultIconMap[category] || null;
             }
         }
         
@@ -5830,20 +5777,6 @@ function renderEditExercisesSilent() {
         return;
     }
     
-    let trainingIcon = 'bodybuilding';
-    if (editIsCustom || editWorkoutId === 'new') {
-        const selectedIcon = document.querySelector('.icon-option-active');
-        if (selectedIcon) trainingIcon = selectedIcon.dataset.icon;
-    } else {
-        const iconMap = {
-            'Руки': 'bodybuilding', 'Плечи': 'shoulder', 'Пресс': 'press',
-            'Грудь': 'breast', 'Спина': 'back', 'Ноги': 'legs',
-            'Всё тело': 'WholeBody', 'Кардио': 'cardio', 'Растяжка': 'stretching',
-            'Зарядка': 'charging', 'Пилатес': 'Pilates'
-        };
-        trainingIcon = iconMap[editCategory] || 'bodybuilding';
-    }
-    
     const exercisesHtml = editExercises.map((ex, index) => {
         const icon = ex.icon || getExerciseIcon(ex.name);
         let detailsText = `${formatSets(ex.sets, true)} × ${formatReps(ex.reps, true)}`;
@@ -5852,7 +5785,7 @@ function renderEditExercisesSilent() {
             <div class="edit-exercise-item" data-index="${index}" data-id="${index}" style="cursor: grab; border: 2px dashed transparent;">
                 <div class="edit-drag-handle" touch-action="none"><span>☰</span></div>
                 <div class="item-icon">
-                    <img src="images/${icon}.png" class="edit-exercise-icon">
+                    ${icon ? `<img src="images/${icon}.png" class="edit-exercise-icon">` : ''}
                 </div>
                 <div class="edit-exercise-info">
                     <h4 class="edit-exercise-name">${ex.name}</h4>
@@ -6006,7 +5939,7 @@ document.getElementById('saveEditBtn')?.addEventListener('click', function() {
     const title = nameInput ? nameInput.value.trim() : (editCategory || 'Моя тренировка');
     if (!title) { showToast('⚠️ Введите название тренировки'); return; }
     const selectedIcon = document.querySelector('.icon-option-active');
-    const icon = selectedIcon ? selectedIcon.dataset.icon : 'bodybuilding';
+    const icon = selectedIcon ? selectedIcon.dataset.icon : null;
     
     // ★★★ ПОЛУЧАЕМ РЕЗУЛЬТАТ С ID ★★★
     const result = saveWorkoutData(editCategory, editLevel, editIsCustom, editWorkoutId, title, icon, editExercises);
@@ -6196,7 +6129,7 @@ function renderMyWorkouts() {
     }
     container.innerHTML = workouts.map(w => `
         <div class="item-card" data-workout-id="${w._id}" onclick="handleWorkoutClick('${w._id}', event)">
-            <div class="item-icon"><img src="images/${w.icon || 'bodybuilding'}.png"></div>
+            ${w.icon ? `<div class="item-icon"><img src="images/${w.icon}.png"></div>` : ''}
             <div class="item-info">
                 <h3 class="item-title">${w.title}</h3>
                 <p class="item-desc">${w.exercises?.length || 0} упражнений</p>
@@ -6247,10 +6180,10 @@ async function loadStats() {
     if (!result.success) return;
     
     // ★★★ ИСКЛЮЧАЕМ ЗАРЯДКУ И ОДИНОЧНЫЕ УПРАЖНЕНИЯ (ДЛЯ ТРЕНИРОВОК) ★★★
-    const workouts = result.data.filter(w => {
-        const icon = getWorkoutIcon(w);
-        return icon !== 'charging' && !w.isSingle;
-    });
+        const workouts = result.data.filter(w => {
+            const icon = getWorkoutIcon(w);
+            return icon && icon !== 'charging' && !w.isSingle;
+        });
 
     // ★★★ ДЛЯ ПОДСЧЁТА УПРАЖНЕНИЙ БЕРЁМ ВСЕ, ВКЛЮЧАЯ ОДИНОЧНЫЕ ★★★
     const allWorkouts = result.data.filter(w => getWorkoutIcon(w) !== 'charging');
@@ -6299,13 +6232,14 @@ async function loadStats() {
 
     // === ТРЕНИРОВКИ ПО КАТЕГОРИЯМ (ТОЛЬКО ПО ИКОНКАМ) ===
     const categoryCounts = {};
-    workouts.forEach(w => {
-        const icon = getWorkoutIcon(w);
-        const category = getCategoryByIcon(icon);
-        if (category && category !== 'Зарядка') {
-            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-        }
-    });
+workouts.forEach(w => {
+    const icon = getWorkoutIcon(w);
+    if (!icon) return;
+    const category = getCategoryByIcon(icon);
+    if (category && category !== 'Зарядка') {
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    }
+});
 
     const categoriesContainer = document.getElementById('categoriesStats');
     if (categoriesContainer) {
@@ -6381,7 +6315,10 @@ async function renderCalendar(month, year) {
         const result = await getUserWorkoutsFromFirestore(user.uid);
         if (result.success) {
             workoutDates = result.data
-                .filter(w => !(w.title || '').includes('Зарядка'))
+                .filter(w => {
+                    const icon = getWorkoutIcon(w);
+                    return icon && icon !== 'charging';
+                })
                 .map(w => new Date(w.date));
         }
     }
@@ -6519,6 +6456,9 @@ if (currentLevel.id > prevLevel) {
     document.getElementById('profileLevelBlock')?.addEventListener('click', openLevelInfoModal);
     
 await loadInventoryFromProfile();
+
+    // ★★★ ОБНОВЛЯЕМ СЕРИЮ ★★★
+    await updateProfileStreak();
 
     try {
         const results = await checkAllAchievements(user.uid);
@@ -8210,7 +8150,7 @@ function getAllExercises() {
     return filtered.map(ex => ({
         ...ex,
         // Если у упражнения нет icon - берём по категории
-        icon: ex.icon || categoryIconMap[ex.category] || 'bodybuilding',
+        icon: ex.icon || categoryIconMap[ex.category] || null,
         category: ex.category || 'Без категории',
         level: ex.level || '1 LVL'
     }));
@@ -8352,7 +8292,7 @@ container.innerHTML = filtered.map(ex => {
     
     return `<div class="item-card ${disabled ? 'premium-locked' : ''}" onclick="${disabled ? 'openPremiumModal()' : `addExerciseFromList('${ex.name}', ${ex.sets}, '${ex.reps}')`}" style="${disabled ? 'opacity:0.6;' : ''}">
         <div class="item-icon" style="width:44px;height:44px;min-width:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;${disabled ? 'background:#E2E8F0;' : ''}">
-            <img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;${disabled ? 'filter:grayscale(1);' : ''}">
+            ${icon ? `<img src="images/${icon}.png" style="width:28px;height:28px;object-fit:contain;${disabled ? 'filter:grayscale(1);' : ''}">` : ''}
         </div>
         <div class="item-info">
             <h3 class="item-title">${ex.name}</h3>
@@ -8401,7 +8341,7 @@ function addExerciseFromList(name, sets, reps) {
     const repsValue = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
     const repsDisplay = isSeconds ? `${repsValue} секунд` : `${repsValue}`;
     
-    let icon = 'bodybuilding';
+    let icon = null;
     let weight = 0; // ← ДОБАВЛЯЕМ ПЕРЕМЕННУЮ ДЛЯ ВЕСА
     
     if (typeof EXERCISES_CATALOG !== 'undefined') {
@@ -8427,7 +8367,7 @@ function addExerciseFromList(name, sets, reps) {
                 'Мужская сила': 'men',
                 'Женское счастье': 'woman'
             };
-            icon = categoryIconMap[found.category] || 'bodybuilding';
+            icon = categoryIconMap[found.category] || null;
             weight = found.weight || 0; // ← ПОЛУЧАЕМ ВЕС ИЗ КАТАЛОГА
         }
     }
@@ -8454,7 +8394,7 @@ function addExerciseFromList(name, sets, reps) {
         
         const selectedIcon = document.querySelector('.icon-option-active');
         const iconToSave = selectedIcon ? selectedIcon.dataset.icon : 
-                          (localStorage.getItem('temp_edit_icon') || 'bodybuilding');
+                          (localStorage.getItem('temp_edit_icon') || null);
         localStorage.setItem('temp_edit_icon', iconToSave);
     }
 
@@ -10287,7 +10227,7 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
             sessionSeconds = 0;
             sessionWorkoutTitle = '';
             sessionCategory = '';
-            sessionWorkoutIcon = 'bodybuilding';
+            sessionWorkoutIcon = null;
             
             window.navigateTo('workouts');
             return;
@@ -10329,11 +10269,11 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
 
         const workoutExercises = sessionExercises.map((ex, index) => ({
             ...ex,
-            icon: ex.icon || 'bodybuilding',
+            icon: ex.icon || null,
             completed: sessionCompleted.has(index)
         }));
 
-        const workoutIcon = sessionWorkoutIcon || 'bodybuilding';
+        const workoutIcon = sessionWorkoutIcon || null;
 
         const workoutData = {
             title: sessionWorkoutTitle || 'Тренировка',
@@ -10371,7 +10311,7 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
             sessionSeconds = 0;
             sessionWorkoutTitle = '';
             sessionCategory = '';
-            sessionWorkoutIcon = 'bodybuilding';
+            sessionWorkoutIcon = null;
 
             // ★★★ ПЕРЕХОДИМ НА ТРЕНИРОВКИ ★★★
             window.navigateTo('workouts');
@@ -10434,12 +10374,12 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
 
         const workoutExercises = sessionExercises.map((ex, index) => ({
             ...ex,
-            icon: ex.icon || 'bodybuilding',
+            icon: ex.icon || null,
             completed: sessionCompleted.has(index)
         }));
 
         // ИКОНКА ТРЕНИРОВКИ — ИСПОЛЬЗУЕМ СОХРАНЁННУЮ В СЕССИИ
-        const workoutIcon = sessionWorkoutIcon || 'bodybuilding';
+        const workoutIcon = sessionWorkoutIcon || null;
 
         const workoutData = {
             title: sessionWorkoutTitle || 'Тренировка',
@@ -10464,6 +10404,7 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
                 }
                 showToast('💾 Тренировка сохранена');
                 await updateAchievementsAfterWorkout();
+                await updateProfileStreak();
             } else {
                 addPendingWorkout(workoutData);
                 showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
@@ -10478,7 +10419,7 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
         sessionSeconds = 0;
         sessionWorkoutTitle = '';
         sessionCategory = '';
-        sessionWorkoutIcon = 'bodybuilding';
+        sessionWorkoutIcon = null;
         
         window.navigateTo('workouts');
         
@@ -10492,7 +10433,6 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
     }
 });
 
-// =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
 // =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================
 function getExerciseIcon(exerciseName) {
     // ★★★ СНАЧАЛА ИЩЕМ В ОТДЕЛЬНОМ КАТАЛОГЕ ★★★
@@ -10546,15 +10486,16 @@ function getExerciseIcon(exerciseName) {
                 'Мужская сила': 'men',
                 'Женское счастье': 'woman'
             };
-            return categoryIconMap[found.category] || 'bodybuilding';
+                        return categoryIconMap[found.category] || null;
         }
     }
     
-    return 'bodybuilding';
+    return null;
 }
 
 // =================== ФУНКЦИЯ ПОЛУЧЕНИЯ КАТЕГОРИИ ПО ИКОНКЕ ===================
 function getCategoryByIcon(icon) {
+    if (!icon) return null;
     return ICON_TO_CATEGORY[icon] || 'Без категории';
 }
 
@@ -11401,7 +11342,10 @@ const ACHIEVEMENTS_CONFIG = [
         name: 'Марафонец',
         description: 'Выполнить 100 тренировок',  // ← ИЗМЕНЕНО (было 50)
         check: async (userId, profile, workouts) => {
-            const filtered = workouts.filter(w => getWorkoutIcon(w) !== 'charging');
+            const filtered = workouts.filter(w => {
+                const icon = getWorkoutIcon(w);
+                return icon && icon !== 'charging';
+            });
             return filtered.length >= 100;  // ← ИЗМЕНЕНО (было 50)
         }
     },
@@ -13104,12 +13048,6 @@ function renderWeeklyLoadChart(weeklyData, weeks) {
     const maxLoad = Math.max(0, ...values);
     const chartHeight = 180;
 
-    // ★★★ ОПРЕДЕЛЯЕМ ТЕМУ ★★★
-    const isDarkMode = document.body.classList.contains('theme-dark-mode') ||
-                      localStorage.getItem('appThemeMode') === 'dark' ||
-                      (localStorage.getItem('appThemeMode') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-
     let html = `<div style="position:relative; padding:0.5rem;  background-image: 
         linear-gradient(rgba(100, 100, 100, 0.1) 1px, transparent 1px),
         linear-gradient(90deg, rgba(100, 100, 100, 0.1) 1px, transparent 1px);
@@ -13125,17 +13063,15 @@ function renderWeeklyLoadChart(weeklyData, weeks) {
         const percentDisplay = Math.round((load / maxLoad) * 100);
         const showInside = barHeight > 30;
 
-        html += `
-            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
-                <span style="font-size:0.7rem; font-weight:700; color:var(--accent);">${load > 0 ? load : ''}</span>
-                <div style="width:100%; height:${barHeight}px; background:var(--accent); border-radius:6px 6px 0 0; min-height:4px; position:relative; border:1px solid var(--accent); border-bottom:none;">
-                    <div style="position:absolute; bottom:0; left:0; right:0; height:${(load / maxLoad) * 100}%; background:var(--accent); border-radius:4px 4px 0 0; transition:height 0.3s ease; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
-                        ${load > 0 && showInside ? `<span style="font-size:0.6rem; font-weight:700; color:var(--white);">${percentDisplay}%</span>` : ''}
-                    </div>
-                </div>
-                <span style="font-size:0.55rem; color:var(--slate); text-align:center; line-height:1.2;">${label}</span>
-            </div>
-        `;
+html += `
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.2rem; height:100%; justify-content:flex-end;">
+        <span style="font-size:0.7rem; font-weight:700; color:var(--accent);">${load > 0 ? load : ''}</span>
+        <div style="width:100%; height:${barHeight}px; background:var(--accent); border-radius:6px 6px 0 0; min-height:4px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
+            ${load > 0 && showInside ? `<span style="font-size:0.6rem; font-weight:700; color:var(--white);">${percentDisplay}%</span>` : ''}
+        </div>
+        <span style="font-size:0.55rem; color:var(--slate); text-align:center; line-height:1.2;">${label}</span>
+    </div>
+`;
     });
 
     html += `</div>`;
@@ -13165,7 +13101,10 @@ async function loadPremiumStats() {
     const result = await getUserWorkoutsFromFirestore(user.uid);
     if (!result.success) return;
 
-    const workouts = result.data.filter(w => getWorkoutIcon(w) !== 'charging');
+    const workouts = result.data.filter(w => {
+        const icon = getWorkoutIcon(w);
+        return icon && icon !== 'charging';
+    });
 
     const workoutLoads = {};
     workouts.forEach(w => {
@@ -13247,7 +13186,10 @@ function changeWeeklyLoadMonth(delta) {
 
     getUserWorkoutsFromFirestore(user.uid).then(result => {
         if (!result.success) return;
-        const workouts = result.data.filter(w => getWorkoutIcon(w) !== 'charging');
+        const workouts = result.data.filter(w => {
+        const icon = getWorkoutIcon(w);
+        return icon && icon !== 'charging';
+    });
 
         const workoutLoads = {};
         workouts.forEach(w => {
@@ -13815,7 +13757,10 @@ async function openDayWorkoutsModal(year, month, day) {
             return workoutDate >= targetDate && workoutDate < nextDay;
         });
         
-        const filteredWorkouts = dayWorkouts.filter(w => getWorkoutIcon(w) !== 'charging');
+        const filteredWorkouts = dayWorkouts.filter(w => {
+            const icon = getWorkoutIcon(w);
+            return icon && icon !== 'charging';
+        });
         
         if (filteredWorkouts.length === 0) {
             container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">В этот день тренировок не было :(</div>';
@@ -14018,7 +13963,7 @@ function startTaskSession(taskId) {
         sets: 1,
         reps: isSeconds ? target + ' секунд' : target,
         weight: 0,
-        icon: 'bodybuilding'
+        icon: null
     };
 
     // Сбрасываем таймеры
@@ -14230,7 +14175,7 @@ function openTaskResultModal(sessionData, actualSeconds) {
             sets: 1,
             reps: entered,
             weight: 0,
-            icon: exercise.icon || 'bodybuilding'
+            icon: exercise.icon || null
         };
 
         let durationSeconds = actualSeconds || 0;
@@ -14279,7 +14224,7 @@ async function addSingleExerciseToStats(exercise, durationSeconds, xpEarned) {
         exercises: [{ ...exercise, completed: true }],
         xpEarned: xpEarned,
         category: 'Одиночное',
-        icon: exercise.icon || 'bodybuilding',
+        icon: exercise.icon,
         isSingle: true
     };
 
@@ -14511,7 +14456,7 @@ document.getElementById('taskFinishBtn')?.addEventListener('click', function() {
         sets: 1,
         reps: exercise.reps,
         weight: 0,
-        icon: exercise.icon || 'bodybuilding'
+        icon: exercise.icon || null
     };
     
     const xpForExercise = calculateExerciseXP(tempExercise, 1);
@@ -14636,13 +14581,13 @@ document.getElementById('taskStartStopBtn')?.addEventListener('click', function(
                         const exercise = taskSessionData.exercise;
                         
                         // 1. Сначала сохраняем упражнение и ждём
-                        const tempExercise = {
-                            name: exercise.name,
-                            sets: 1,
-                            reps: exercise.reps,
-                            weight: 0,
-                            icon: exercise.icon || 'bodybuilding'
-                        };
+    const tempExercise = {
+        name: exercise.name,
+        sets: 1,
+        reps: exercise.reps,
+        weight: 0,
+        icon: exercise.icon || null
+    };
                         
                         const xpForExercise = calculateExerciseXP(tempExercise, 1);
                         await addSingleExerciseToStats(tempExercise, taskSessionData.target, xpForExercise);
@@ -14821,7 +14766,10 @@ async function getFriendsWorkoutHistory() {
             
             const workoutsResult = await getUserWorkoutsFromFirestore(friend.id);
             if (workoutsResult.success && workoutsResult.data.length > 0) {
-                const filteredWorkouts = workoutsResult.data.filter(w => getWorkoutIcon(w) !== 'charging');
+                const filteredWorkouts = workoutsResult.data.filter(w => {
+                    const icon = getWorkoutIcon(w);
+                    return icon && icon !== 'charging';
+                });
                 
                 filteredWorkouts.forEach(w => {
                     allHistory.push({
@@ -15855,8 +15803,8 @@ async function loadGlobalStats() {
             const data = doc.data();
 
             // Исключаем зарядку и одиночные упражнения
-            const icon = data.icon || 'bodybuilding';
-            if (icon === 'charging' || data.isSingle === true) return;
+            const icon = data.icon || null;
+            if (!icon || icon === 'charging' || data.isSingle === true) return;
 
             totalWorkouts++;
             totalMinutes += Math.floor((data.durationSeconds || 0) / 60);
@@ -16077,8 +16025,8 @@ async function loadCommunityGoal() {
         let totalWorkouts = 0;
         snapshot.forEach(doc => {
             const data = doc.data();
-            const icon = data.icon || 'bodybuilding';
-            if (icon === 'charging' || data.isSingle === true) return;
+            const icon = data.icon || null;
+            if (!icon || icon === 'charging' || data.isSingle === true) return;
             totalWorkouts++;
         });
 
@@ -16117,8 +16065,8 @@ async function loadCommunityGoalTop() {
         const counts = {};
         snapshot.forEach(doc => {
             const data = doc.data();
-            const icon = data.icon || 'bodybuilding';
-            if (icon === 'charging' || data.isSingle === true) return;
+            const icon = data.icon || null;
+            if (!icon || icon === 'charging' || data.isSingle === true) return;
             const userId = data.userId;
             if (!userId) return;
             counts[userId] = (counts[userId] || 0) + 1;
@@ -16227,8 +16175,8 @@ async function checkAndGiveCommunityGoalReward() {
         let totalWorkouts = 0;
         snapshot.forEach(doc => {
             const data = doc.data();
-            const icon = data.icon || 'bodybuilding';
-            if (icon === 'charging' || data.isSingle === true) return;
+            const icon = data.icon || null;
+            if (!icon || icon === 'charging' || data.isSingle === true) return;
 
             totalWorkouts++;
             const userId = data.userId;
@@ -16326,3 +16274,170 @@ const GTO_AGE_MAP = {
     '14 СТУПЕНЬ': '50 - 54 года',
     '15 СТУПЕНЬ': '55 - 59 лет'
 };
+
+// =================== СЕРИЯ ТРЕНИРОВОК ===================
+async function calculateStreak(userId) {
+    try {
+        const result = await getUserWorkoutsFromFirestore(userId);
+        if (!result.success) return 0;
+        
+        const workouts = result.data.filter(w => {
+            const icon = getWorkoutIcon(w);
+            return icon && icon !== 'charging' && !w.isSingle;
+        });
+        
+        if (workouts.length === 0) return 0;
+        
+        // Собираем уникальные даты (YYYY-MM-DD)
+        const dates = new Set();
+        workouts.forEach(w => {
+            const d = new Date(w.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            dates.add(key);
+        });
+        
+        // Считаем серию подряд идущих дней, начиная с сегодня/вчера
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let streak = 0;
+        let current = new Date(today);
+        
+        // Если сегодня нет тренировки — проверяем со вчера
+        const todayKey = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}-${String(current.getDate()).padStart(2,'0')}`;
+        if (!dates.has(todayKey)) {
+            current.setDate(current.getDate() - 1);
+        }
+        
+        // Идём назад по дням, пока есть тренировки
+        while (true) {
+            const key = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}-${String(current.getDate()).padStart(2,'0')}`;
+            if (dates.has(key)) {
+                streak++;
+                current.setDate(current.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+        
+    } catch (error) {
+        console.error('❌ Ошибка подсчёта серии:', error);
+        return 0;
+    }
+}
+
+// =================== ОТОБРАЖЕНИЕ СЕРИИ ===================
+async function updateProfileStreak() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    const streakEl = document.getElementById('profileStreakValue');
+    const streakContainer = document.getElementById('profileStreak');
+    if (!streakEl || !streakContainer) return;
+    
+    const streak = await calculateStreak(user.uid);
+    streakEl.textContent = streak;
+
+    // ★★★ СОХРАНЯЕМ В FIRESTORE ★★★
+    const profileResult = await getUserProfile(user.uid);
+    if (profileResult.success && profileResult.data.streakDays !== streak) {
+        await updateUserProfile(user.uid, { streakDays: streak });
+    }
+        
+    // Если 0 — приглушаем цвет
+    if (streak === 0) {
+        streakContainer.classList.add('zero');
+    } else {
+        streakContainer.classList.remove('zero');
+    }
+    
+    console.log(`🔥 Серия: ${streak} дней`);
+    return streak;
+}
+
+// =================== МОДАЛКА: СЕРИЯ ТРЕНИРОВОК ===================
+async function openStreakModal() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    const streak = await calculateStreak(user.uid);
+    
+    // ★★★ ЗАПОЛНЯЕМ ЗНАЧЕНИЕ ★★★
+    const valueEl = document.getElementById('streakModalValue');
+    if (valueEl) valueEl.textContent = streak;
+    
+    // ★★★ МЕНЯЕМ ТЕКСТ В ЗАВИСИМОСТИ ОТ СЕРИИ ★★★
+    const text1 = document.getElementById('streakModalText1');
+    const text2 = document.getElementById('streakModalText2');
+    const text3 = document.getElementById('streakModalText3');
+    
+if (streak === 0) {
+    if (text1) text1.textContent = 'У вас пока нет активной серии.';
+    if (text2) text2.textContent = 'Выполните тренировку сегодня, чтобы начать серию.';
+    if (text3) text3.textContent = 'Тренируйтесь каждый день — серия будет расти.';
+} else if (streak < 21) {
+    if (text1) text1.textContent = `Вы тренируетесь ${streak} ${declOfNum(streak, ['день', 'дня', 'дней'])} подряд!`;
+    if (text2) text2.textContent = 'До достижения "21 день подряд" осталось совсем немного.';
+    if (text3) text3.textContent = 'Не пропускайте дни, чтобы не сбросить серию.';
+} else {
+    if (text1) text1.textContent = `Невероятно! ${streak} ${declOfNum(streak, ['день', 'дня', 'дней'])} подряд!`;
+    if (text2) text2.textContent = 'Вы настоящий чемпион дисциплины.';
+    if (text3) text3.textContent = 'Так держать! Продолжайте тренироваться каждый день.';
+}
+    
+    openModal('streakModal');
+}
+
+// ★★★ СКЛОНЕНИЕ СЛОВ ★★★
+function declOfNum(n, titles) {
+    const cases = [2, 0, 1, 1, 1, 2];
+    return titles[(n % 100 > 4 && n % 100 < 20) ? 2 : cases[(n % 10 < 5) ? n % 10 : 5]];
+}
+
+window.openStreakModal = openStreakModal;
+
+// =================== ИНВЕНТАРЬ ДЛЯ ФИЛЬТРАЦИИ УПРАЖНЕНИЙ ===================
+
+/**
+ * Получить инвентарь пользователя из localStorage
+ */
+function getUserInventoryFromStorage() {
+    try {
+        const saved = localStorage.getItem('userInventory');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (e) {
+        console.warn('Ошибка получения инвентаря:', e);
+    }
+    return [];
+}
+
+/**
+ * Фильтровать упражнения по инвентарю
+ * Если у упражнения нет поля equipment — показываем всегда
+ * Если есть — показываем только если инвентарь подходит
+ */
+function filterExercisesByInventory(userInventory) {
+    if (typeof EXERCISES_CATALOG === 'undefined') return [];
+    
+    return EXERCISES_CATALOG.filter(ex => {
+        // Если у упражнения нет requirements — показываем всегда
+        if (!ex.equipment || !Array.isArray(ex.equipment) || ex.equipment.length === 0) {
+            return true;
+        }
+        
+        // Если у пользователя нет инвентаря — показываем только bodyweight
+        if (userInventory.length === 0) {
+            return ex.equipment.includes('bodyweight') || ex.equipment.includes('none');
+        }
+        
+        // Показываем, если хотя бы одно требование есть у пользователя
+        return ex.equipment.some(item => 
+            userInventory.includes(item) || item === 'bodyweight' || item === 'none'
+        );
+    });
+}
