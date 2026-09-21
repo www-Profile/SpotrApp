@@ -163,6 +163,7 @@ body {
     overflow: hidden;
     max-height: 0;
     opacity: 0;
+    pointer-events: none;   /* ★★★ БЛОКИРУЕМ КЛИКИ, КОГДА ЗАКРЫТО ★★★ */
     transition: max-height 0.3s ease-out,
                 opacity 0.25s ease-out,
                 margin 0.3s ease-out;
@@ -171,6 +172,7 @@ body {
 .section-block.open .section-body {
     max-height: 3000px;
     opacity: 1;
+    pointer-events: auto;   /* ★★★ ВОЗВРАЩАЕМ КЛИКИ, КОГДА ОТКРЫТО ★★★ */
     margin-top: 0.2rem;
 }
 
@@ -699,6 +701,7 @@ body.theme-dark-mode .item-card-light {
 }
 
 /* ===================ЕДИНЫЙ СТИЛЬ ДЛЯ МОДАЛЬНЫХ ОКОН ==================== */
+/* =================== МОДАЛЬНЫЕ ОКНА (С АНИМАЦИЕЙ) ==================== */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -710,6 +713,18 @@ body.theme-dark-mode .item-card-light {
     align-items: center;
     justify-content: center;
     z-index: 2000;
+
+    /* Анимация фона */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.modal-overlay-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .modal-content {
@@ -722,6 +737,32 @@ body.theme-dark-mode .item-card-light {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-height: 90vh;
     overflow-y: auto;
+
+    /* ★★★ СТАРТОВОЕ ПОЛОЖЕНИЕ — СНИЗУ ★★★ */
+    transform: translateY(60px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.3s ease;
+}
+
+/* ★★★ ПОЯВЛЕНИЕ: СНИЗУ → ЦЕНТР ★★★ */
+.modal-overlay.modal-overlay-visible .modal-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* ★★★ ИСЧЕЗНОВЕНИЕ: ЦЕНТР → ВВЕРХ ★★★ */
+.modal-overlay.modal-overlay-closing .modal-content {
+    transform: translateY(-60px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.6, 1),
+                opacity 0.25s ease;
+}
+
+/* Фон при закрытии */
+.modal-overlay.modal-overlay-closing {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .modal-title {
@@ -776,11 +817,11 @@ body.theme-dark-mode .item-card-light {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 0.5rem;
-    margin-top: 0.5rem;
     padding: 0.6rem;
     background-color: var(--light);
-    border-radius: 16px;
+    border-radius: 12px;
     width: 100%;
+    border: 1.5px solid var(--light-grey);
 }
 
 .stats-summaryMOD .stat-card {
@@ -2950,8 +2991,8 @@ body.theme-dark-mode .premium-price-period {
     }
 
     .item-icon img {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
     }
 
     .exercise-status {
@@ -3837,7 +3878,8 @@ body.theme-dark-mode .legend-box-today {
 
 /* Статистика */
 body.theme-dark-mode .stats-summaryMOD {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
+    border: 1.5px solid var(--border-color);
 }
 
 body.theme-dark-mode .stats-summaryMOD .stat-card {
@@ -5031,11 +5073,6 @@ body.theme-dark-mode .community-achievement-percent {
     gap: 0.8rem;
 }
 
-.community-goal-hint {
-    font-size: 0.7rem;
-    color: var(--slate);
-}
-
 .community-goal-icon {
     width: 44px;
     height: 44px;
@@ -5164,4 +5201,125 @@ body.theme-dark-mode .profile-streak.zero {
 
 body.theme-dark-mode .profile-streak.zero i {
     color: var(--border-color);
+}
+
+/* =================== АВТО-КАРУСЕЛЬ (БЕСКОНЕЧНАЯ) ==================== */
+.auto-carousel {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+}
+
+.auto-carousel-track {
+    display: flex;
+    gap: 0.5rem;
+    width: max-content;
+    animation: autoScroll 60s linear infinite;
+    will-change: transform;
+}
+
+/* ★★★ БЕСКОНЕЧНАЯ ПРОКРУТКА ★★★ */
+@keyframes autoScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* ★★★ ПРЯМОУГОЛЬНАЯ КАРТОЧКА ★★★ */
+.carousel-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--white);
+    padding: 0.5rem;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid var(--accent);
+    width: 260px;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+    margin: 0 0 12px;
+}
+
+.carousel-card-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.carousel-card-icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.carousel-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.carousel-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.carousel-card-desc {
+    font-size: 0.7rem;
+    color: var(--slate);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.theme-dark-mode .carousel-card {
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+body.theme-dark-mode .carousel-card-icon {
+    background: var(--accent-dark);
+}
+
+body.theme-dark-mode .carousel-card-title {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .carousel-card-desc {
+    color: var(--text-secondary);
+}
+
+/* =================== ИСТОРИЯ ДРУЗЕЙ =================== */
+.friends-history-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.friends-history-scroll::-webkit-scrollbar {
+    display: block;
+    width: 0px;
 }

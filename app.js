@@ -1954,6 +1954,9 @@ ${friends.map(f => {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
     
     // Массив выбранных друзей
     window._selectedFriends = [];
@@ -2473,7 +2476,9 @@ document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async fu
                 }
                 showToast('💾 Тренировка сохранена');
                 // После сохранения или добавления в офлайн-очередь
-await updateAchievementsAfterWorkout();
+                await updateAchievementsAfterWorkout();
+                    // ★★★ ПРОВЕРЯЕМ ОБЩУЮ ЦЕЛЬ ★★★
+                    await checkAndGiveCommunityGoalReward();
             } else {
                 addPendingWorkout(workoutData);
                 showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
@@ -2553,12 +2558,17 @@ await updateAchievementsAfterWorkout();
         const showPremiumCoop = shouldShowPremiumOffer();
 
         // ★★★ ПОКАЗЫВАЕМ PREMIUM ЧЕРЕЗ НЕКОТОРОЕ ВРЕМЯ ★★★
-        if (showPremiumCoop) {
-            markPremiumOfferShown();
-            setTimeout(() => {
-                openPremiumModal();
-            }, 800);
-        }
+if (showPremiumCoop) {
+    markPremiumOfferShown();
+    setTimeout(() => {
+        enqueueModal({ type: 'premium' });
+    }, 800);
+}
+
+// ★★★ ДОБАВЛЯЕМ ПРОВЕРКУ НАГРАДЫ ★★★
+setTimeout(() => {
+    checkAndGiveCommunityGoalReward();
+}, 1000);
 
     } catch (error) {
         console.error('❌ [coopFinishDoneBtn] ОШИБКА:', error);
@@ -2772,25 +2782,26 @@ function showNotification(icon, text, actionCallback, autoClose = true, okAction
     const isFriendAccepted = text.includes('новый друг');
     
     // ★★★ ЕСЛИ ЭТО УВЕДОМЛЕНИЕ ОТ ДРУГОГО ПОЛЬЗОВАТЕЛЯ — ПОКАЗЫВАЕМ ВСЕГДА ★★★
-    if (isInvite || isFriendRequest || isFriendAccepted) {
-        const uniqueId = 'user_action_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-        notificationQueue.push({ 
-            icon, 
-            text, 
-            actionCallback, 
-            id: uniqueId, 
-            isInvite: true,
-            isFriendRequest: isFriendRequest,
-            isFriendAccepted: isFriendAccepted,
-            autoClose: false,
-            okAction: okAction,
-            forceShow: true  // ★★★ ФЛАГ ДЛЯ ПРИНУДИТЕЛЬНОГО ПОКАЗА ★★★
-        });
-        if (!isNotificationShowing) {
-            processNotificationQueue();
-        }
-        return;
+if (isInvite || isFriendRequest || isFriendAccepted) {
+    const uniqueId = 'user_action_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    notificationQueue.push({ 
+        icon, 
+        text, 
+        actionCallback, 
+        id: uniqueId, 
+        isInvite: true,
+        isFriendRequest: isFriendRequest,
+        isFriendAccepted: isFriendAccepted,
+        autoClose: true,          // ← ИЗМЕНЕНО: теперь авто-скрытие работает
+        autoCloseDelay: 5000,     // ← 5 СЕКУНД
+        okAction: okAction,
+        forceShow: true
+    });
+    if (!isNotificationShowing) {
+        processNotificationQueue();
     }
+    return;
+}
     
     // ★★★ ОБЫЧНЫЕ УВЕДОМЛЕНИЯ (СИСТЕМНЫЕ) — ПРОВЕРЯЕМ НА ПОВТОР ★★★
     const notificationId = text + icon;
@@ -2834,73 +2845,99 @@ function processNotificationQueue() {
     const okBtn = document.getElementById('notificationOkBtn');
     console.log('🔍 Кнопка notificationOkBtn найдена?', okBtn ? 'Да' : 'Нет');
     
-    if (notification.actionCallback) {
-        console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
-        okBtn.textContent = 'Принять';
-        okBtn.onclick = function(e) {
-            console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
-            if (notification.actionCallback) {
-                console.log('🔵 Вызываем actionCallback');
-                try {
-                    notification.actionCallback();
-                    console.log('✅ actionCallback выполнен');
-                } catch (error) {
-                    console.error('❌ Ошибка в actionCallback:', error);
-                }
+if (notification.actionCallback) {
+    console.log('🔵 Есть actionCallback, ставим кнопку "Принять"');
+    okBtn.textContent = 'Принять';
+    okBtn.onclick = function(e) {
+        console.log('🔵 КНОПКА "ПРИНЯТЬ" НАЖАТА!');
+        if (notification.actionCallback) {
+            console.log('🔵 Вызываем actionCallback');
+            try {
+                notification.actionCallback();
+                console.log('✅ actionCallback выполнен');
+            } catch (error) {
+                console.error('❌ Ошибка в actionCallback:', error);
             }
-            hideNotification();
-            
-            if (!notification.forceShow && !notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
+        }
+        hideNotification();
         
-        // ★★★ АВТО-ЗАКРЫТИЕ ДЛЯ "ПРИНЯТЬ" — 10 СЕКУНД ★★★
-        if (notification.autoClose !== false) {
-            console.log('⏰ Уведомление с "Принять" закроется через 10 секунд');
-            setTimeout(() => {
-                if (isNotificationShowing) {
-                    console.log('⏰ Авто-закрытие уведомления с "Принять"');
-                    hideNotification();
-                    
-                    if (!notification.forceShow && !notification.isInvite && notification.id) {
-                        markNotificationSeen(notification.id);
-                    }
+        if (!notification.forceShow && !notification.isInvite && notification.id) {
+            markNotificationSeen(notification.id);
+        }
+    };
+    
+    // ★★★ АВТО-ЗАКРЫТИЕ — 5 СЕКУНД ★★★
+    if (notification.autoClose !== false) {
+        const delay = notification.autoCloseDelay || 5000;
+        console.log(`⏰ Уведомление с "Принять" закроется через ${delay / 1000} секунд`);
+        setTimeout(() => {
+            if (isNotificationShowing) {
+                console.log('⏰ Авто-закрытие уведомления с "Принять"');
+                hideNotification();
+                
+                if (!notification.forceShow && !notification.isInvite && notification.id) {
+                    markNotificationSeen(notification.id);
                 }
-            }, 10000);  // ← 10 СЕКУНД
+            }
+        }, delay);
+    }
+    
+} else {
+    console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
+    okBtn.textContent = 'ОК';
+    okBtn.onclick = function() {
+        console.log('🔵 Кнопка "ОК" нажата');
+        
+        if (notification.okAction) {
+            try {
+                notification.okAction();
+                console.log('✅ okAction выполнен');
+            } catch (error) {
+                console.error('❌ Ошибка в okAction:', error);
+            }
         }
         
-    } else {
-        console.log('🔵 Нет actionCallback, ставим кнопку "ОК"');
-        okBtn.textContent = 'ОК';
-        okBtn.onclick = function() {
-            console.log('🔵 Кнопка "ОК" нажата');
-            
-            if (notification.okAction) {
-                try {
-                    notification.okAction();
-                    console.log('✅ okAction выполнен');
-                } catch (error) {
-                    console.error('❌ Ошибка в okAction:', error);
+        hideNotification();
+        
+        if (notification.isFriendRequest && notification.requestId) {
+            const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+            if (!shownRequests.includes(notification.requestId)) {
+                shownRequests.push(notification.requestId);
+                localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+            }
+            shownThisSession.delete(notification.requestId);
+        }
+        
+        if (!notification.forceShow && !notification.isInvite && notification.id) {
+            markNotificationSeen(notification.id);
+        }
+    };
+    
+    // ★★★ АВТО-ЗАКРЫТИЕ — 5 СЕКУНД ★★★
+    if (notification.autoClose !== false) {
+        const delay = notification.autoCloseDelay || 5000;
+        console.log(`⏰ Уведомление с "ОК" закроется через ${delay / 1000} секунд`);
+        setTimeout(() => {
+            if (isNotificationShowing) {
+                console.log('⏰ Авто-закрытие уведомления с "ОК"');
+                hideNotification();
+                
+                if (notification.isFriendRequest && notification.requestId) {
+                    const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
+                    if (!shownRequests.includes(notification.requestId)) {
+                        shownRequests.push(notification.requestId);
+                        localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
+                    }
+                    shownThisSession.delete(notification.requestId);
+                }
+                
+                if (!notification.forceShow && !notification.isInvite && notification.id) {
+                    markNotificationSeen(notification.id);
                 }
             }
-            
-            hideNotification();
-            
-            if (notification.isFriendRequest && notification.requestId) {
-                const shownRequests = JSON.parse(localStorage.getItem('shownFriendRequests') || '[]');
-                if (!shownRequests.includes(notification.requestId)) {
-                    shownRequests.push(notification.requestId);
-                    localStorage.setItem('shownFriendRequests', JSON.stringify(shownRequests));
-                }
-                shownThisSession.delete(notification.requestId);
-            }
-            
-            if (!notification.forceShow && !notification.isInvite && notification.id) {
-                markNotificationSeen(notification.id);
-            }
-        };
+        }, delay);
     }
+}
     
     notificationCard.classList.remove('show');
     notificationCard.style.transform = 'translateY(-120px)';
@@ -3747,47 +3784,47 @@ window.navigateTo = function(page, params) {
     });
 
     // ===== ВЫЗОВЫ СТРАНИЦ =====
-if (page === 'profile') {
-    loadProfile();
-    setTimeout(() => TabManager.profile(TabManager.state.profile), 300);
-}
-if (page === 'level-select' && params) loadLevelSelect(params.category, params);
-if (page === 'workout-detail' && params) {
-    loadWorkoutDetail(
-        params.category,
-        params.level,
-        params.isCustom,
-        params.id,
-        params.parentCategory,
-        params.isPremium,
-        params.gtoGender
-    );
-}
-if (page === 'workout-edit' && params) {
-    loadEditPage(
-        params.category,
-        params.isCustom,
-        params.id,
-        params.level,
-        params.exercises
-    );
-}
-if (page === 'workouts') {
-    TabManager.workouts(TabManager.state.workouts);
-    renderMyWorkouts();
-}
-    if (page === 'exercise-list') renderExerciseListPage();
-if (page === 'stats') {
-    const currentTab = TabManager.state.stats || 'personal';
-    TabManager.stats(currentTab);
-    updateStats(currentTab); // ← ЕДИНЫЙ ВЫЗОВ
-}
+    if (page === 'profile') {
+        loadProfile();
+        setTimeout(() => TabManager.profile(TabManager.state.profile), 300);
+    }
+    if (page === 'level-select' && params) loadLevelSelect(params.category, params);
+    if (page === 'workout-detail' && params) {
+        loadWorkoutDetail(
+            params.category,
+            params.level,
+            params.isCustom,
+            params.id,
+            params.parentCategory,
+            params.isPremium,
+            params.gtoGender
+        );
+    }
+    if (page === 'workout-edit' && params) {
+        loadEditPage(
+            params.category,
+            params.isCustom,
+            params.id,
+            params.level,
+            params.exercises
+        );
+    }
+    if (page === 'workouts') {
+        TabManager.workouts(TabManager.state.workouts);
+        renderMyWorkouts();
+    }
+        if (page === 'exercise-list') renderExerciseListPage();
+    if (page === 'stats') {
+        const currentTab = TabManager.state.stats || 'personal';
+        TabManager.stats(currentTab);
+        updateStats(currentTab); // ← ЕДИНЫЙ ВЫЗОВ
+    }
 
-if (page === 'training-session' || page === 'finish' || page === 'training-waiting' || page === 'coop-finish') {
-    document.getElementById('bottomNav').style.display = 'none';
-} else {
-    document.getElementById('bottomNav').style.display = 'block';
-}
+    if (page === 'training-session' || page === 'finish' || page === 'training-waiting' || page === 'coop-finish') {
+        document.getElementById('bottomNav').style.display = 'none';
+    } else {
+        document.getElementById('bottomNav').style.display = 'block';
+    }
 };
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -3800,12 +3837,34 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 // ===================УНИВЕРСАЛЬНЫЕ ФУНКЦИИ ДЛЯ МОДАЛОК ===================
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'flex';
+    if (!modal) return;
+
+    // Убираем класс "закрытия" (на случай повторного открытия)
+    modal.classList.remove('modal-overlay-closing');
+
+    // Показываем
+    modal.style.display = 'flex';
+    void modal.offsetWidth;
+
+    // Запускаем анимацию появления
+    modal.classList.add('modal-overlay-visible');
 }
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'none';
+    if (!modal) return;
+
+    // Убираем класс появления — фон начнёт гаснуть
+    modal.classList.remove('modal-overlay-visible');
+
+    // Добавляем класс закрытия — контент уедет вверх
+    modal.classList.add('modal-overlay-closing');
+
+    // Через время анимации прячем полностью
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('modal-overlay-closing');
+    }, 350);
 }
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
@@ -3873,9 +3932,16 @@ if (currentTab === 'world') {
 
 // ===================КАТЕГОРИИ ТРЕНИРОВОК ===================
 document.querySelectorAll('.item-card').forEach(card => {
-    card.addEventListener('click', function() {
+    card.addEventListener('click', function(e) {
         const name = this.dataset.category;
         if (!name) return;
+        
+        // ★★★ НЕ ОБРАБАТЫВАЕМ КЛИК, ЕСЛИ БЛОК ЗАКРЫТ ★★★
+        const parentBlock = this.closest('.section-block');
+        if (parentBlock && !parentBlock.classList.contains('open')) {
+            e.stopPropagation();
+            return;
+        }
         
         console.log('=== КЛИК ПО КАРТОЧКЕ ===');
         console.log('name:', name);
@@ -6044,6 +6110,9 @@ function resetWorkout() {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
 
     document.getElementById('resetConfirmYes').addEventListener('click', function() {
         overlay.remove();
@@ -6692,9 +6761,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
             
             // ★★★ ДАННЫЕ ЗАГРУЖЕНЫ, НО СТРАНИЦУ ЗАГРУЗКИ НЕ ЗАКРЫВАЕМ ★★★
             console.log('✅ Данные загружены, ждем нажатия кнопки');
-
-            // ★★★ ПРОВЕРЯЕМ НАГРАДУ ЗА ОБЩУЮ ЦЕЛЬ ПРИ ВХОДЕ ★★★
-checkAndGiveCommunityGoalReward();
          
         } else {
             // Пользователь не авторизован - сбрасываем флаг
@@ -7465,6 +7531,10 @@ function enterApp() {
             showOfflineModal();
         }, 1000);
     }
+    // ★★★ ПРОВЕРЯЕМ НАГРАДУ ЗА ОБЩУЮ ЦЕЛЬ ★★★
+    setTimeout(() => {
+        checkAndGiveCommunityGoalReward();
+    }, 1000);
 }
 
 // ===================ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
@@ -8534,7 +8604,7 @@ async function loadWorldLeaderboard() {
             }
             
             return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-                <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <div class="item-icon" style="width:40px;height:40px;min-width:40px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
                 </div>
                 <div class="item-info">
@@ -8630,7 +8700,7 @@ async function loadFriendsLeaderboard() {
             }
             
             return `<div class="item-card ${isCurrentUser ? 'current-user' : ''}">
-                <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <div class="item-icon" style="width:40px;height:40px;min-width:40px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
                     <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
                 </div>
                 <div class="item-info">
@@ -8755,6 +8825,9 @@ function createTutorialOverlay(step) {
     overlay.id = 'tutorialOverlay';
     overlay.className = 'tutorial-overlay';
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
 
     let highlightElements = [];
     if (step.highlight) {
@@ -9469,16 +9542,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateLanguageUI();
 
-    // Загружаем задания
+    // ★★★ ЗАГРУЖАЕМ ЗАДАНИЯ ПОСЛЕ ИНИЦИАЛИЗАЦИИ ★★★
     loadTasks();
-    loadDailyTasks();
 
     updateInventoryStatus();
 
     // Инициализация ежедневных заданий
-    setTimeout(async () => {
-        await initDailyTasks();
-    }, 2000);
+setTimeout(async () => {
+    await initDailyTasks();
+}, 800);
 
     setTimeout(() => {
         listenForInvites();
@@ -9532,6 +9604,9 @@ function showConfirmWithPasswordModal(title, message, onConfirm, confirmText = '
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
 
     document.getElementById('confirmYes').addEventListener('click', async function() {
         const passwordInput = document.getElementById('confirmPassword');
@@ -9586,6 +9661,9 @@ function showConfirmModal(title, message, onConfirm, confirmText = 'Да') {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
 
     document.getElementById('confirmYes').addEventListener('click', function() {
         overlay.remove();
@@ -10216,76 +10294,75 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     finishBtn.id = 'finishDoneBtn';
     finishBtn.textContent = 'Закончить';
 
-    finishBtn.onclick = function() {
-        // ★★★ ЕСЛИ 0 УПРАЖНЕНИЙ — НЕ СОХРАНЯЕМ ★★★
-        if (completedCount === 0) {
-            showToast('⚠️ Выполнено 0 упражнений.');
-            
-            sessionExercises = [];
-            sessionCompleted = new Set();
-            sessionCompletedSets = {};
-            sessionSeconds = 0;
-            sessionWorkoutTitle = '';
-            sessionCategory = '';
-            sessionWorkoutIcon = null;
-            
-            window.navigateTo('workouts');
-            return;
-        }
-        
-        if (!preventDoubleClick('finishDoneBtn', 3000)) {
-            showToast('⏳ Подождите, тренировка уже сохраняется...');
-            return;
-        }
+finishBtn.onclick = function() {
+    // ★★★ ЕСЛИ 0 УПРАЖНЕНИЙ — НЕ СОХРАНЯЕМ ★★★
+    if (completedCount === 0) {
+        showToast('⚠️ Выполнено 0 упражнений.');
 
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = 'Закончить';
-        btn.style.opacity = '1';
+        sessionExercises = [];
+        sessionCompleted = new Set();
+        sessionCompletedSets = {};
+        sessionSeconds = 0;
+        sessionWorkoutTitle = '';
+        sessionCategory = '';
+        sessionWorkoutIcon = null;
 
-        // ★★★ УВЕЛИЧИВАЕМ СЧЁТЧИК ТРЕНИРОВОК ★★★
-        const workoutsCount = incrementWorkoutsCount();
-        const showPremium = shouldShowPremiumOffer();
+        window.navigateTo('workouts');
+        return;
+    }
 
-        // ★★★ ОСТАВЛЯЕМ ОРИГИНАЛЬНУЮ ЛОГИКУ ★★★
-        const xpText = document.getElementById('finishXp').textContent;
-        const xpEarned2 = parseFloat(xpText) || 0;
+    if (!preventDoubleClick('finishDoneBtn', 3000)) {
+        showToast('⏳ Подождите, тренировка уже сохраняется...');
+        return;
+    }
 
-        let finalCategory = sessionCategory;
-        if (!finalCategory || finalCategory === 'Без категории') {
-            const title = sessionWorkoutTitle || '';
-            if (title.includes('Руки')) finalCategory = 'Руки';
-            else if (title.includes('Плечи')) finalCategory = 'Плечи';
-            else if (title.includes('Пресс')) finalCategory = 'Пресс';
-            else if (title.includes('Грудь')) finalCategory = 'Грудь';
-            else if (title.includes('Спина')) finalCategory = 'Спина';
-            else if (title.includes('Ноги')) finalCategory = 'Ноги';
-            else if (title.includes('Кардио')) finalCategory = 'Кардио';
-            else if (title.includes('Растяжка')) finalCategory = 'Гибкость';
-            else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
-            else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
-            else finalCategory = 'Без категории';
-        }
+    const btn = this;
+    btn.disabled = true;
 
-        const workoutExercises = sessionExercises.map((ex, index) => ({
-            ...ex,
-            icon: ex.icon || null,
-            completed: sessionCompleted.has(index)
-        }));
+    // ★★★ УВЕЛИЧИВАЕМ СЧЁТЧИК ТРЕНИРОВОК ★★★
+    incrementWorkoutsCount();
+    const showPremium = shouldShowPremiumOffer();
 
-        const workoutIcon = sessionWorkoutIcon || null;
+    // ★★★ XP ИЗ UI ★★★
+    const xpText = document.getElementById('finishXp').textContent;
+    const xpEarned2 = parseFloat(xpText) || 0;
 
-        const workoutData = {
-            title: sessionWorkoutTitle || 'Тренировка',
-            date: new Date().toISOString(),
-            durationSeconds: sessionSeconds,
-            exercises: workoutExercises,
-            xpEarned: xpEarned2,
-            category: finalCategory,
-            icon: workoutIcon
-        };
+    let finalCategory = sessionCategory;
+    if (!finalCategory || finalCategory === 'Без категории') {
+        const title = sessionWorkoutTitle || '';
+        if (title.includes('Руки')) finalCategory = 'Руки';
+        else if (title.includes('Плечи')) finalCategory = 'Плечи';
+        else if (title.includes('Пресс')) finalCategory = 'Пресс';
+        else if (title.includes('Грудь')) finalCategory = 'Грудь';
+        else if (title.includes('Спина')) finalCategory = 'Спина';
+        else if (title.includes('Ноги')) finalCategory = 'Ноги';
+        else if (title.includes('Кардио')) finalCategory = 'Кардио';
+        else if (title.includes('Растяжка')) finalCategory = 'Гибкость';
+        else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
+        else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
+        else finalCategory = 'Без категории';
+    }
 
-        (async function() {
+    const workoutExercises = sessionExercises.map((ex, index) => ({
+        ...ex,
+        icon: ex.icon || null,
+        completed: sessionCompleted.has(index)
+    }));
+
+    const workoutIcon = sessionWorkoutIcon || null;
+
+    const workoutData = {
+        title: sessionWorkoutTitle || 'Тренировка',
+        date: new Date().toISOString(),
+        durationSeconds: sessionSeconds,
+        exercises: workoutExercises,
+        xpEarned: xpEarned2,
+        category: finalCategory,
+        icon: workoutIcon
+    };
+
+    (async function() {
+        try {
             const user = await getFirebaseUser();
             if (user) {
                 const result = await saveWorkoutToFirestore(user.uid, workoutData);
@@ -10306,25 +10383,39 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
                 showToast('⚠️ Тренировка сохранена локально');
             }
 
+            // Сбрасываем переменные
             sessionExercises = [];
             sessionCompleted = new Set();
+            sessionCompletedSets = {};
             sessionSeconds = 0;
             sessionWorkoutTitle = '';
             sessionCategory = '';
             sessionWorkoutIcon = null;
 
-            // ★★★ ПЕРЕХОДИМ НА ТРЕНИРОВКИ ★★★
+            // Переход на тренировки
             window.navigateTo('workouts');
 
-            // ★★★ ПОКАЗЫВАЕМ PREMIUM ЧЕРЕЗ НЕКОТОРОЕ ВРЕМЯ ★★★
+            // ★★★ ПОКАЗЫВАЕМ PREMIUM ★★★
             if (showPremium) {
                 markPremiumOfferShown();
                 setTimeout(() => {
-                    openPremiumModal();
+                    enqueueModal({ type: 'premium' });
                 }, 800);
             }
-        })();
-    };
+
+            // ★★★ ПРОВЕРЯЕМ НАГРАДУ ★★★
+            setTimeout(() => {
+                checkAndGiveCommunityGoalReward(true);  // force = true
+            }, 1000);
+
+        } catch (error) {
+            console.error('❌ Ошибка сохранения тренировки:', error);
+            showToast('❌ Ошибка сохранения тренировки');
+        } finally {
+            btn.disabled = false;
+        }
+    })();
+};
     container.appendChild(finishBtn);
     
     window.navigateTo('finish');
@@ -10422,6 +10513,11 @@ document.getElementById('finishDoneBtn')?.addEventListener('click', async functi
         sessionWorkoutIcon = null;
         
         window.navigateTo('workouts');
+
+        // ★★★ ПРОВЕРЯЕМ НАГРАДУ ЗА ОБЩУЮ ЦЕЛЬ ★★★
+setTimeout(() => {
+    checkAndGiveCommunityGoalReward();
+}, 1000);
         
     } catch (error) {
         console.error('Ошибка сохранения:', error);
@@ -10678,12 +10774,16 @@ document.addEventListener('click', function(e) {
         }
     }
 
-    // 2. Клик по навигации (нижнее меню)
-    const navItem = e.target.closest('.nav-item');
-    if (navItem) {
-        setTimeout(refreshNotificationData, 300);
-        return;
-    }
+// 2. Клик по навигации (нижнее меню)
+const navItem = e.target.closest('.nav-item');
+if (navItem) {
+    setTimeout(refreshNotificationData, 300);
+    // ★★★ ПРОВЕРЯЕМ НАГРАДУ ПРИ ПЕРЕХОДАХ ПО МЕНЮ ★★★
+    setTimeout(() => {
+        checkAndGiveCommunityGoalReward();
+    }, 500);
+    return;
+}
     
     // 3. Клик по ЛЮБОЙ вкладке (статистика, тренировки, профиль)
     const tabBtn = e.target.closest('.tab-btn, .profile-tab-btn');
@@ -10982,6 +11082,9 @@ function editEmail() {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
     
     document.getElementById('editEmailCancel').addEventListener('click', function() {
         overlay.remove();
@@ -11111,6 +11214,9 @@ function showEmailVerificationModal(newEmail) {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
     
     // ★★★ КНОПКА "ОТМЕНА" - ВОЗВРАЩАЕМ СТАРУЮ ПОЧТУ ★★★
     document.getElementById('emailVerifyCancel').addEventListener('click', async function() {
@@ -11230,6 +11336,9 @@ function editPassword() {
         </div>
     `;
     document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
     
     document.getElementById('editPasswordCancel').addEventListener('click', function() {
         overlay.remove();
@@ -11374,7 +11483,7 @@ const ACHIEVEMENTS_CONFIG = [
         id: 'masterOfStyles',
         icon: 'fa-solid fa-award',
         name: 'Мастер всех стилей',
-        description: 'Выполнить по 10 тренировок в каждой категорий',
+        description: 'Выполнить 10 тренировок в каждой категорий',
         check: async (userId, profile, workouts) => {
             const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
             const counts = {};
@@ -11685,32 +11794,6 @@ document.getElementById('levelInfoOkBtn')?.addEventListener('click', function() 
     openAchievementsModal();
 });
 
-// ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ =====
-let dailyTasks = { 1: false, 2: false, 3: false };
-
-// Сохранить состояние ежедневных заданий в localStorage
-function saveDailyTasks() {
-    localStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(dailyTasks));
-}
-
-// Загрузить состояние ежедневных заданий из localStorage
-function loadDailyTasks() {
-    const saved = localStorage.getItem(DAILY_TASKS_KEY);
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            for (const key in parsed) {
-                if (dailyTasks.hasOwnProperty(key)) {
-                    dailyTasks[key] = parsed[key];
-                }
-            }
-        } catch (e) {
-            console.warn('Ошибка загрузки ежедневных заданий:', e);
-        }
-    }
-    updateDailyUI();
-}
-
 function updateDailyModalIcons() {
     for (let i = 1; i <= 3; i++) {
         const icon = document.getElementById('modalDailyIcon' + i);
@@ -11852,12 +11935,17 @@ function updateTasksUI() {
         if (icon) {
             if (tasks[i]) {
                 icon.className = 'fa-regular fa-square-check';
-                icon.style.color = ''; // убираем инлайн-стиль, чтобы работал CSS
+                icon.style.color = '';
             } else {
                 icon.className = 'fa-regular fa-square';
-                icon.style.color = ''; // убираем инлайн-стиль
+                icon.style.color = '';
             }
         }
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ КАРУСЕЛЬ ★★★
+    if (typeof refreshAutoCarousel === 'function') {
+        refreshAutoCarousel();
     }
 }
 
@@ -11903,10 +11991,6 @@ async function addTaskXp() {
 function checkAllTasksCompleted() {
     return Object.values(tasks).every(function(v) { return v === true; });
 }
-
-// Загружаем задания при инициализации
-loadTasks();
-
 
 // ===== ЕЖЕДНЕВНЫЕ ЗАДАНИЯ =====
 // Конфигурация блоков заданий
@@ -12387,6 +12471,11 @@ async function initDailyTasks() {
         loadDailyTasksFromStorage();
         renderDailyTasks();
     }
+    
+    // ★★★ ОБНОВЛЯЕМ КАРУСЕЛЬ ПОСЛЕ ЗАГРУЗКИ/ГЕНЕРАЦИИ ★★★
+    if (typeof refreshAutoCarousel === 'function') {
+        refreshAutoCarousel();
+    }
 }
 
 // Рендерить ежедневные задания в интерфейсе
@@ -12484,6 +12573,10 @@ function renderDailyTasks() {
     });
     
     container.innerHTML = html;
+    // ★★★ ОБНОВЛЯЕМ КАРУСЕЛЬ ★★★
+    if (typeof refreshAutoCarousel === 'function') {
+        refreshAutoCarousel();
+    }
 }
 
 // Начисление XP за ежедневное задание
@@ -12573,6 +12666,11 @@ async function completeDailyTaskIfExists(taskId) {
                 setTimeout(function() { loadProfile(); }, 300);
             }
         );
+    }
+    
+    // ★★★ ОБНОВЛЯЕМ КАРУСЕЛЬ ★★★
+    if (typeof refreshAutoCarousel === 'function') {
+        refreshAutoCarousel();
     }
     
     return true;
@@ -14059,37 +14157,6 @@ function updateTaskExerciseTimerDisplay() {
     }
 }
 
-
-// Обработчики кнопок
-document.getElementById('taskQuitBtn').addEventListener('click', function() {
-    if (taskSessionData) {
-        clearInterval(taskSessionData.timerInterval);
-        taskSessionData = null;
-        showToast('❌ Задание не выполнено');
-        // Переход на профиль (вкладка "Мой")
-        TabManager.profile('my');
-        window.navigateTo('profile');
-        document.getElementById('bottomNav').style.display = 'block';
-    }
-});
-
-document.getElementById('taskFinishBtn').addEventListener('click', function() {
-    if (!taskSessionData) return;
-    clearInterval(taskSessionData.timerInterval);
-
-    // Определяем фактическое время (для повторений)
-    let actualSeconds = 0;
-    if (taskSessionData.isSeconds) {
-        // сколько прошло: target - remaining
-        actualSeconds = taskSessionData.target - taskSessionData.remainingSeconds;
-    } else {
-        actualSeconds = taskSessionData.elapsedSeconds;
-    }
-
-    // Открываем модалку выбора количества
-    openTaskResultModal(taskSessionData, actualSeconds);
-});
-
 function openTaskResultModal(sessionData, actualSeconds) {
     const oldModal = document.getElementById('taskResultModal');
     if (oldModal) oldModal.remove();
@@ -14912,8 +14979,10 @@ function openFriendHistoryFilterModal() {
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
-        overlay.style.display = 'flex';
+document.body.appendChild(overlay);
+overlay.style.display = 'flex';
+void overlay.offsetWidth;
+overlay.classList.add('modal-overlay-visible');
         
         document.getElementById('applyFriendFilterBtn').addEventListener('click', function() {
             applyFriendHistoryFilter();
@@ -15872,8 +15941,15 @@ async function loadGlobalUsersCount() {
             total = snap.size;
         }
 
-        el.textContent = formatBigNumber(total);
-        console.log(`👥 Всего пользователей: ${total}`);
+el.textContent = formatBigNumber(total);
+
+// ★★★ ПРАВИЛЬНОЕ СКЛОНЕНИЕ СЛОВА "ПОЛЬЗОВАТЕЛЬ" ★★★
+const labelEl = document.getElementById('globalTotalUsersLabel');
+if (labelEl) {
+    labelEl.textContent = declOfNum(total, ['пользователь', 'пользователя', 'пользователей']);
+}
+
+console.log(`👥 Всего пользователей: ${total}`);
 
     } catch (error) {
         console.error('❌ Ошибка загрузки пользователей:', error);
@@ -15985,61 +16061,207 @@ async function loadCommunityAchievements() {
 
 // =================== ОБЩАЯ ЦЕЛЬ СООБЩЕСТВА ===================
 const COMMUNITY_GOAL = {
-    target: 100, // число в цели
-    reward: 40, // награда в ХП
+    target: 100,
     topCount: 10,
-    
-    // ★★★ ГЕТТЕР: собирается автоматически ★★★
-    get title() {
-        return `Выполнить ${this.target} тренировок`;
+    title: 'Выполнить 100 тренировок',
+
+    getRewardByPosition(position) {
+        if (position === 1) return 100;
+        if (position === 2) return 80;
+        if (position === 3) return 60;
+        if (position === 4 || position === 5) return 40;
+        return 20;
     }
 };
+
+const COMMUNITY_GOAL_DOC = 'communityGoals/current';
+
+/**
+ * Получить текущую цель из Firestore.
+ * Если документа нет — создаём с дефолтными значениями.
+ */
+async function getCommunityGoalState() {
+    try {
+        const docRef = firebase.firestore().doc(COMMUNITY_GOAL_DOC);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            const defaultState = {
+                target: COMMUNITY_GOAL.target,
+                title: COMMUNITY_GOAL.title,
+                status: 'active',
+                completedAt: null,
+                top10: [],
+                startedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await docRef.set(defaultState);
+            return defaultState;
+        }
+
+        return doc.data();
+    } catch (error) {
+        console.error('❌ Ошибка получения состояния цели:', error);
+        return null;
+    }
+}
+
+/**
+ * Считает тренировки всех пользователей.
+ * Возвращает { counts, totalWorkouts }.
+ */
+async function countAllWorkouts() {
+    // ★★★ ПОЛУЧАЕМ ДАТУ СТАРТА ЦЕЛИ ★★★
+    const state = await getCommunityGoalState();
+    const startedAt = state?.startedAt;
+
+    // Преобразуем Firestore Timestamp в миллисекунды
+    let startMs = 0;
+    if (startedAt) {
+        if (typeof startedAt.toMillis === 'function') {
+            startMs = startedAt.toMillis();          // Firestore Timestamp
+        } else if (startedAt.seconds) {
+            startMs = startedAt.seconds * 1000;      // сырой объект
+        } else {
+            startMs = new Date(startedAt).getTime();
+        }
+    }
+
+    console.log('🎯 Считаем тренировки с даты:', new Date(startMs).toISOString());
+
+    const snapshot = await firebase.firestore()
+        .collection('workouts')
+        .get();
+
+    const counts = {};
+    let totalWorkouts = 0;
+
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        // Исключаем зарядку и одиночные упражнения
+        const icon = data.icon || null;
+        if (!icon || icon === 'charging' || data.isSingle === true) return;
+
+        // ★★★ ФИЛЬТР ПО ДАТЕ СТАРТА ЦЕЛИ ★★★
+        const workoutDate = data.date ? new Date(data.date).getTime() : 0;
+        if (workoutDate < startMs) return;
+
+        totalWorkouts++;
+        const userId = data.userId;
+        if (!userId) return;
+        counts[userId] = (counts[userId] || 0) + 1;
+    });
+
+    return { counts, totalWorkouts };
+}
+
+/**
+ * Фиксирует завершение цели: сохраняет топ-10 и ставит status = 'completed'.
+ */
+async function completeCommunityGoal(totalWorkouts, counts) {
+    try {
+        const sorted = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, COMMUNITY_GOAL.topCount);
+
+        const top10 = [];
+        for (let i = 0; i < sorted.length; i++) {
+            const [userId, count] = sorted[i];
+            const position = i + 1;
+
+            let name = 'Пользователь';
+            let xp = 0;
+            let achievements = {};
+            try {
+                const profileResult = await getUserProfile(userId);
+                if (profileResult.success) {
+                    name = profileResult.data.displayName || 'Пользователь';
+                    xp = profileResult.data.totalXp || 0;
+                    achievements = profileResult.data.achievements || {};
+                }
+            } catch (e) {}
+
+            top10.push({
+                userId,
+                name,
+                count,
+                position,
+                xp,
+                achievements,
+                reward: COMMUNITY_GOAL.getRewardByPosition(position)
+            });
+        }
+
+        await firebase.firestore().doc(COMMUNITY_GOAL_DOC).update({
+            status: 'completed',
+            completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            top10: top10,
+            totalWorkouts: totalWorkouts
+        });
+
+        console.log('🏆 Цель зафиксирована! Топ-10 сохранён.');
+        return top10;
+    } catch (error) {
+        console.error('❌ Ошибка фиксации цели:', error);
+        return null;
+    }
+}
 
 // =================== ПРОГРЕСС ОБЩЕЙ ЦЕЛИ ===================
 async function loadCommunityGoal() {
     const progressEl = document.getElementById('communityGoalProgress');
     const fillEl = document.getElementById('communityGoalFill');
+    const titleEl = document.getElementById('communityGoalTitle');
     if (!progressEl || !fillEl) return;
 
-    // ★★★ ПОДСТАВЛЯЕМ ЧИСЛА ИЗ КОНФИГА ★★★
-    const titleEl = document.getElementById('communityGoalTitle');
-    if (titleEl) titleEl.textContent = COMMUNITY_GOAL.title;
-
-    const rewardTextEl = document.getElementById('communityGoalRewardText');
-    if (rewardTextEl) rewardTextEl.textContent = `+${COMMUNITY_GOAL.reward} XP`;
-
-    progressEl.textContent = '... / ' + COMMUNITY_GOAL.target;
+    progressEl.textContent = '... / ...';
     fillEl.style.width = '0%';
 
     try {
         const user = await getFirebaseUser();
         if (!user) {
-            progressEl.textContent = '— / ' + COMMUNITY_GOAL.target;
+            progressEl.textContent = '—';
             return;
         }
 
-        const snapshot = await firebase.firestore()
-            .collection('workouts')
-            .get();
+        let state = await getCommunityGoalState();
+        if (!state) return;
 
         let totalWorkouts = 0;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const icon = data.icon || null;
-            if (!icon || icon === 'charging' || data.isSingle === true) return;
-            totalWorkouts++;
-        });
 
-        const percent = Math.min(100, Math.round((totalWorkouts / COMMUNITY_GOAL.target) * 100));
+        if (state.status === 'completed') {
+            // Не пересчитываем — показываем финальное значение
+            totalWorkouts = state.totalWorkouts || 0;
+            progressEl.textContent = `${totalWorkouts} / ${state.target}`;
+            fillEl.style.width = '100%';
+            if (titleEl) titleEl.textContent = state.title || `Выполнить ${state.target} тренировок`;
+            console.log(`🎯 Цель завершена: ${totalWorkouts}/${state.target}`);
+            return;
+        }
 
-        progressEl.textContent = `${totalWorkouts} / ${COMMUNITY_GOAL.target}`;
-        fillEl.style.width = percent + '%';
+        // Цель активна — считаем
+        const { counts, totalWorkouts: total } = await countAllWorkouts();
+        totalWorkouts = total;
 
-        console.log(`🎯 Общая цель: ${totalWorkouts} / ${COMMUNITY_GOAL.target} (${percent}%)`);
+        // Если цель только что достигнута — фиксируем
+        if (totalWorkouts >= state.target) {
+            console.log('🎉 Цель достигнута! Фиксируем топ-10...');
+            await completeCommunityGoal(totalWorkouts, counts);
+            state = await getCommunityGoalState();
+            progressEl.textContent = `${totalWorkouts} / ${state.target}`;
+            fillEl.style.width = '100%';
+        } else {
+            const percent = Math.min(100, Math.round((totalWorkouts / state.target) * 100));
+            progressEl.textContent = `${totalWorkouts} / ${state.target}`;
+            fillEl.style.width = percent + '%';
+        }
+        if (titleEl) titleEl.textContent = state.title || `Выполнить ${state.target} тренировок`;
+
+        console.log(`🎯 Общая цель: статус=${state.status}, прогресс=${totalWorkouts}/${state.target}`);
 
     } catch (error) {
         console.error('❌ Ошибка загрузки общей цели:', error);
-        progressEl.textContent = '— / ' + COMMUNITY_GOAL.target;
+        progressEl.textContent = '—';
     }
 }
 
@@ -16057,52 +16279,66 @@ async function loadCommunityGoalTop() {
             return;
         }
 
-        // ★★★ СЧИТАЕМ ТРЕНИРОВКИ ПО ПОЛЬЗОВАТЕЛЯМ ★★★
-        const snapshot = await firebase.firestore()
-            .collection('workouts')
-            .get();
+        const state = await getCommunityGoalState();
+        if (!state) return;
 
-        const counts = {};
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const icon = data.icon || null;
-            if (!icon || icon === 'charging' || data.isSingle === true) return;
-            const userId = data.userId;
-            if (!userId) return;
-            counts[userId] = (counts[userId] || 0) + 1;
-        });
+        let topUsers = [];
 
-        // ★★★ СОРТИРУЕМ И БЕРЁМ ТОП-10 ★★★
-        const sorted = Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, COMMUNITY_GOAL.topCount);
+        if (state.status === 'completed' && state.top10 && state.top10.length > 0) {
+            // ★★★ ИСПОЛЬЗУЕМ ЗАФИКСИРОВАННЫЙ ТОП ★★★
+            console.log('📌 Используем зафиксированный топ-10');
+            topUsers = state.top10.map(u => ({
+                id: u.userId,
+                name: u.name,
+                count: u.count,
+                xp: u.xp,
+                achievements: u.achievements || {},
+                position: u.position,
+                reward: u.reward
+            }));
+        } else {
+            // ★★★ СЧИТАЕМ АКТУАЛЬНЫЙ ТОП ★★★
+            const { counts } = await countAllWorkouts();
 
-        if (sorted.length === 0) {
+            const sorted = Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, COMMUNITY_GOAL.topCount);
+
+            for (let i = 0; i < sorted.length; i++) {
+                const [userId, count] = sorted[i];
+                const position = i + 1;
+
+                let name = 'Пользователь';
+                let xp = 0;
+                let achievements = {};
+                try {
+                    const profileResult = await getUserProfile(userId);
+                    if (profileResult.success) {
+                        name = profileResult.data.displayName || 'Пользователь';
+                        xp = profileResult.data.totalXp || 0;
+                        achievements = profileResult.data.achievements || {};
+                    }
+                } catch (e) {}
+
+                topUsers.push({
+                    id: userId,
+                    name,
+                    count,
+                    xp,
+                    achievements,
+                    position,
+                    reward: COMMUNITY_GOAL.getRewardByPosition(position)
+                });
+            }
+        }
+
+        if (topUsers.length === 0) {
             container.innerHTML = '<div style="text-align:center;color:var(--slate);padding:1rem;">Пока нет тренировок</div>';
             return;
         }
 
-        // ★★★ ЗАГРУЖАЕМ ПРОФИЛИ ★★★
-        const topUsers = [];
-        for (const [userId, count] of sorted) {
-            let name = 'Пользователь';
-            let xp = 0;
-            let achievements = {};
-            try {
-                const profileResult = await getUserProfile(userId);
-                if (profileResult.success) {
-                    name = profileResult.data.displayName || 'Пользователь';
-                    xp = profileResult.data.totalXp || 0;
-                    achievements = profileResult.data.achievements || {};
-                }
-            } catch (e) {}
-            topUsers.push({ id: userId, name, count, xp, achievements });
-        }
-
-        // ★★★ РЕНДЕРИМ ★★★
         const visible = getAchievementsVisibility();
-        container.innerHTML = topUsers.map((u, index) => {
-            const position = index + 1;
+        container.innerHTML = topUsers.map(u => {
             const isCurrentUser = u.id === user.uid;
 
             let infoHtml = '';
@@ -16123,21 +16359,20 @@ async function loadCommunityGoalTop() {
                 infoHtml = `<span style="font-size:0.6rem; color:var(--slate);">Уровень ${level}</span>`;
             }
 
+            const statsText = `${u.count} ${declOfNum(u.count, ['тренировка', 'тренировки', 'тренировок'])} · +${u.reward} XP`;
+
             return `
                 <div class="item-card-light ${isCurrentUser ? 'current-user' : ''}">
                     <div class="item-icon" style="width:44px;height:44px;min-width:44px;background:var(--accent-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                        <span style="font-size:1rem;font-weight:700;color:var(--accent);">${position}</span>
+                        <span style="font-size:1rem;font-weight:700;color:var(--accent);">${u.position}</span>
                     </div>
                     <div class="item-info" style="text-align:left;">
                         <h3 class="item-title">${u.name}</h3>
-                        <p class="item-desc">${infoHtml}</p>
+                        <p class="item-desc" style="font-weight:600; color:var(--accent);">${statsText}</p>
                     </div>
-                    <div class="item-xp">${u.count}</div>
                 </div>
             `;
         }).join('');
-
-        console.log(`🏆 Топ-${COMMUNITY_GOAL.topCount} вкладчиков загружен`);
 
     } catch (error) {
         console.error('❌ Ошибка загрузки топ-10:', error);
@@ -16145,100 +16380,356 @@ async function loadCommunityGoalTop() {
     }
 }
 
-// =================== НАГРАДА ЗА ОБЩУЮ ЦЕЛЬ ===================
-// Срабатывает при входе в приложение. Если цель достигнута и пользователь в топ-10
-// и ещё не получал награду — начисляем XP + показываем SMS.
+// =================== МОДАЛКА «ОБЩАЯ ЦЕЛЬ» ===================
+async function openCommunityGoalModal() {
+    openModal('communityGoalModal');
 
-async function checkAndGiveCommunityGoalReward() {
+    // Обновляем текст статуса
+    const statusTextEl = document.getElementById('communityGoalStatusText');
+    if (statusTextEl) {
+        try {
+            const state = await getCommunityGoalState();
+            if (state && state.status === 'completed') {
+                statusTextEl.textContent = '✅ Задание выполнено! Все награды разданы!';
+            } else {
+                statusTextEl.textContent = 'Как только сообщество достигнет цели, все получат свою награду.';
+            }
+        } catch (e) {
+            statusTextEl.textContent = 'Как только сообщество достигнет цели, все получат свою награду.';
+        }
+    }
+
+    // Топ-10
+    loadCommunityGoalTop();
+
+    // ★★★ МОЁ МЕСТО И НАГРАДА ★★★
+    loadCommunityGoalMyPlace();
+}
+
+window.openCommunityGoalModal = openCommunityGoalModal;
+
+// ★★★ НОВАЯ ФУНКЦИЯ: МОЁ МЕСТО И НАГРАДА ★★★
+async function loadCommunityGoalMyPlace() {
+    const placeTextEl = document.getElementById('communityGoalMyPlaceText');
+    const rewardEl = document.getElementById('communityGoalMyReward');
+    if (!placeTextEl || !rewardEl) return;
+
+    placeTextEl.textContent = 'Вы на ... месте';
+    rewardEl.textContent = '+...XP';
+
     try {
         const user = await getFirebaseUser();
         if (!user) return;
 
-        // ★★★ 1. ПОЛУЧАЕМ ПРОФИЛЬ ★★★
+        const state = await getCommunityGoalState();
+        if (!state) return;
+
+        let myPosition = 0;
+        let myReward = 0;
+
+        // ★★★ ЕСЛИ ЦЕЛЬ ЗАВЕРШЕНА — БЕРЁМ ИЗ ЗАФИКСИРОВАННОГО ТОПА ★★★
+        if (state.status === 'completed' && state.top10 && state.top10.length > 0) {
+            const topUser = state.top10.find(u => u.userId === user.uid);
+            if (topUser) {
+                myPosition = topUser.position;
+                myReward = topUser.reward;
+            } else {
+                // Не в топ-10 — считаем место по общей статистике
+                const { counts } = await countAllWorkouts();
+                const myCount = counts[user.uid] || 0;
+                // Место = количество людей с большим счётом + 1
+                myPosition = Object.values(counts).filter(c => c > myCount).length + 1;
+                myReward = 0; // Вне топ-10 награды нет
+            }
+        } else {
+            // ★★★ ЦЕЛЬ АКТИВНА — СЧИТАЕМ АКТУАЛЬНОЕ МЕСТО ★★★
+            const { counts } = await countAllWorkouts();
+            const myCount = counts[user.uid] || 0;
+            myPosition = Object.values(counts).filter(c => c > myCount).length + 1;
+
+            // Награда по позиции из конфига
+            if (myPosition === 1) myReward = 100;
+            else if (myPosition === 2) myReward = 80;
+            else if (myPosition === 3) myReward = 60;
+            else if (myPosition === 4 || myPosition === 5) myReward = 40;
+            else if (myPosition <= 10) myReward = 20;
+            else myReward = 0;
+        }
+
+        // ★★★ ОБНОВЛЯЕМ UI ★★★
+        placeTextEl.textContent = `Вы на ${myPosition}-ом месте`;
+        rewardEl.textContent = myReward > 0 ? `+${myReward}XP` : 'без награды';
+        rewardEl.style.color = myReward > 0 ? 'var(--accent)' : 'var(--slate)';
+
+        console.log(`🎯 Ваше место: ${myPosition}, награда: ${myReward}XP`);
+
+    } catch (error) {
+        console.error('❌ Ошибка загрузки места:', error);
+        placeTextEl.textContent = 'Вы на ... месте';
+        rewardEl.textContent = '+...XP';
+    }
+}
+
+// =================== ОЧЕРЕДЬ МОДАЛОК ===================
+const modalQueue = [];
+let isModalQueueProcessing = false;
+
+/**
+ * Добавить модалку в очередь.
+ */
+function enqueueModal(item) {
+    modalQueue.push(item);
+    processModalQueue();
+}
+
+/**
+ * Обработать очередь: показывает модалки по одной.
+ */
+function processModalQueue() {
+    if (isModalQueueProcessing) return;
+    if (modalQueue.length === 0) return;
+
+    // Не показываем модалки во время тренировки
+    const sessionPage = document.getElementById('page-training-session');
+    const taskSessionPage = document.getElementById('page-task-session');
+    const isTraining = (sessionPage && sessionPage.classList.contains('page-active'))
+                    || (taskSessionPage && taskSessionPage.classList.contains('page-active'));
+    if (isTraining) {
+        console.log('⏸️ Тренировка активна — очередь модалок ждёт');
+        return;
+    }
+
+    // Не показываем на экранах hero/loading/login/register
+    const forbidden = ['page-hero', 'page-loading', 'page-login', 'page-login-password',
+                       'page-register', 'page-register-email', 'page-register-password',
+                       'page-register-verify', 'page-inventory'];
+    for (const id of forbidden) {
+        const el = document.getElementById(id);
+        if (el && el.classList.contains('page-active')) {
+            console.log('⏸️ Экран ' + id + ' — очередь модалок ждёт');
+            return;
+        }
+    }
+
+    // Не показываем, если уже открыта какая-то модалка
+    const openModalOverlay = document.querySelector(
+        '.modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"]'
+    );
+    if (openModalOverlay && openModalOverlay.id !== 'communityGoalRewardModal') {
+        console.log('⏸️ Другая модалка открыта — очередь ждёт');
+        return;
+    }
+
+    isModalQueueProcessing = true;
+    const item = modalQueue.shift();
+
+    if (item.type === 'premium') {
+        try {
+            openPremiumModal();
+        } catch (error) {
+            console.error('❌ Ошибка открытия Premium-модалки:', error);
+            isModalQueueProcessing = false;
+            processModalQueue();
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            console.warn('⚠️ Premium-модалка не закрылась за 30с — продолжаем очередь');
+            isModalQueueProcessing = false;
+            processModalQueue();
+        }, 30000);
+
+        watchModalClose('premiumModal', () => {
+            clearTimeout(timeout);
+            isModalQueueProcessing = false;
+            processModalQueue();
+        });
+
+    } else if (item.type === 'goalReward') {
+        try {
+            showCommunityGoalRewardModal(item.topUser, item.goalState);
+        } catch (error) {
+            console.error('❌ Ошибка показа reward-модалки:', error);
+            isModalQueueProcessing = false;
+            processModalQueue();
+        }
+    } else {
+        console.warn('⚠️ Неизвестный тип модалки в очереди:', item.type);
+        isModalQueueProcessing = false;
+        processModalQueue();
+    }
+}
+
+/**
+ * Следит за закрытием модалки.
+ */
+function watchModalClose(modalId, callback) {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        callback();
+        return;
+    }
+
+    // Если модалка уже закрыта — сразу вызываем
+    if (modal.style.display === 'none' || modal.style.display === '') {
+        callback();
+        return;
+    }
+
+    const observer = new MutationObserver(() => {
+        if (modal.style.display === 'none' || modal.style.display === '') {
+            observer.disconnect();
+            callback();
+        }
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+}
+
+// =================== МОДАЛКА НАГРАДЫ ЗА ЦЕЛЬ ===================
+async function showCommunityGoalRewardModal(topUser, goalState) {
+    const modal = document.getElementById('communityGoalRewardModal');
+
+    // ★★★ ЕСЛИ МОДАЛКИ НЕТ — ПРОДОЛЖАЕМ ОЧЕРЕДЬ ★★★
+    if (!modal) {
+        console.warn('⚠️ Модалка communityGoalRewardModal не найдена в HTML');
+        isModalQueueProcessing = false;
+        processModalQueue();
+        return;
+    }
+
+    // ★★★ ЕСЛИ НЕТ ДАННЫХ — ПРОПУСКАЕМ ★★★
+    if (!topUser || !goalState) {
+        console.warn('⚠️ showCommunityGoalRewardModal: нет topUser или goalState');
+        isModalQueueProcessing = false;
+        processModalQueue();
+        return;
+    }
+
+    const titleEl = document.getElementById('communityGoalRewardTitle');
+    const textEl = document.getElementById('communityGoalRewardText');
+    const acceptBtn = document.getElementById('communityGoalRewardAcceptBtn');
+
+    // Заполняем тексты
+    if (titleEl) {
+        titleEl.textContent = `Задание "${goalState.title || 'Общая цель'}" выполнено!`;
+    }
+    if (textEl) {
+        textEl.textContent = `Вы заняли ${topUser.position} место и получаете награду: +${topUser.reward}XP.`;
+    }
+
+    // Обработчик кнопки «Принять»
+    if (acceptBtn) {
+        // Убираем старые обработчики
+        const newBtn = acceptBtn.cloneNode(true);
+        acceptBtn.parentNode.replaceChild(newBtn, acceptBtn);
+
+        newBtn.disabled = false;
+        newBtn.addEventListener('click', async function() {
+            newBtn.disabled = true;
+
+            try {
+                const user = await getFirebaseUser();
+                if (!user) {
+                    closeModal('communityGoalRewardModal');
+                    isModalQueueProcessing = false;
+                    processModalQueue();
+                    return;
+                }
+
+                const profileResult = await getUserProfile(user.uid);
+                const profile = profileResult.success ? profileResult.data : {};
+                const currentXp = profile.totalXp || 0;
+
+                await updateUserProfile(user.uid, {
+                    totalXp: currentXp + topUser.reward,
+                    communityGoalReward: goalState.target
+                });
+
+                console.log(`🏆 Награда принята: +${topUser.reward} XP`);
+
+                closeModal('communityGoalRewardModal');
+
+                // Обновляем профиль, чтобы XP отобразился
+                if (typeof loadProfile === 'function') loadProfile();
+
+                // ★★★ ПРОДОЛЖАЕМ ОЧЕРЕДЬ ★★★
+                isModalQueueProcessing = false;
+                processModalQueue();
+
+            } catch (error) {
+                console.error('❌ Ошибка принятия награды:', error);
+                closeModal('communityGoalRewardModal');
+                isModalQueueProcessing = false;
+                processModalQueue();
+            }
+        });
+    }
+
+    openModal('communityGoalRewardModal');
+}
+
+// =================== ПРОВЕРКА НАГРАДЫ ЗА ЦЕЛЬ ===================
+let _lastGoalRewardCheck = 0;
+
+/**
+ * Проверяет, должен ли пользователь получить награду.
+ * Если да — добавляет модалку в очередь.
+ * @param {boolean} force — игнорировать throttle
+ */
+async function checkAndGiveCommunityGoalReward(force = false) {
+    // ★★★ THROTTLE: не чаще раза в 10 секунд (если не force) ★★★
+    const now = Date.now();
+    if (!force && now - _lastGoalRewardCheck < 10000) {
+        return;
+    }
+    _lastGoalRewardCheck = now;
+
+    try {
+        const user = await getFirebaseUser();
+        if (!user) return;
+
         const profileResult = await getUserProfile(user.uid);
         if (!profileResult.success) return;
         const profile = profileResult.data;
 
-        // ★★★ 2. ПРОВЕРЯЕМ, НЕ ПОЛУЧАЛ ЛИ УЖЕ НАГРАДУ ★★★
-        // Храним в Firestore в поле communityGoalReward
-        if (profile.communityGoalReward === COMMUNITY_GOAL.target) {
-            console.log('ℹ️ Награда за общую цель уже получена');
+        const state = await getCommunityGoalState();
+        if (!state) return;
+
+        // Если цель не завершена — выходим
+        if (state.status !== 'completed') return;
+
+        // Если уже получал награду за эту цель — выходим
+        if (profile.communityGoalReward === state.target) {
+            console.log('ℹ️ Награда за эту цель уже получена');
             return;
         }
 
-        // ★★★ 3. СЧИТАЕМ ОБЩИЙ ПРОГРЕСС ★★★
-        const snapshot = await firebase.firestore()
-            .collection('workouts')
-            .get();
+        // Ищем пользователя в зафиксированном топе
+        const topUser = (state.top10 || []).find(u => u.userId === user.uid);
 
-        const counts = {};
-        let totalWorkouts = 0;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const icon = data.icon || null;
-            if (!icon || icon === 'charging' || data.isSingle === true) return;
-
-            totalWorkouts++;
-            const userId = data.userId;
-            if (!userId) return;
-            counts[userId] = (counts[userId] || 0) + 1;
-        });
-
-        // ★★★ 4. ЕСЛИ ЦЕЛЬ НЕ ДОСТИГНУТА — ВЫХОДИМ ★★★
-        if (totalWorkouts < COMMUNITY_GOAL.target) {
-            console.log(`⏳ Цель ещё не достигнута: ${totalWorkouts}/${COMMUNITY_GOAL.target}`);
-            return;
-        }
-
-        // ★★★ 5. ПРОВЕРЯЕМ, ВХОДИТ ЛИ ПОЛЬЗОВАТЕЛЬ В ТОП-10 ★★★
-        const sorted = Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, COMMUNITY_GOAL.topCount);
-
-        const isInTop = sorted.some(([userId]) => userId === user.uid);
-        if (!isInTop) {
-            console.log('ℹ️ Вы не в топ-10, награда не начисляется');
-            // Помечаем, что награда обработана (чтобы не проверять каждый раз)
+        if (!topUser) {
+            // Не в топ-10 — ставим флаг, чтобы не проверять каждый раз
+            console.log('ℹ️ Вы не в топ-10 зафиксированной цели');
             await updateUserProfile(user.uid, {
-                communityGoalReward: COMMUNITY_GOAL.target
+                communityGoalReward: state.target
             });
             return;
         }
 
-        // ★★★ 6. НАЧИСЛЯЕМ НАГРАДУ ★★★
-        const currentXp = profile.totalXp || 0;
-        await updateUserProfile(user.uid, {
-            totalXp: currentXp + COMMUNITY_GOAL.reward,
-            communityGoalReward: COMMUNITY_GOAL.target   // ← флаг «получена»
+        // ★★★ ДОБАВЛЯЕМ В ОЧЕРЕДЬ ★★★
+        console.log(`📥 Добавляем награду в очередь: место ${topUser.position}, +${topUser.reward} XP`);
+        enqueueModal({
+            type: 'goalReward',
+            topUser: topUser,
+            goalState: state
         });
 
-        console.log(`🏆 Награда за общую цель: +${COMMUNITY_GOAL.reward} XP`);
-
-        // ★★★ 7. ПОКАЗЫВАЕМ SMS С НАГРАДОЙ ★★★
-        showNotification(
-            '🏆',
-            `Вы вошли в топ-${COMMUNITY_GOAL.topCount} вкладчиков! Награда: +${COMMUNITY_GOAL.reward} XP`,
-            null
-        );
-
     } catch (error) {
-        console.error('❌ Ошибка выдачи награды:', error);
+        console.error('❌ Ошибка проверки награды:', error);
     }
 }
 
-function openCommunityGoalModal() {
-    // ★★★ ПОДСТАВЛЯЕМ ЧИСЛА ИЗ КОНФИГА ★★★
-    const titleEl = document.getElementById('communityGoalModalTitle');
-    if (titleEl) titleEl.textContent = 'Общая цель сообщества';
-
-    const rewardTextEl = document.getElementById('communityGoalRewardText');
-    if (rewardTextEl) rewardTextEl.textContent = `+${COMMUNITY_GOAL.reward} XP`;
-
-    openModal('communityGoalModal');
-    loadCommunityGoalTop();
-}
-
-window.openCommunityGoalModal = openCommunityGoalModal;
+// =================== ГТО: ВОЗРАСТНЫЕ КАТЕГОРИИ (15 СТУПЕНЕЙ) ===================
 
 window.selectGTOGender = function(gender) {
     const category = 'ГТО';
@@ -16256,7 +16747,6 @@ window.selectGTOGender = function(gender) {
     });
 };
 
-// =================== ГТО: ВОЗРАСТНЫЕ КАТЕГОРИИ (15 СТУПЕНЕЙ) ===================
 const GTO_AGE_MAP = {
     '1 СТУПЕНЬ':  '6 - 7 лет',
     '2 СТУПЕНЬ':  '8 - 9 лет',
@@ -16441,3 +16931,257 @@ function filterExercisesByInventory(userInventory) {
         );
     });
 }
+
+// =================== АВТО-КАРУСЕЛЬ (БЕСКОНЕЧНАЯ) ===================
+const CAROUSEL_CARDS = [
+    {
+        icon: 'fa-solid fa-dumbbell',
+        iconImg: null,
+        title: 'Силовые тренировки',
+        desc: 'Руки, пресс, грудь, спина',
+        action: () => {
+            TabManager.workouts('ready');
+            window.navigateTo('workouts');
+            // Скролл к силовым
+            setTimeout(() => {
+                const block = document.querySelector('[data-block-id="strength"]');
+                if (block) {
+                    block.classList.add('open');
+                    block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    },
+    {
+        icon: 'fa-solid fa-heart-pulse',
+        iconImg: null,
+        title: 'Кардио и Фитнес',
+        desc: 'Бег, прыжки, растяжка',
+        action: () => {
+            TabManager.workouts('ready');
+            window.navigateTo('workouts');
+            setTimeout(() => {
+                const block = document.querySelector('[data-block-id="fitness"]');
+                if (block) {
+                    block.classList.add('open');
+                    block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    },
+    {
+        icon: 'fa-solid fa-crown',
+        iconImg: null,
+        title: 'PREMIUM',
+        desc: 'Кроссфит, ГТО, мощь',
+        action: () => {
+            if (!hasPremium()) {
+                openModal('premiumModal');
+            } else {
+                TabManager.workouts('ready');
+                window.navigateTo('workouts');
+                setTimeout(() => {
+                    const block = document.querySelector('[data-block-id="premium"]');
+                    if (block) {
+                        block.classList.add('open');
+                        block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
+        }
+    },
+    {
+        icon: 'fa-solid fa-list-check',
+        iconImg: null,
+        title: 'Задания',           // ← будет переопределяться динамически
+        desc: 'Выполнено 0/5',      // ← будет переопределяться динамически
+        dynamic: true,              // ★★★ ФЛАГ ДЛЯ ДИНАМИЧЕСКОЙ КАРТОЧКИ ★★★
+        action: () => {
+            TabManager.profile('my');
+            window.navigateTo('profile');
+            
+            // Раскрываем нужный блок через 300мс, когда страница отрисуется
+            setTimeout(() => {
+                const isDaily = checkAllTasksCompleted();
+                const blockId = isDaily ? 'daily-tasks-block' : 'tasks-block';
+                const block = document.getElementById(blockId);
+                
+                if (block) {
+                    // Скрываем другой блок
+                    const otherId = isDaily ? 'tasks-block' : 'daily-tasks-block';
+                    const otherBlock = document.getElementById(otherId);
+                    if (otherBlock) otherBlock.style.display = 'none';
+                    
+                    // Показываем нужный
+                    block.style.display = 'block';
+                    block.classList.add('open');
+                    
+                    // Скролл к блоку
+                    setTimeout(() => {
+                        block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                    
+                    // Перерисовываем содержимое
+                    if (isDaily) {
+                        renderDailyTasks();
+                    } else {
+                        updateTasksUI();
+                    }
+                    
+                    saveBlocksState();
+                }
+            }, 400);
+        }
+    },
+    {
+        icon: 'fa-solid fa-chart-bar',
+        iconImg: null,
+        title: 'Моя статистика',
+        desc: 'Прогресс, XP, история',
+        action: () => {
+            TabManager.stats('personal');
+            window.navigateTo('stats');
+        }
+    },
+    {
+        icon: 'fa-solid fa-user-group',
+        iconImg: null,
+        title: 'Соревнуйся с друзьями',
+        desc: 'Рейтинг и достижения друзей',
+        action: () => {
+            TabManager.stats('world');
+            window.navigateTo('stats');
+            setTimeout(() => {
+                const block = document.querySelector('[data-block-id="friends-leaderboard"]');
+                if (block) {
+                    block.classList.add('open');
+                    block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    },
+    {
+        icon: 'fa-solid fa-fire',
+        iconImg: null,
+        title: 'Серия тренировок',
+        desc: 'Тренируйся каждый день',
+        action: () => {
+            TabManager.profile('my');
+            window.navigateTo('profile');
+            setTimeout(() => openStreakModal(), 400);
+        }
+    }
+];
+
+function initAutoCarousel() {
+    const track = document.getElementById('autoCarouselTrack');
+    if (!track) return;
+
+    // ★★★ ОБНОВЛЯЕМ ДИНАМИЧЕСКИЕ КАРТОЧКИ ПЕРЕД РЕНДЕРОМ ★★★
+    updateCarouselDynamicCards();
+
+    // Дублируем карточки для бесконечной прокрутки
+    const cardsHtml = CAROUSEL_CARDS.map((card, index) => {
+        const iconHtml = card.iconImg
+            ? `<img src="${card.iconImg}" alt="${card.title}">`
+            : `<i class="${card.icon}"></i>`;
+        return `
+            <div class="carousel-card" data-card-index="${index}">
+                <div class="carousel-card-icon">${iconHtml}</div>
+                <div class="carousel-card-info">
+                    <div class="carousel-card-title">${card.title}</div>
+                    <div class="carousel-card-desc">${card.desc}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    track.innerHTML = cardsHtml + cardsHtml;
+
+    // Обработчик клика
+    track.addEventListener('click', function(e) {
+        const card = e.target.closest('.carousel-card');
+        if (!card) return;
+        const index = parseInt(card.dataset.cardIndex);
+        if (CAROUSEL_CARDS[index] && typeof CAROUSEL_CARDS[index].action === 'function') {
+            CAROUSEL_CARDS[index].action();
+        }
+    });
+}
+
+// ★★★ ОБНОВЛЕНИЕ ДИНАМИЧЕСКИХ КАРТОЧЕК ★★★
+function updateCarouselDynamicCards() {
+    CAROUSEL_CARDS.forEach(card => {
+        if (!card.dynamic) return;
+
+        if (card.icon === 'fa-solid fa-list-check') {
+            const isDaily = checkAllTasksCompleted();
+
+            if (isDaily) {
+                // ★★★ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
+                const total = (dailyTasksList && dailyTasksList.length > 0) 
+                    ? dailyTasksList.length 
+                    : (hasPremium() ? 5 : 3);
+                    
+                const completed = (dailyTasksList && dailyTasksList.length > 0)
+                    ? dailyTasksList.filter(t => t.completed).length 
+                    : 0;
+
+                const remaining = total - completed;
+
+                card.title = 'Ежедневные задания';
+                card.desc = remaining > 0 
+                    ? `Выполнено ${completed} из ${total} · Осталось ${remaining}`
+                    : `Все ${total} заданий выполнены`;
+            } else {
+                // ★★★ ПЕРВЫЕ ЗАДАНИЯ ★★★
+                const totalTasks = 5;
+                const completedTasks = Object.values(tasks).filter(v => v === true).length;
+                const remainingTasks = totalTasks - completedTasks;
+
+                card.title = 'Первые задания';
+                card.desc = remainingTasks > 0
+                    ? `Пройдено ${completedTasks} из ${totalTasks} · Осталось ${remainingTasks}`
+                    : `Все ${totalTasks} заданий пройдены`;
+            }
+        }
+    });
+}
+
+// ★★★ ПЕРЕЗАПУСК КАРУСЕЛИ (для обновления после выполнения заданий) ★★★
+function refreshAutoCarousel() {
+    const track = document.getElementById('autoCarouselTrack');
+    if (!track) return;
+
+    // Останавливаем анимацию
+    track.style.animation = 'none';
+
+    // Обновляем контент
+    updateCarouselDynamicCards();
+
+    const cardsHtml = CAROUSEL_CARDS.map((card, index) => {
+        const iconHtml = card.iconImg
+            ? `<img src="${card.iconImg}" alt="${card.title}">`
+            : `<i class="${card.icon}"></i>`;
+        return `
+            <div class="carousel-card" data-card-index="${index}">
+                <div class="carousel-card-icon">${iconHtml}</div>
+                <div class="carousel-card-info">
+                    <div class="carousel-card-title">${card.title}</div>
+                    <div class="carousel-card-desc">${card.desc}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    track.innerHTML = cardsHtml + cardsHtml;
+
+    // Перезапускаем анимацию
+    void track.offsetWidth; // force reflow
+    track.style.animation = '';
+}
+
+// Запускаем после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initAutoCarousel, 500);
+});
