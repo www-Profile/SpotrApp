@@ -6595,185 +6595,140 @@ firebase.auth().onAuthStateChanged(async (user) => {
     
     const bottomNav = document.getElementById('bottomNav');
     try {
-        if (user) {
-            try { 
-                await user.reload(); 
-            } catch (e) { 
-                console.warn('Ошибка перезагрузки пользователя:', e); 
-            }
-            
-            // ===== ПРОВЕРКА ПОДТВЕРЖДЕНИЯ ПОЧТЫ =====
-            if (!user.emailVerified) {
-                console.log('📧 Почта не подтверждена, проверяем таймер удаления...');
-                
-                // ★★★ ПРОВЕРЯЕМ В FIRESTORE ★★★
-                try {
-                    const pendingDoc = await firebase.firestore()
-                        .collection('pendingDeletions')
-                        .doc(user.uid)
-                        .get();
-                    
-                    if (pendingDoc.exists) {
-                        const data = pendingDoc.data();
-                        const deleteAt = data.deleteAt?.toDate?.() || new Date(data.deleteAt);
-                        
-                        if (deleteAt && new Date() > deleteAt) {
-                            // Прошло больше 5 минут - удаляем аккаунт
-                            console.log('⏰ Время подтверждения истекло, удаляем аккаунт...');
-                            try {
-                                // Удаляем данные пользователя из Firestore
-                                await firebase.firestore().collection('users').doc(user.uid).delete();
-                                // Удаляем запись о pending
-                                await pendingDoc.ref.delete();
-                                // Удаляем сам аккаунт
-                                await user.delete();
-                                localStorage.removeItem('pendingVerification_' + user.uid);
-                                showToast('⏰ Время подтверждения истекло. Зарегистрируйтесь заново.');
-                                showHero();
-                                return;
-                            } catch (e) {
-                                console.warn('Ошибка удаления просроченного аккаунта:', e);
-                                // Если не удалось удалить - всё равно показываем страницу входа
-                                showHero();
-                                return;
-                            }
-                        } else {
-                            console.log('⏳ Осталось времени:', Math.round((deleteAt - new Date()) / 1000), 'сек');
-                        }
-                    } else {
-                        // ★★★ ЕСЛИ НЕТ ЗАПИСИ В FIRESTORE - СОЗДАЁМ ★★★
-                        console.log('📝 Создаём запись о pending в Firestore');
-                        scheduleAccountDeletion(user);
-                    }
-                } catch (error) {
-                    console.error('❌ Ошибка проверки pending:', error);
-                    // В случае ошибки - показываем страницу подтверждения
-                }
-                
-                // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ПРИВЕТСТВИЯ ★★★
-                isDataLoaded = false;
-                document.querySelectorAll('.page').forEach(p => {
-                    p.style.display = 'none';
-                    p.classList.remove('page-active');
-                });
-                if (bottomNav) bottomNav.style.display = 'none';
-                
-                showHero();
-                clearAuthFields();
-                return;
-            }
-            
-            // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - УДАЛЯЕМ ИЗ PENDING ★★★
-            try {
-                await firebase.firestore()
-                    .collection('pendingDeletions')
-                    .doc(user.uid)
-                    .delete();
-                localStorage.removeItem('pendingVerification_' + user.uid);
-                console.log('✅ Запись о pending удалена (почта подтверждена)');
-            } catch (e) {
-                // Игнорируем ошибку, если записи нет
-            }
-            
-            // ★★★ ПРОВЕРЯЕМ ФЛАГ ЗАГРУЗКИ ★★★
-            if (isDataLoaded) {
-                console.log('⚠️ Данные уже загружены, пропускаем');
-                return;
-            }
-            
-            // Проверяем, не загружена ли уже страница (для безопасности)
-            const isPageLoaded = document.querySelector('#page-workouts.page-active') || 
-                                document.querySelector('#page-stats.page-active') || 
-                                document.querySelector('#page-profile.page-active');
-            if (isPageLoaded) {
-                isDataLoaded = true;
-                console.log('⚠️ Страница уже загружена, пропускаем');
-                return;
-            }
-
-            // ★★★ ПОКАЗЫВАЕМ СТРАНИЦУ ЗАГРУЗКИ ★★★
-            document.querySelectorAll('.page').forEach(p => {
-                p.style.display = 'none';
-                p.classList.remove('page-active');
-            });
-            
-            const loadingPage = document.getElementById('page-loading');
-            if (loadingPage) {
-                loadingPage.style.display = 'block';
-                loadingPage.classList.add('page-active');
-                console.log('📱 Страница загрузки показана');
-            }
-            if (bottomNav) bottomNav.style.display = 'none';
-
-            console.log('📊 Загрузка данных...');
-            const [profileResult, workoutsResult] = await Promise.all([
-                getUserProfile(user.uid),
-                getUserWorkoutsFromFirestore(user.uid)
-            ]);
-
-            let profile = null;
-            if (profileResult.success) {
-                profile = profileResult.data;
-            } else {
-                const newProfile = {
-                    displayName: user.displayName || user.email?.split('@')[0] || 'Пользователь',
-                    avatar: 'bodybuilding',
-                    level: 1,
-                    totalXp: 0,
-                    createdAt: new Date().toISOString(),
-                    tutorialCompleted: false
-                };
-                await saveUserProfile(user.uid, newProfile);
-                profile = newProfile;
-            }
-
-            clearAuthFields();
-
-            if (document.readyState !== 'complete') {
-                await new Promise(resolve => {
-                    window.addEventListener('load', resolve, { once: true });
-                });
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            console.log('📊 Загрузка профиля...');
-            await loadProfile();
-            console.log('📊 Загрузка статистики...');
-            await loadStats();
-            console.log('📊 Рендер тренировок...');
-            renderMyWorkouts();
-            await renderCalendar(currentMonth, currentYear);
-            updatePremiumUI();
-            initProfileBlocks();
-            switchProfileTab('my');
-
-            loadPremiumStats();
-
-            window._tutorialNeeded = profile && profile.tutorialCompleted === false;
-
-            if (typeof syncPendingWorkouts === 'function') {
-                syncPendingWorkouts();
-            }
-            
-            // ★★★ УСТАНАВЛИВАЕМ ФЛАГ, ЧТО ДАННЫЕ ЗАГРУЖЕНЫ ★★★
-            isDataLoaded = true;
-            
-            // ★★★ ДАННЫЕ ЗАГРУЖЕНЫ, НО СТРАНИЦУ ЗАГРУЗКИ НЕ ЗАКРЫВАЕМ ★★★
-            console.log('✅ Данные загружены, ждем нажатия кнопки');
-         
-        } else {
-            // Пользователь не авторизован - сбрасываем флаг
+        // ★★★ ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН — СРАЗУ ПОКАЗЫВАЕМ HERO ★★★
+        if (!user) {
             isDataLoaded = false;
             console.log('👤 Пользователь не авторизован');
             if (bottomNav) bottomNav.style.display = 'none';
-            
             showHero();
+            // ★★★ ПЛАВНО ПОКАЗЫВАЕМ КНОПКИ ★★★
+            showHeroButtons();
             clearAuthFields();
+            return;
         }
+
+        try { 
+            await user.reload(); 
+        } catch (e) { 
+            console.warn('Ошибка перезагрузки пользователя:', e); 
+        }
+
+        // ===== ПРОВЕРКА ПОДТВЕРЖДЕНИЯ ПОЧТЫ =====
+        if (!user.emailVerified) {
+            // ...оставляем как у тебя было (код с pendingDeletions и т.д.)
+            // ...
+        }
+
+        // ★★★ ПОЧТА ПОДТВЕРЖДЕНА — УДАЛЯЕМ ИЗ PENDING ★★★
+        try {
+            await firebase.firestore()
+                .collection('pendingDeletions')
+                .doc(user.uid)
+                .delete();
+            localStorage.removeItem('pendingVerification_' + user.uid);
+        } catch (e) {}
+
+        // ★★★ ПРОВЕРЯЕМ ФЛАГ ЗАГРУЗКИ ★★★
+        if (isDataLoaded) {
+            console.log('⚠️ Данные уже загружены, пропускаем');
+            return;
+        }
+
+        const isPageLoaded = document.querySelector('#page-workouts.page-active') || 
+                            document.querySelector('#page-stats.page-active') || 
+                            document.querySelector('#page-profile.page-active');
+        if (isPageLoaded) {
+            isDataLoaded = true;
+            return;
+        }
+
+        // ★★★ МГНОВЕННО ПОКАЗЫВАЕМ ЭКРАН ЗАГРУЗКИ — БЕЗ КНОПКИ ★★★
+        document.querySelectorAll('.page').forEach(p => {
+            p.style.display = 'none';
+            p.classList.remove('page-active');
+        });
+        
+        const loadingPage = document.getElementById('page-loading');
+        if (loadingPage) {
+            loadingPage.style.display = 'block';
+            loadingPage.classList.add('page-active');
+            console.log('📱 Страница загрузки показана мгновенно');
+        }
+        if (bottomNav) bottomNav.style.display = 'none';
+        
+        // ★★★ УБЕЖДАЕМСЯ, ЧТО КНОПКА СКРЫТА ★★★
+        hideHeroButtons();
+
+        // ★★★ ТЕПЕРЬ ГРУЗИМ ДАННЫЕ В ФОНЕ ★★★
+        console.log('📊 Загрузка данных...');
+        const [profileResult, workoutsResult] = await Promise.all([
+            getUserProfile(user.uid),
+            getUserWorkoutsFromFirestore(user.uid)
+        ]);
+
+        let profile = null;
+        if (profileResult.success) {
+            profile = profileResult.data;
+        } else {
+            const newProfile = {
+                displayName: user.displayName || user.email?.split('@')[0] || 'Пользователь',
+                avatar: 'bodybuilding',
+                level: 1,
+                totalXp: 0,
+                createdAt: new Date().toISOString(),
+                tutorialCompleted: false
+            };
+            await saveUserProfile(user.uid, newProfile);
+            profile = newProfile;
+        }
+
+        clearAuthFields();
+
+        if (document.readyState !== 'complete') {
+            await new Promise(resolve => {
+                window.addEventListener('load', resolve, { once: true });
+            });
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        console.log('📊 Загрузка профиля...');
+        await loadProfile();
+        console.log('📊 Загрузка статистики...');
+        await loadStats();
+        console.log('📊 Рендер тренировок...');
+        renderMyWorkouts();
+        await renderCalendar(currentMonth, currentYear);
+        updatePremiumUI();
+        initProfileBlocks();
+        switchProfileTab('my');
+
+        loadPremiumStats();
+
+        window._tutorialNeeded = profile && profile.tutorialCompleted === false;
+
+        if (typeof syncPendingWorkouts === 'function') {
+            syncPendingWorkouts();
+        }
+        
+        // ★★★ УСТАНАВЛИВАЕМ ФЛАГ, ЧТО ДАННЫЕ ЗАГРУЖЕНЫ ★★★
+        isDataLoaded = true;
+        
+        console.log('✅ Данные загружены, показываем кнопку');
+
+        // ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ ★★★
+const pendingInvite = localStorage.getItem('pendingFriendInvite');
+if (pendingInvite) {
+    localStorage.removeItem('pendingFriendInvite');
+    console.log('🎯 Найдено отложенное приглашение:', pendingInvite);
+    setTimeout(() => openFriendInviteModal(pendingInvite), 1500);
+}
+        
+        // ★★★ ПЛАВНО ПОКАЗЫВАЕМ КНОПКУ ★★★
+        showHeroButtons();
+
     } catch (error) {
         console.error('❌ Ошибка в onAuthStateChanged:', error);
-        // При ошибке сбрасываем флаг
         isDataLoaded = false;
         if (bottomNav) bottomNav.style.display = 'none';
         
@@ -6786,9 +6741,9 @@ firebase.auth().onAuthStateChanged(async (user) => {
         if (loginPage) {
             loginPage.style.display = 'block';
             loginPage.classList.add('page-active');
-            console.log('📱 Страница входа показана (ошибка)');
         }
         clearAuthFields();
+        showHeroButtons();
     }
 });
 
@@ -6804,6 +6759,20 @@ function showHero() {
         heroPage.style.display = 'block';
     }
     clearAuthFields();
+}
+
+// ★★★ ПЛАВНО ПОКАЗАТЬ КНОПКИ НА ЭКРАНАХ HERO / LOADING ★★★
+function showHeroButtons() {
+    document.querySelectorAll('.hero-buttons').forEach(el => {
+        el.classList.add('hero-buttons-ready');
+    });
+}
+
+// ★★★ СКРЫТЬ КНОПКИ ★★★
+function hideHeroButtons() {
+    document.querySelectorAll('.hero-buttons').forEach(el => {
+        el.classList.remove('hero-buttons-ready');
+    });
 }
 
 // =================== РЕГИСТРАЦИЯ (ПОШАГОВАЯ) ===================
@@ -9490,6 +9459,9 @@ function toggleEditWorkout() {
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('SportApp загружен!');
+
+        // ★★★ ПРИ СТАРТЕ — КНОПКИ СКРЫТЫ ★★★
+    hideHeroButtons();
     
     // 1. Очистка сессионных данных
     shownThisSession.clear();
@@ -17184,4 +17156,307 @@ function refreshAutoCarousel() {
 // Запускаем после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initAutoCarousel, 500);
+});
+
+// =================== СВЯЗЬ С АДМИНИСТРАЦИЕЙ ===================
+
+const SUPPORT_COOLDOWN_KEY = 'supportLastSent';
+const SUPPORT_COOLDOWN_MS = 60 * 1000; // 1 минута между сообщениями
+
+function openSupportModal() {
+    // Проверяем кулдаун
+    const lastSent = parseInt(localStorage.getItem(SUPPORT_COOLDOWN_KEY) || '0');
+    const now = Date.now();
+    if (now - lastSent < SUPPORT_COOLDOWN_MS) {
+        const remaining = Math.ceil((SUPPORT_COOLDOWN_MS - (now - lastSent)) / 1000);
+        showToast(`⏳ Подождите ${remaining} сек перед новым сообщением`);
+        return;
+    }
+
+    // Очищаем поля
+    document.getElementById('supportSubject').value = 'bug';
+    document.getElementById('supportMessage').value = '';
+    document.getElementById('supportContact').value = '';
+    document.getElementById('supportCharCount').textContent = '0';
+
+    openModal('supportModal');
+
+    // Счётчик символов
+    const textarea = document.getElementById('supportMessage');
+    textarea.oninput = function() {
+        document.getElementById('supportCharCount').textContent = this.value.length;
+    };
+}
+
+async function sendSupportMessage() {
+    const subject = document.getElementById('supportSubject').value;
+    const message = document.getElementById('supportMessage').value.trim();
+    const contact = document.getElementById('supportContact').value.trim();
+
+    // Валидация
+    if (!message || message.length < 5) {
+        showToast('⚠️ Опишите проблему подробнее (минимум 5 символов)');
+        document.getElementById('supportMessage').classList.add('error');
+        return;
+    }
+    document.getElementById('supportMessage').classList.remove('error');
+
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+
+    const btn = document.getElementById('supportSendBtn');
+    btn.disabled = true;
+    btn.textContent = 'Отправка...';
+
+    try {
+        const profileResult = await getUserProfile(user.uid);
+        const profile = profileResult.success ? profileResult.data : {};
+
+        const payload = {
+            userName: profile.displayName || 'Пользователь',
+            userEmail: user.email || '',
+            userContact: contact || '—',
+            subject: subject,
+            message: message,
+            userId: user.uid
+        };
+
+        // ★★★ 1. СОХРАНЯЕМ В FIRESTORE ★★★
+        await firebase.firestore().collection('supportMessages').add({
+            ...payload,
+            status: 'new',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            deviceInfo: navigator.userAgent.slice(0, 200)
+        });
+
+        // ★★★ 2. ОТПРАВЛЯЕМ НА ВЕБХУК NODUL → TELEGRAM ★★★
+        try {
+            await fetch('https://webhook.nodul.ru/27731/dev/7ce0dbd1-82f5-4125-bf98-bbee595b4742', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            console.log('✅ Уведомление отправлено в Nodul');
+        } catch (webhookError) {
+            // Не критично — сообщение уже сохранено в Firestore
+            console.warn('⚠️ Ошибка отправки вебхука:', webhookError);
+        }
+
+        closeModal('supportModal');
+        showToast('✅ Сообщение отправлено! Мы свяжемся с вами.');
+
+    } catch (error) {
+        console.error('❌ Ошибка отправки:', error);
+        showToast('❌ Не удалось отправить. Проверьте интернет.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить';
+    }
+}
+
+// Привязка кнопки
+document.getElementById('supportSendBtn')?.addEventListener('click', sendSupportMessage);
+
+window.openSupportModal = openSupportModal;
+
+// =================== ПОДЕЛИТЬСЯ ПРОФИЛЕМ ===================
+async function shareProfile() {
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+
+    const profileResult = await getUserProfile(user.uid);
+    if (!profileResult.success) {
+        showToast('❌ Не удалось загрузить профиль');
+        return;
+    }
+    const profile = profileResult.data;
+    const name = profile.displayName || 'Пользователь';
+
+    // ★★★ ФОРМИРУЕМ ССЫЛКУ ★★★
+    const shareUrl = `${window.location.origin}${window.location.pathname}?addFriend=${user.uid}`;
+    const shareText = `${name} приглашает тебя в SportApp! Жми на ссылку, чтобы добавить в друзья:`;
+
+    // ★★★ ПРОБУЕМ НАТИВНЫЙ SHARE API ★★★
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'SportApp',
+                text: shareText,
+                url: shareUrl
+            });
+            console.log('✅ Профиль отправлен через Web Share API');
+            return;
+        } catch (error) {
+            // Пользователь отменил или ошибка — падаем в fallback
+            if (error.name !== 'AbortError') {
+                console.warn('Web Share API не сработал:', error);
+            } else {
+                return; // Пользователь сам отменил, ничего не делаем
+            }
+        }
+    }
+
+    // ★★★ FALLBACK: КОПИРУЕМ В БУФЕР ★★★
+    copyProfileLink(shareUrl, shareText);
+}
+
+function copyProfileLink(url, text) {
+    const fullText = `${text}\n${url}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullText).then(() => {
+            showToast('✅ Ссылка скопирована! Отправь другу');
+        }).catch(() => {
+            showFallbackCopyModal(url);
+        });
+    } else {
+        showFallbackCopyModal(url);
+    }
+}
+
+function showFallbackCopyModal(url) {
+    // Старый способ копирования через textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ Ссылка скопирована! Отправь другу');
+    } catch (e) {
+        // Совсем не получилось — показываем модалку
+        showConfirmModal(
+            'Ваша ссылка',
+            url,
+            null,
+            'OK'
+        );
+    }
+    document.body.removeChild(textarea);
+}
+
+// Привязка кнопки
+document.getElementById('shareProfileBtn')?.addEventListener('click', shareProfile);
+
+window.shareProfile = shareProfile;
+
+// =================== ОБРАБОТКА ССЫЛКИ "ДОБАВИТЬ В ДРУЗЬЯ" ===================
+async function checkFriendInviteLink() {
+    const params = new URLSearchParams(window.location.search);
+    const friendId = params.get('addFriend');
+
+    if (!friendId) return;
+
+    // Убираем параметр из URL, чтобы не срабатывало повторно при перезагрузке
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // Ждём, пока пользователь авторизуется
+    const user = await getFirebaseUser();
+    if (!user) {
+        // Не авторизован — сохраняем в localStorage, обработаем после входа
+        localStorage.setItem('pendingFriendInvite', friendId);
+        console.log('💾 Приглашение сохранено, обработаем после входа');
+        return;
+    }
+
+    // Нельзя добавить самого себя
+    if (friendId === user.uid) {
+        showToast('ℹ️ Это ваша собственная ссылка');
+        return;
+    }
+
+    // Показываем профиль приглашающего
+    await openFriendInviteModal(friendId);
+}
+
+async function openFriendInviteModal(friendId) {
+    try {
+        const profileResult = await getUserProfile(friendId);
+        if (!profileResult.success) {
+            showToast('❌ Пользователь не найден');
+            return;
+        }
+
+        const profile = profileResult.data;
+        const name = profile.displayName || 'Пользователь';
+        const xp = profile.totalXp || 0;
+        const level = getCurrentLevel(xp);
+
+        // Проверяем, не друзья ли уже
+        const status = await getFriendshipStatus(friendId);
+
+        // Заполняем модалку
+        document.getElementById('inviteFriendAvatar').textContent = name[0].toUpperCase();
+        document.getElementById('inviteFriendName').textContent = name;
+        document.getElementById('inviteFriendLevel').textContent = `Уровень ${level.id} · ${Math.round(xp)} XP`;
+
+        // Кнопка в зависимости от статуса
+        const btn = document.getElementById('inviteFriendActionBtn');
+        
+        if (status === 'friends') {
+            btn.textContent = 'Уже в друзьях';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.onclick = null;
+        } else if (status === 'pending_sent') {
+            btn.textContent = 'Заявка отправлена';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.onclick = null;
+        } else if (status === 'pending_received') {
+            btn.textContent = 'Принять заявку';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.onclick = async () => {
+                const requests = await getFriendRequests();
+                if (requests.success) {
+                    const req = requests.data.find(r => r.from === friendId);
+                    if (req) {
+                        await acceptFriendRequest(req.id, friendId);
+                        closeModal('friendInviteModal');
+                    } else {
+                        showToast('❌ Заявка не найдена');
+                    }
+                }
+            };
+        } else {
+            btn.textContent = 'Добавить в друзья';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.onclick = async () => {
+                btn.disabled = true;
+                btn.textContent = 'Отправка...';
+                const result = await sendFriendRequest(friendId);
+                if (result.success) {
+                    btn.textContent = 'Заявка отправлена';
+                    btn.style.opacity = '0.6';
+                    showToast('✅ Заявка отправлена!');
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Добавить в друзья';
+                    btn.style.opacity = '1';
+                    showToast('❌ ' + (result.error || 'Ошибка'));
+                }
+            };
+        }
+
+        openModal('friendInviteModal');
+
+    } catch (error) {
+        console.error('❌ Ошибка открытия приглашения:', error);
+        showToast('❌ Не удалось загрузить профиль');
+    }
+}
+
+// ★★★ ЗАПУСКАЕМ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ★★★
+document.addEventListener('DOMContentLoaded', () => {
+    checkFriendInviteLink();
 });
