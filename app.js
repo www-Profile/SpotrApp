@@ -6716,13 +6716,10 @@ firebase.auth().onAuthStateChanged(async (user) => {
         
         console.log('✅ Данные загружены, показываем кнопку');
 
-        // ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ ★★★
-const pendingInvite = localStorage.getItem('pendingFriendInvite');
-if (pendingInvite) {
-    localStorage.removeItem('pendingFriendInvite');
-    console.log('🎯 Найдено отложенное приглашение:', pendingInvite);
-    setTimeout(() => openFriendInviteModal(pendingInvite), 1500);
-}
+// ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ (ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ В ПРИЛОЖЕНИИ) ★★★
+setTimeout(() => {
+    tryOpenPendingInvite();
+}, 1500);
         
         // ★★★ ПЛАВНО ПОКАЗЫВАЕМ КНОПКУ ★★★
         showHeroButtons();
@@ -7504,6 +7501,10 @@ function enterApp() {
     setTimeout(() => {
         checkAndGiveCommunityGoalReward();
     }, 1000);
+   // ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ ★★★
+    setTimeout(() => {
+        tryOpenPendingInvite();
+    }, 800);
 }
 
 // ===================ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ===================
@@ -8072,12 +8073,6 @@ document.getElementById('friendRequestRejectBtn')?.addEventListener('click', asy
     } else {
         showToast('❌ Ошибка при отклонении заявки');
     }
-});
-
-document.getElementById('friendProfileCloseBtn')?.addEventListener('click', function() {
-    closeModal('friendProfileModal');
-    currentFriendId = null;
-    currentFriendData = null;
 });
 
 // ===================ДРУЗЬЯ - ГЛОБАЛЬНЫЕ КНОПКИ ===================
@@ -10583,15 +10578,33 @@ async function openFriendProfile(friendId) {
         
         currentFriendData = result.data;
         
+        // Заполняем аватар, имя, email
+        const name = currentFriendData.displayName || 'Пользователь';
+        document.getElementById('friendProfileAvatar').textContent = name[0].toUpperCase();
+        document.getElementById('friendProfileName').textContent = name;
+        document.getElementById('friendProfileEmail').textContent = currentFriendData.email || 'email не указан';
+        
+        // Уровень
+        const xp = currentFriendData.totalXp || 0;
+        const currentLevel = getCurrentLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLevel = getNextLevel(xp);
+        const xpRounded = Math.round(xp);
+        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
+        
+        document.getElementById('friendLevelLvl').textContent = currentLevel.id + ' LVL';
+        document.getElementById('friendLevelTitle').textContent = currentLevel.name;
+        document.getElementById('friendLevelProgressText').textContent = progressText;
+        document.getElementById('friendLevelFill').style.width = progress + '%';
+        
+        // Достижения
         const achievements = currentFriendData.achievements || {};
         updateAchievementsUI('friendAchievements', achievements);
-        
         const visible = getAchievementsVisibility();
-        const container = document.getElementById('friendAchievements');
-        if (container) {
-            container.classList.toggle('hidden', !visible);
-        }
+        const achContainer = document.getElementById('friendAchievements');
+        if (achContainer) achContainer.classList.toggle('hidden', !visible);
         
+        // Статистика
         let workouts = [];
         let totalSeconds = 0;
         let totalExercises = 0;
@@ -10610,27 +10623,12 @@ async function openFriendProfile(friendId) {
             console.warn('⚠️ Ошибка загрузки тренировок друга:', error);
         }
         
-        const name = currentFriendData.displayName || 'Пользователь';
-        document.getElementById('friendProfileName').textContent = name;
-        document.getElementById('friendProfileEmail').textContent = currentFriendData.email || 'email не указан';
-        
-        const xp = currentFriendData.totalXp || 0;
-        const currentLevel = getCurrentLevel(xp);
-        const progress = getXpProgress(xp);
-        const nextLevel = getNextLevel(xp);
-        
-        // ★★★ ОКРУГЛЯЕМ XP ДО ЦЕЛОГО ★★★
-        const xpRounded = Math.round(xp);
-        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
-        
-        document.getElementById('friendLevelLvl').textContent = currentLevel.id + ' LVL';
-        document.getElementById('friendLevelTitle').textContent = currentLevel.name;
-        document.getElementById('friendLevelProgressText').textContent = progressText;
-        document.getElementById('friendLevelFill').style.width = progress + '%';
-        
         document.getElementById('friendTotalWorkouts').textContent = workouts.length;
         document.getElementById('friendTotalMinutes').textContent = Math.floor(totalSeconds / 60);
         document.getElementById('friendTotalExercises').textContent = totalExercises;
+        
+        // ★★★ РЕНДЕРИМ КНОПКИ ДЛЯ ПРОСМОТРА ДРУГА ★★★
+        renderFriendProfileActions('friend');
         
         openModal('friendProfileModal');
         
@@ -10641,37 +10639,6 @@ async function openFriendProfile(friendId) {
         showToast('❌ Ошибка загрузки профиля друга');
     }
 }
-
-document.getElementById('friendProfileCloseBtn')?.addEventListener('click', function() {
-    closeModal('friendProfileModal');
-    currentFriendId = null;
-    currentFriendData = null;
-});
-
-document.getElementById('friendRemoveBtn')?.addEventListener('click', function() {
-    if (!currentFriendId || !currentFriendData) {
-        showToast('❌ Данные друга не загружены');
-        return;
-    }
-    
-    const friendName = currentFriendData.displayName || 'Пользователь';
-    
-    showConfirmModal(
-        'Удалить друга?',
-        `Вы уверены, что хотите удалить ${friendName} из друзей?`,
-        async function() {
-            const result = await removeFriendFromList(currentFriendId);
-            if (result.success) {
-                closeModal('friendProfileModal');
-                currentFriendId = null;
-                currentFriendData = null;
-                await renderFriendsInProfile();
-                showToast(`✅ ${result.friendName || friendName} удалён из друзей`);
-            }
-        },
-        'Удалить'
-    );
-});
 
 async function removeFriendFromList(friendId) {
     const user = await getFirebaseUser();
@@ -17349,32 +17316,50 @@ document.getElementById('shareProfileBtn')?.addEventListener('click', shareProfi
 window.shareProfile = shareProfile;
 
 // =================== ОБРАБОТКА ССЫЛКИ "ДОБАВИТЬ В ДРУЗЬЯ" ===================
+// =================== ОБРАБОТКА ССЫЛКИ "ДОБАВИТЬ В ДРУЗЬЯ" ===================
 async function checkFriendInviteLink() {
     const params = new URLSearchParams(window.location.search);
     const friendId = params.get('addFriend');
 
     if (!friendId) return;
 
-    // Убираем параметр из URL, чтобы не срабатывало повторно при перезагрузке
+    // Убираем параметр из URL
     window.history.replaceState({}, '', window.location.pathname);
 
-    // Ждём, пока пользователь авторизуется
+    // ★★★ ВСЕГДА СОХРАНЯЕМ В localStorage — откроем, когда пользователь войдёт в приложение ★★★
+    localStorage.setItem('pendingFriendInvite', friendId);
+    console.log('💾 Приглашение сохранено, откроем после входа в приложение');
+
+    // ★★★ ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ В ПРИЛОЖЕНИИ — ОТКРЫВАЕМ СРАЗУ ★★★
     const user = await getFirebaseUser();
-    if (!user) {
-        // Не авторизован — сохраняем в localStorage, обработаем после входа
-        localStorage.setItem('pendingFriendInvite', friendId);
-        console.log('💾 Приглашение сохранено, обработаем после входа');
+    if (user && isInsideApp()) {
+        localStorage.removeItem('pendingFriendInvite');
+        await openFriendInviteModal(friendId);
+    }
+}
+
+// ★★★ ПРОВЕРКА: НАХОДИТСЯ ЛИ ПОЛЬЗОВАТЕЛЬ ВНУТРИ ПРИЛОЖЕНИЯ ★★★
+function isInsideApp() {
+    const appPages = ['page-workouts', 'page-stats', 'page-profile'];
+    return appPages.some(id => {
+        const el = document.getElementById(id);
+        return el && el.classList.contains('page-active');
+    });
+}
+
+// ★★★ ОТКРЫВАЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ, КОГДА ПОЛЬЗОВАТЕЛЬ В ПРИЛОЖЕНИИ ★★★
+function tryOpenPendingInvite() {
+    const pendingInvite = localStorage.getItem('pendingFriendInvite');
+    if (!pendingInvite) return;
+
+    if (!isInsideApp()) {
+        console.log('⏸️ Пользователь ещё не в приложении, приглашение ждёт');
         return;
     }
 
-    // Нельзя добавить самого себя
-    if (friendId === user.uid) {
-        showToast('ℹ️ Это ваша собственная ссылка');
-        return;
-    }
-
-    // Показываем профиль приглашающего
-    await openFriendInviteModal(friendId);
+    localStorage.removeItem('pendingFriendInvite');
+    console.log('🎯 Открываем отложенное приглашение:', pendingInvite);
+    setTimeout(() => openFriendInviteModal(pendingInvite), 500);
 }
 
 async function openFriendInviteModal(friendId) {
@@ -17389,70 +17374,174 @@ async function openFriendInviteModal(friendId) {
         const name = profile.displayName || 'Пользователь';
         const xp = profile.totalXp || 0;
         const level = getCurrentLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLevel = getNextLevel(xp);
+        const xpRounded = Math.round(xp);
+        const progressText = nextLevel ? `${xpRounded}/${nextLevel.minXp} XP` : `${xpRounded}+ XP`;
 
-        // Проверяем, не друзья ли уже
+        // ★★★ ЗАПОЛНЯЕМ ТУ ЖЕ МОДАЛКУ ★★★
+        document.getElementById('friendProfileAvatar').textContent = name[0].toUpperCase();
+        document.getElementById('friendProfileName').textContent = name;
+        document.getElementById('friendProfileEmail').textContent = profile.email || 'email не указан';
+
+        document.getElementById('friendLevelLvl').textContent = level.id + ' LVL';
+        document.getElementById('friendLevelTitle').textContent = level.name;
+        document.getElementById('friendLevelProgressText').textContent = progressText;
+        document.getElementById('friendLevelFill').style.width = progress + '%';
+
+        const achievements = profile.achievements || {};
+        updateAchievementsUI('friendAchievements', achievements);
+        const visible = getAchievementsVisibility();
+        const achContainer = document.getElementById('friendAchievements');
+        if (achContainer) achContainer.classList.toggle('hidden', !visible);
+
+        // Статистика
+        let workouts = [];
+        let totalSeconds = 0;
+        let totalExercises = 0;
+        try {
+            const workoutsResult = await getUserWorkoutsFromFirestore(friendId);
+            if (workoutsResult.success) {
+                workouts = workoutsResult.data.filter(w => !(w.title || '').includes('Зарядка'));
+                totalSeconds = workouts.reduce((sum, w) => sum + (w.durationSeconds || 0), 0);
+                totalExercises = workouts.reduce((sum, w) => {
+                    const completed = w.exercises?.filter(e => e.completed === true).length || 0;
+                    return sum + completed;
+                }, 0);
+            }
+        } catch (e) {}
+
+        document.getElementById('friendTotalWorkouts').textContent = workouts.length;
+        document.getElementById('friendTotalMinutes').textContent = Math.floor(totalSeconds / 60);
+        document.getElementById('friendTotalExercises').textContent = totalExercises;
+
+        // ★★★ РЕНДЕРИМ КНОПКИ ДЛЯ ПРИГЛАШЕНИЯ ★★★
         const status = await getFriendshipStatus(friendId);
+        renderFriendProfileActions('invite', friendId, status);
 
-        // Заполняем модалку
-        document.getElementById('inviteFriendAvatar').textContent = name[0].toUpperCase();
-        document.getElementById('inviteFriendName').textContent = name;
-        document.getElementById('inviteFriendLevel').textContent = `Уровень ${level.id} · ${Math.round(xp)} XP`;
+        openModal('friendProfileModal');
 
-        // Кнопка в зависимости от статуса
-        const btn = document.getElementById('inviteFriendActionBtn');
-        
+    } catch (error) {
+        console.error('❌ Ошибка открытия приглашения:', error);
+        showToast('❌ Не удалось загрузить профиль');
+    }
+}
+
+// =================== РЕНДЕР КНОПОК В ПРОФИЛЕ ДРУГА ===================
+function renderFriendProfileActions(mode, friendId, status) {
+    const container = document.getElementById('friendProfileActions');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // ★★★ РЕЖИМ 1: ОБЫЧНЫЙ ПРОСМОТР ДРУГА ★★★
+    if (mode === 'friend') {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-danger';
+        removeBtn.style.flex = '1';
+        removeBtn.id = 'friendRemoveBtn';
+        removeBtn.textContent = 'Удалить';
+        removeBtn.onclick = function() {
+            if (!currentFriendId || !currentFriendData) {
+                showToast('❌ Данные друга не загружены');
+                return;
+            }
+            const friendName = currentFriendData.displayName || 'Пользователь';
+            showConfirmModal(
+                'Удалить друга?',
+                `Вы уверены, что хотите удалить ${friendName} из друзей?`,
+                async function() {
+                    const result = await removeFriendFromList(currentFriendId);
+                    if (result.success) {
+                        closeModal('friendProfileModal');
+                        currentFriendId = null;
+                        currentFriendData = null;
+                        await renderFriendsInProfile();
+                        showToast(`✅ ${result.friendName || friendName} удалён из друзей`);
+                    }
+                },
+                'Удалить'
+            );
+        };
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-primary';
+        closeBtn.style.flex = '1';
+        closeBtn.textContent = 'Готово';
+        closeBtn.onclick = function() {
+            closeModal('friendProfileModal');
+            currentFriendId = null;
+            currentFriendData = null;
+        };
+
+        container.appendChild(removeBtn);
+        container.appendChild(closeBtn);
+        return;
+    }
+
+    // ★★★ РЕЖИМ 2: ПРИГЛАШЕНИЕ ПО ССЫЛКЕ ★★★
+    if (mode === 'invite') {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary';
+        closeBtn.style.flex = '1';
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.onclick = function() {
+            closeModal('friendProfileModal');
+        };
+
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'btn btn-primary';
+        actionBtn.style.flex = '1';
+
         if (status === 'friends') {
-            btn.textContent = 'Уже в друзьях';
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            btn.onclick = null;
+            actionBtn.textContent = 'Уже в друзьях';
+            actionBtn.disabled = true;
+            actionBtn.style.opacity = '0.6';
+            actionBtn.onclick = null;
         } else if (status === 'pending_sent') {
-            btn.textContent = 'Заявка отправлена';
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            btn.onclick = null;
+            actionBtn.textContent = 'Заявка отправлена';
+            actionBtn.disabled = true;
+            actionBtn.style.opacity = '0.6';
+            actionBtn.onclick = null;
         } else if (status === 'pending_received') {
-            btn.textContent = 'Принять заявку';
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.onclick = async () => {
+            actionBtn.textContent = 'Принять заявку';
+            actionBtn.onclick = async function() {
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Принятие...';
                 const requests = await getFriendRequests();
                 if (requests.success) {
                     const req = requests.data.find(r => r.from === friendId);
                     if (req) {
                         await acceptFriendRequest(req.id, friendId);
-                        closeModal('friendInviteModal');
+                        closeModal('friendProfileModal');
                     } else {
                         showToast('❌ Заявка не найдена');
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Принять заявку';
                     }
                 }
             };
         } else {
-            btn.textContent = 'Добавить в друзья';
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.onclick = async () => {
-                btn.disabled = true;
-                btn.textContent = 'Отправка...';
+            actionBtn.textContent = 'Добавить в друзья';
+            actionBtn.onclick = async function() {
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Отправка...';
                 const result = await sendFriendRequest(friendId);
                 if (result.success) {
-                    btn.textContent = 'Заявка отправлена';
-                    btn.style.opacity = '0.6';
+                    actionBtn.textContent = 'Заявка отправлена';
+                    actionBtn.style.opacity = '0.6';
                     showToast('✅ Заявка отправлена!');
                 } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Добавить в друзья';
-                    btn.style.opacity = '1';
+                    actionBtn.disabled = false;
+                    actionBtn.textContent = 'Добавить в друзья';
                     showToast('❌ ' + (result.error || 'Ошибка'));
                 }
             };
         }
 
-        openModal('friendInviteModal');
-
-    } catch (error) {
-        console.error('❌ Ошибка открытия приглашения:', error);
-        showToast('❌ Не удалось загрузить профиль');
+        container.appendChild(closeBtn);
+        container.appendChild(actionBtn);
+        return;
     }
 }
 
