@@ -22,6 +22,7 @@ body {
 :root {
     --accent: #DC143C;
     --accent-dark: #B01030;
+    --accent-border: color-mix(in srgb, var(--accent) 80%, black);
     --accent-light: #FFE8EC;
     --dark: #0F172A;
     --slate: #64748B;
@@ -510,6 +511,7 @@ body.theme-dark-mode .item-card-light {
     color: var(--white);
         display: block;
     width: 100%;
+    border-bottom: 3px solid var(--accent-border);
 }
 
 .btn-secondary {
@@ -526,6 +528,7 @@ body.theme-dark-mode .item-card-light {
     border: none;
             display: block;
     width: 100%;
+    border-bottom: 3px solid #C61236;
 }
 
 .search-btn {
@@ -5169,6 +5172,7 @@ body.theme-dark-mode .community-goal-bar {
     font-weight: 700;
     color: var(--accent);
     z-index: 2;
+    cursor: pointer;
 }
 
 .profile-streak i {

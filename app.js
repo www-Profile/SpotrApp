@@ -3431,6 +3431,91 @@ function getFirebaseUser() {
     });
 }
 
+// =================== СИНХРОНИЗАЦИЯ С FIRESTORE ===================
+
+/**
+ * Универсальный хелпер: сохранить поле в users/{uid}
+ */
+async function syncSaveToFirestore(fieldName, value) {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        await firebase.firestore().collection('users').doc(user.uid).update({
+            [fieldName]: value
+        });
+        console.log(`✅ ${fieldName} сохранено в Firestore`);
+    } catch (error) {
+        // Если документа нет — создаём его
+        if (error.code === 'not-found') {
+            await firebase.firestore().collection('users').doc(user.uid).set({
+                [fieldName]: value
+            }, { merge: true });
+        } else {
+            console.error(`❌ Ошибка сохранения ${fieldName}:`, error);
+        }
+    }
+}
+
+/**
+ * Универсальный хелпер: загрузить поле из users/{uid}
+ */
+async function syncLoadFromFirestore(fieldName) {
+    const user = await getFirebaseUser();
+    if (!user) return null;
+    
+    try {
+        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+        if (doc.exists && doc.data()[fieldName] !== undefined) {
+            return doc.data()[fieldName];
+        }
+        return null;
+    } catch (error) {
+        console.error(`❌ Ошибка загрузки ${fieldName}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Универсальный хелпер: загрузить с fallback на localStorage
+ * @param {string} firestoreField — имя поля в Firestore
+ * @param {string} localStorageKey — ключ в localStorage
+ * @param {*} defaultValue — что вернуть, если нигде нет
+ */
+async function syncLoadWithFallback(firestoreField, localStorageKey, defaultValue = null) {
+    // 1. Пробуем из Firestore
+    const fromFirestore = await syncLoadFromFirestore(firestoreField);
+    if (fromFirestore !== null) {
+        // Обновляем localStorage как кэш
+        if (typeof fromFirestore === 'object') {
+            localStorage.setItem(localStorageKey, JSON.stringify(fromFirestore));
+        } else {
+            localStorage.setItem(localStorageKey, String(fromFirestore));
+        }
+        return fromFirestore;
+    }
+    
+    // 2. Fallback на localStorage
+    const fromLocal = localStorage.getItem(localStorageKey);
+    if (fromLocal !== null) {
+        // ★★★ ПЕРЕНОСИМ В FIRESTORE ★★★
+        try {
+            let parsed = fromLocal;
+            if (fromLocal.startsWith('{') || fromLocal.startsWith('[')) {
+                parsed = JSON.parse(fromLocal);
+            } else if (fromLocal === 'true' || fromLocal === 'false') {
+                parsed = fromLocal === 'true';
+            }
+            await syncSaveToFirestore(firestoreField, parsed);
+            console.log(`📤 ${localStorageKey} перенесён в Firestore`);
+        } catch (e) {}
+        
+        return fromLocal;
+    }
+    
+    return defaultValue;
+}
+
 // ===================ПРОФИЛЬ ===================
 async function saveUserProfile(userId, data) {
     try {
@@ -3638,6 +3723,11 @@ function applyColor() {
     if (colorChanged) {
         // ★★★ ПРИМЕНЯЕМ ЦВЕТ ★★★
         localStorage.setItem('themeColor', tempColor);
+        syncSaveToFirestore('settings', {
+    themeMode: localStorage.getItem('appThemeMode') || 'system',
+    themeColor: color,
+    themeColorCustom: true // или false
+});
         localStorage.removeItem('themeColorCustom');
         
         // ★★★ ПРИМЕНЯЕМ ВИЗУАЛЬНО ★★★
@@ -3825,6 +3915,10 @@ window.navigateTo = function(page, params) {
     } else {
         document.getElementById('bottomNav').style.display = 'block';
     }
+    // ★★★ ДОБАВЬ ЭТО ★★★
+    setTimeout(() => {
+        tryOpenPendingInvite();
+    }, 500);
 };
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -6160,11 +6254,16 @@ overlay.classList.add('modal-overlay-visible');
 
 // ===================МОИ ТРЕНИРОВКИ (localStorage) ===================
 function getMyWorkouts() {
+    // Синхронная функция — читает из localStorage (кэш)
     return JSON.parse(localStorage.getItem('myCustomWorkouts')) || [];
 }
 
 function saveMyWorkouts(workouts) {
+    // 1. Локально
     localStorage.setItem('myCustomWorkouts', JSON.stringify(workouts));
+    
+    // 2. В Firestore
+    syncSaveToFirestore('customWorkouts', workouts);
 }
 
 function getWorkoutById(id) {
@@ -6481,7 +6580,8 @@ async function loadProfile() {
     if (levelFill) levelFill.style.width = progress + '%';
     
 // ★★★ ПРОВЕРКА ПОВЫШЕНИЯ УРОВНЯ И СОХРАНЕНИЕ СОБЫТИЯ ★★★
-const prevLevel = parseInt(localStorage.getItem('prevLevel') || '0');
+const prevLevelData = await syncLoadFromFirestore('prevLevel');
+const prevLevel = parseInt(prevLevelData || localStorage.getItem('prevLevel') || '0');
 if (currentLevel.id > prevLevel) {
     // Сохраняем событие о новом уровне
     await saveUserEvent(user.uid, 'level_up', {
@@ -6502,6 +6602,7 @@ if (currentLevel.id > prevLevel) {
             }
         }
         localStorage.setItem('prevLevel', String(currentLevel.id));
+syncSaveToFirestore('prevLevel', currentLevel.id);
     }
     
     const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
@@ -6550,7 +6651,7 @@ document.getElementById('editProfileBtn')?.addEventListener('click', () => {
 
 document.getElementById('cancelProfileEditBtn')?.addEventListener('click', () => {
     isEditingProfile = false;
-    document.getElementById('profileView').style.display = 'block';
+    document.getElementById('profileView').style.display = 'flex';  // ← flex вместо block
     document.getElementById('profileEdit').style.display = 'none';
     loadProfile();
 });
@@ -6569,7 +6670,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
 
     if (name === currentName) {
         isEditingProfile = false;
-        document.getElementById('profileView').style.display = 'block';
+        document.getElementById('profileView').style.display = 'flex';  // ← flex
         document.getElementById('profileEdit').style.display = 'none';
         return;
     }
@@ -6581,7 +6682,7 @@ document.getElementById('saveProfileBtn')?.addEventListener('click', async () =>
         loadProfile();
         showToast('✅ Профиль обновлен');
     }
-    document.getElementById('profileView').style.display = 'block';
+    document.getElementById('profileView').style.display = 'flex';  // ← flex
     document.getElementById('profileEdit').style.display = 'none';
 });
 
@@ -6704,6 +6805,48 @@ firebase.auth().onAuthStateChanged(async (user) => {
         switchProfileTab('my');
 
         loadPremiumStats();
+// ★★★ ЗАГРУЖАЕМ ЗАДАНИЯ ★★★
+await loadTasks();
+await initDailyTasks();
+
+// ★★★ ЗАГРУЖАЕМ ЛИЧНЫЕ ТРЕНИРОВКИ ★★★
+const customWorkouts = await syncLoadWithFallback('customWorkouts', 'myCustomWorkouts', []);
+if (Array.isArray(customWorkouts)) {
+    localStorage.setItem('myCustomWorkouts', JSON.stringify(customWorkouts));
+    renderMyWorkouts();
+}
+
+// ★★★ ЗАГРУЖАЕМ НАСТРОЙКИ ТЕМЫ ★★★
+const settings = await syncLoadFromFirestore('settings');
+if (settings) {
+    if (settings.themeMode) {
+        localStorage.setItem('appThemeMode', settings.themeMode);
+    }
+    if (settings.themeColor) {
+        localStorage.setItem('themeColor', settings.themeColor);
+        localStorage.setItem('themeColorCustom', String(settings.themeColorCustom === true));
+    }
+    // Применяем тему
+    updateThemeUI();
+    setupSystemThemeListener();
+    
+    const savedColor = localStorage.getItem('themeColor') || 'red';
+    const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+    if (isCustom && savedColor.startsWith('#')) {
+        applyColorToTheme(savedColor);
+    } else {
+        document.body.className = 'theme-' + savedColor;
+        const isDarkMode = localStorage.getItem('appThemeMode') === 'dark' || 
+                          (localStorage.getItem('appThemeMode') === 'system' && 
+                           window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDarkMode) document.body.classList.add('theme-dark-mode');
+    }
+}
+
+await loadLayoutsFromFirestore();
+applySavedStatsOrder();
+applySavedWorkoutsOrder();
+applySavedWorldStatsOrder();
 
         window._tutorialNeeded = profile && profile.tutorialCompleted === false;
 
@@ -9509,15 +9652,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateLanguageUI();
 
-    // ★★★ ЗАГРУЖАЕМ ЗАДАНИЯ ПОСЛЕ ИНИЦИАЛИЗАЦИИ ★★★
-    loadTasks();
-
     updateInventoryStatus();
-
-    // Инициализация ежедневных заданий
-setTimeout(async () => {
-    await initDailyTasks();
-}, 800);
 
     setTimeout(() => {
         listenForInvites();
@@ -9944,13 +10079,17 @@ disableEdit(save = false) {
 }
 
 
-    save() {
-        const layout = this.getCurrentLayout();
-        localStorage.setItem(this.storageKey, JSON.stringify(layout));
-        this.backupLayout = null;
-        this.disableEdit(true);
-        showToast('✅ Изменения применены');
-    }
+save() {
+    const layout = this.getCurrentLayout();
+    localStorage.setItem(this.storageKey, JSON.stringify(layout));
+    
+    // ★★★ В FIRESTORE ★★★
+    saveLayoutToFirestore(this.storageKey, layout);
+    
+    this.backupLayout = null;
+    this.disableEdit(true);
+    showToast('✅ Изменения применены');
+}
 
     cancel() {
         this.disableEdit(false);
@@ -10076,6 +10215,42 @@ initSortables() {
     destroySortables() {
         this.sortableInstances.forEach(s => s.destroy());
         this.sortableInstances = [];
+    }
+}
+
+async function saveLayoutToFirestore(layoutKey, layout) {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+        const layouts = doc.exists ? (doc.data().layouts || {}) : {};
+        layouts[layoutKey] = layout;
+        
+        await firebase.firestore().collection('users').doc(user.uid).set({
+            layouts: layouts
+        }, { merge: true });
+    } catch (error) {
+        console.error('❌ Ошибка сохранения раскладки:', error);
+    }
+}
+
+async function loadLayoutsFromFirestore() {
+    const user = await getFirebaseUser();
+    if (!user) return;
+    
+    try {
+        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+        if (!doc.exists) return;
+        const layouts = doc.data().layouts || {};
+        
+        // Применяем к localStorage
+        for (const key in layouts) {
+            localStorage.setItem(key, JSON.stringify(layouts[key]));
+        }
+        console.log('✅ Раскладки загружены из Firestore');
+    } catch (error) {
+        console.error('❌ Ошибка загрузки раскладок:', error);
     }
 }
 
@@ -10206,14 +10381,17 @@ function saveBlocksState() {
         state[id] = block.classList.contains('open');
     });
     localStorage.setItem('blocksState', JSON.stringify(state));
+    
+    // ★★★ В FIRESTORE ★★★
+    syncSaveToFirestore('blocksState', state);
 }
 
-function loadBlocksState() {
-    const saved = localStorage.getItem('blocksState');
+async function loadBlocksState() {
+    const saved = await syncLoadWithFallback('blocksState', 'blocksState', null);
     if (!saved) return;
-
+    
     try {
-        const state = JSON.parse(saved);
+        const state = typeof saved === 'string' ? JSON.parse(saved) : saved;
         const blocks = document.querySelectorAll('.section-block');
         blocks.forEach((block, index) => {
             const id = block.dataset.blockId || index;
@@ -10963,6 +11141,11 @@ function applyTheme() {
         if (tempTheme !== currentTheme) {
             // Тема реально изменилась - сохраняем
             localStorage.setItem(THEME_MODE_KEY, tempTheme);
+syncSaveToFirestore('settings', { 
+    themeMode: tempTheme,
+    themeColor: localStorage.getItem('themeColor') || 'red',
+    themeColorCustom: localStorage.getItem('themeColorCustom') === 'true'
+});
             
             // ★★★ ОБНОВЛЯЕМ UI ★★★
             updateThemeUI();
@@ -11671,13 +11854,15 @@ function toggleAchievementsVisibility() {
     const newState = !current;
 
     showConfirmModal(
-        newState ? 'Показать достижения в профиле?' : 'Скрыть достижения в профиле?',
-        newState
-            ? 'Достижения снова появятся в вашем профиле, и профиле друзей.'
-            : 'Достижения будут скрыты в вашем профиле, и профиле друзей.',
+        newState ? 'Показать достижения?' : 'Скрыть достижения?',
+        newState ? '...' : '...',
         function() {
             localStorage.setItem(ACHIEVEMENTS_VISIBILITY_KEY, String(newState));
             updateAchievementsVisibilityUI(newState);
+            
+            // ★★★ В FIRESTORE ★★★
+            syncSaveToFirestore('achievementsVisible', newState);
+            
             showToast(`✅ Достижения ${newState ? 'показаны' : 'скрыты'}`);
         },
         newState ? 'Показать' : 'Скрыть'
@@ -11758,31 +11943,29 @@ const tasks = {
 // Ключ для localStorage
 const TASKS_STORAGE_KEY = 'sportapp_tasks';
 
-// app.js
-function loadTasks() {
-    const saved = localStorage.getItem(TASKS_STORAGE_KEY);
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            for (const key in parsed) {
-                if (tasks.hasOwnProperty(key)) {
-                    tasks[key] = parsed[key];
-                }
+async function loadTasks() {
+    // Загружаем из Firestore с fallback на localStorage
+    const firestoreTasks = await syncLoadWithFallback('firstTasks', TASKS_STORAGE_KEY, null);
+    
+    if (firestoreTasks) {
+        let parsed = firestoreTasks;
+        if (typeof firestoreTasks === 'string') {
+            try { parsed = JSON.parse(firestoreTasks); } catch (e) {}
+        }
+        for (const key in parsed) {
+            if (tasks.hasOwnProperty(key)) {
+                tasks[key] = parsed[key];
             }
-        } catch (e) {
-            console.warn('Ошибка загрузки заданий:', e);
         }
     }
     
-    // ★★★ СТРОГАЯ ЛОГИКА ★★★
+    // Логика отображения
     if (checkAllTasksCompleted()) {
-        // Все первые задания выполнены → показываем ЕЖЕДНЕВНЫЕ
         showDailyTasks();
-        hideTasks();  // ← СКРЫВАЕМ ПЕРВЫЕ
+        hideTasks();
     } else {
-        // Не все выполнены → показываем ПЕРВЫЕ
         showTasks();
-        hideDailyTasks();  // ← СКРЫВАЕМ ЕЖЕДНЕВНЫЕ
+        hideDailyTasks();
     }
     
     updateTasksUI();
@@ -11836,9 +12019,12 @@ function showDailyTasks() {
     saveBlocksState();
 }
 
-// Сохранить состояние заданий в localStorage
 function saveTasks() {
+    // 1. Локально (быстро)
     localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    
+    // 2. В Firestore (асинхронно)
+    syncSaveToFirestore('firstTasks', tasks);
 }
 
 function toggleTask(taskId) {
@@ -12339,38 +12525,41 @@ async function generateDailyTasks() {
     }
 }
 
-// Сохранить ежедневные задания в localStorage
 function saveDailyTasksToStorage() {
     const data = {
         tasks: dailyTasksList,
         completed: dailyTasksCompleted,
         date: dailyTasksDate
     };
+    
+    // 1. Локально
     localStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(data));
     localStorage.setItem(DAILY_DATE_KEY, dailyTasksDate);
+    
+    // 2. В Firestore
+    syncSaveToFirestore('dailyTasks', data);
 }
 
-// Загрузить ежедневные задания из localStorage
-function loadDailyTasksFromStorage() {
-    const saved = localStorage.getItem(DAILY_TASKS_KEY);
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            dailyTasksList = data.tasks || [];
-            dailyTasksCompleted = data.completed || {};
-            dailyTasksDate = data.date || '';
-            
-            // Восстанавливаем completed из объекта
-            dailyTasksList.forEach(task => {
-                if (dailyTasksCompleted[task.id] !== undefined) {
-                    task.completed = dailyTasksCompleted[task.id];
-                }
-            });
-            
-            return true;
-        } catch (e) {
-            console.warn('Ошибка загрузки ежедневных заданий:', e);
+async function loadDailyTasksFromStorage() {
+    const data = await syncLoadWithFallback('dailyTasks', DAILY_TASKS_KEY, null);
+    
+    if (data) {
+        let parsed = data;
+        if (typeof data === 'string') {
+            try { parsed = JSON.parse(data); } catch (e) { return false; }
         }
+        
+        dailyTasksList = parsed.tasks || [];
+        dailyTasksCompleted = parsed.completed || {};
+        dailyTasksDate = parsed.date || '';
+        
+        dailyTasksList.forEach(task => {
+            if (dailyTasksCompleted[task.id] !== undefined) {
+                task.completed = dailyTasksCompleted[task.id];
+            }
+        });
+        
+        return true;
     }
     return false;
 }
@@ -12398,7 +12587,6 @@ function shouldRefreshDailyTasks() {
     }
 }
 
-// Инициализация ежедневных заданий
 async function initDailyTasks() {
     console.log('🔄 Инициализация ежедневных заданий...');
     
@@ -12406,12 +12594,11 @@ async function initDailyTasks() {
         console.log('📅 Требуется обновление заданий');
         await generateDailyTasks();
     } else {
-        console.log('📂 Загружаем задания из localStorage');
-        loadDailyTasksFromStorage();
+        console.log('📂 Загружаем задания из Firestore/localStorage');
+        await loadDailyTasksFromStorage();
         renderDailyTasks();
     }
     
-    // ★★★ ОБНОВЛЯЕМ КАРУСЕЛЬ ПОСЛЕ ЗАГРУЗКИ/ГЕНЕРАЦИИ ★★★
     if (typeof refreshAutoCarousel === 'function') {
         refreshAutoCarousel();
     }
@@ -12965,6 +13152,11 @@ function applyPaletteColor() {
     if (colorChanged) {
         // ★★★ СОХРАНЯЕМ КАК КАСТОМНЫЙ ЦВЕТ ★★★
         localStorage.setItem('themeColor', color);
+        syncSaveToFirestore('settings', {
+    themeMode: localStorage.getItem('appThemeMode') || 'system',
+    themeColor: color,
+    themeColorCustom: true // или false
+});
         localStorage.setItem('themeColorCustom', 'true');
         
         // ★★★ ПРИМЕНЯЕМ ★★★
