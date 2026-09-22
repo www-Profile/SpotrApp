@@ -5512,3 +5512,11 @@ body.theme-dark-mode .coop-friend-status-name {
 body.theme-dark-mode .coop-friend-status-progress {
     color: var(--text-secondary);
 }
+
+/* =================== КНОПКИ НА ФИНИШЕ ==================== */
+.finish-btn-container {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}

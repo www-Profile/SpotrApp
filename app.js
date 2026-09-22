@@ -10432,6 +10432,7 @@ window.addEventListener('load', function() {
 
 // ===================СТРАНИЦА ФИНИШ ===================
 function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
+    // ★★★ ЗАПОЛНЯЕМ СТАТИСТИКУ ★★★
     document.getElementById('finishExercises').textContent = `${completedCount}/${exercisesCount}`;
     
     const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
@@ -10439,167 +10440,146 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
     document.getElementById('finishMinutes').textContent = `${mins}:${secs}`;
     document.getElementById('finishXp').textContent = '+' + xpEarned.toFixed(1) + ' XP';
     
+    // ★★★ УБИРАЕМ АКТИВНОСТЬ ЗВЁЗД (если они есть) ★★★
     document.querySelectorAll('#finishStars i').forEach(star => star.classList.remove('active'));
-    
-    // ★★★ ВСЕГДА ОДНА КНОПКА "Закончить" ★★★
-    const finishBtnContainer = document.querySelector('.finish-btn-container');
-    if (!finishBtnContainer) {
-        // Если контейнера нет — создаём
-        const finishContent = document.querySelector('.finish-content');
-        const oldBtn = document.getElementById('finishDoneBtn');
-        if (oldBtn) oldBtn.remove();
-        
-        const container = document.createElement('div');
-        container.className = 'finish-btn-container';
-        container.style.cssText = 'display: flex; gap: 0.5rem; width: 100%; margin-top: 1rem;';
-        finishContent.appendChild(container);
-    }
-    
-const container = document.querySelector('.finish-btn-container');
-container.innerHTML = '';
-container.style.display = 'flex';
-container.style.gap = '0.5rem';
-container.style.width = '100%';
 
-// ★★★ КНОПКА "ПОДЕЛИТЬСЯ" ★★★
-const shareBtn = document.createElement('button');
-shareBtn.className = 'btn btn-primary';
-shareBtn.id = 'finishShareBtn';
-shareBtn.style.flex = '1';
-shareBtn.innerHTML = 'Поделиться';
-shareBtn.onclick = openWorkoutShareModal;
-container.appendChild(shareBtn);
-
-// ★★★ КНОПКА "ЗАКОНЧИТЬ" ★★★
-const finishBtn = document.createElement('button');
-finishBtn.className = 'btn btn-primary';
-finishBtn.id = 'finishDoneBtn';
-finishBtn.style.flex = '1';
-finishBtn.textContent = 'Закончить';
-
-finishBtn.onclick = function() {
-    // ★★★ ЕСЛИ 0 УПРАЖНЕНИЙ — НЕ СОХРАНЯЕМ ★★★
-    if (completedCount === 0) {
-        showToast('⚠️ Выполнено 0 упражнений.');
-
-        sessionExercises = [];
-        sessionCompleted = new Set();
-        sessionCompletedSets = {};
-        sessionSeconds = 0;
-        sessionWorkoutTitle = '';
-        sessionCategory = '';
-        sessionWorkoutIcon = null;
-
-        window.navigateTo('workouts');
-        return;
+    // ★★★ КНОПКА "ПОДЕЛИТЬСЯ" ★★★
+    const shareBtn = document.getElementById('finishShareBtn');
+    if (shareBtn) {
+        shareBtn.onclick = openWorkoutShareModal;
     }
 
-    if (!preventDoubleClick('finishDoneBtn', 3000)) {
-        showToast('⏳ Подождите, тренировка уже сохраняется...');
-        return;
-    }
+    // ★★★ КНОПКА "ЗАКОНЧИТЬ" ★★★
+    const finishBtn = document.getElementById('finishDoneBtn');
+    if (finishBtn) {
+        finishBtn.disabled = false;
+        finishBtn.textContent = 'Закончить';
 
-    const btn = this;
-    btn.disabled = true;
+        finishBtn.onclick = function() {
+            // ★★★ ЕСЛИ 0 УПРАЖНЕНИЙ — НЕ СОХРАНЯЕМ ★★★
+            if (completedCount === 0) {
+                showToast('⚠️ Выполнено 0 упражнений.');
 
-    // ★★★ УВЕЛИЧИВАЕМ СЧЁТЧИК ТРЕНИРОВОК ★★★
-    incrementWorkoutsCount();
-    const showPremium = shouldShowPremiumOffer();
+                sessionExercises = [];
+                sessionCompleted = new Set();
+                sessionCompletedSets = {};
+                sessionSeconds = 0;
+                sessionWorkoutTitle = '';
+                sessionCategory = '';
+                sessionWorkoutIcon = null;
 
-    // ★★★ XP ИЗ UI ★★★
-    const xpText = document.getElementById('finishXp').textContent;
-    const xpEarned2 = parseFloat(xpText) || 0;
+                window.navigateTo('workouts');
+                return;
+            }
 
-    let finalCategory = sessionCategory;
-    if (!finalCategory || finalCategory === 'Без категории') {
-        const title = sessionWorkoutTitle || '';
-        if (title.includes('Руки')) finalCategory = 'Руки';
-        else if (title.includes('Плечи')) finalCategory = 'Плечи';
-        else if (title.includes('Пресс')) finalCategory = 'Пресс';
-        else if (title.includes('Грудь')) finalCategory = 'Грудь';
-        else if (title.includes('Спина')) finalCategory = 'Спина';
-        else if (title.includes('Ноги')) finalCategory = 'Ноги';
-        else if (title.includes('Кардио')) finalCategory = 'Кардио';
-        else if (title.includes('Растяжка')) finalCategory = 'Гибкость';
-        else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
-        else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
-        else finalCategory = 'Без категории';
-    }
+            if (!preventDoubleClick('finishDoneBtn', 3000)) {
+                showToast('⏳ Подождите, тренировка уже сохраняется...');
+                return;
+            }
 
-    const workoutExercises = sessionExercises.map((ex, index) => ({
-        ...ex,
-        icon: ex.icon || null,
-        completed: sessionCompleted.has(index)
-    }));
+            const btn = this;
+            btn.disabled = true;
 
-    const workoutIcon = sessionWorkoutIcon || null;
+            // ★★★ УВЕЛИЧИВАЕМ СЧЁТЧИК ТРЕНИРОВОК ★★★
+            incrementWorkoutsCount();
+            const showPremium = shouldShowPremiumOffer();
 
-    const workoutData = {
-        title: sessionWorkoutTitle || 'Тренировка',
-        date: new Date().toISOString(),
-        durationSeconds: sessionSeconds,
-        exercises: workoutExercises,
-        xpEarned: xpEarned2,
-        category: finalCategory,
-        icon: workoutIcon
-    };
+            // ★★★ XP ИЗ UI ★★★
+            const xpText = document.getElementById('finishXp').textContent;
+            const xpEarned2 = parseFloat(xpText) || 0;
 
-    (async function() {
-        try {
-            const user = await getFirebaseUser();
-            if (user) {
-                const result = await saveWorkoutToFirestore(user.uid, workoutData);
-                if (result.success) {
-                    const profileResult = await getUserProfile(user.uid);
-                    if (profileResult.success) {
-                        const currentXp = profileResult.data.totalXp || 0;
-                        await updateUserProfile(user.uid, { totalXp: currentXp + xpEarned2 });
+            // ★★★ ОПРЕДЕЛЯЕМ КАТЕГОРИЮ ★★★
+            let finalCategory = sessionCategory;
+            if (!finalCategory || finalCategory === 'Без категории') {
+                const title = sessionWorkoutTitle || '';
+                if (title.includes('Руки')) finalCategory = 'Руки';
+                else if (title.includes('Плечи')) finalCategory = 'Плечи';
+                else if (title.includes('Пресс')) finalCategory = 'Пресс';
+                else if (title.includes('Грудь')) finalCategory = 'Грудь';
+                else if (title.includes('Спина')) finalCategory = 'Спина';
+                else if (title.includes('Ноги')) finalCategory = 'Ноги';
+                else if (title.includes('Кардио')) finalCategory = 'Кардио';
+                else if (title.includes('Растяжка')) finalCategory = 'Гибкость';
+                else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
+                else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
+                else finalCategory = 'Без категории';
+            }
+
+            const workoutExercises = sessionExercises.map((ex, index) => ({
+                ...ex,
+                icon: ex.icon || null,
+                completed: sessionCompleted.has(index)
+            }));
+
+            const workoutIcon = sessionWorkoutIcon || null;
+
+            const workoutData = {
+                title: sessionWorkoutTitle || 'Тренировка',
+                date: new Date().toISOString(),
+                durationSeconds: sessionSeconds,
+                exercises: workoutExercises,
+                xpEarned: xpEarned2,
+                category: finalCategory,
+                icon: workoutIcon
+            };
+
+            (async function() {
+                try {
+                    const user = await getFirebaseUser();
+                    if (user) {
+                        const result = await saveWorkoutToFirestore(user.uid, workoutData);
+                        if (result.success) {
+                            const profileResult = await getUserProfile(user.uid);
+                            if (profileResult.success) {
+                                const currentXp = profileResult.data.totalXp || 0;
+                                await updateUserProfile(user.uid, { totalXp: currentXp + xpEarned2 });
+                            }
+                            showToast('💾 Тренировка сохранена');
+                            await updateAchievementsAfterWorkout();
+                            await updateProfileStreak();
+                        } else {
+                            addPendingWorkout(workoutData);
+                            showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
+                        }
+                    } else {
+                        addPendingWorkout(workoutData);
+                        showToast('⚠️ Тренировка сохранена локально');
                     }
-                    showToast('💾 Тренировка сохранена');
-                    await updateAchievementsAfterWorkout();
-                } else {
-                    addPendingWorkout(workoutData);
-                    showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
+
+                    // Сбрасываем переменные
+                    sessionExercises = [];
+                    sessionCompleted = new Set();
+                    sessionCompletedSets = {};
+                    sessionSeconds = 0;
+                    sessionWorkoutTitle = '';
+                    sessionCategory = '';
+                    sessionWorkoutIcon = null;
+
+                    // Переход на тренировки
+                    window.navigateTo('workouts');
+
+                    // ★★★ ПОКАЗЫВАЕМ PREMIUM ★★★
+                    if (showPremium) {
+                        markPremiumOfferShown();
+                        setTimeout(() => {
+                            enqueueModal({ type: 'premium' });
+                        }, 800);
+                    }
+
+                    // ★★★ ПРОВЕРЯЕМ НАГРАДУ ★★★
+                    setTimeout(() => {
+                        checkAndGiveCommunityGoalReward(true);
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('❌ Ошибка сохранения тренировки:', error);
+                    showToast('❌ Ошибка сохранения тренировки');
+                } finally {
+                    btn.disabled = false;
                 }
-            } else {
-                addPendingWorkout(workoutData);
-                showToast('⚠️ Тренировка сохранена локально');
-            }
-
-            // Сбрасываем переменные
-            sessionExercises = [];
-            sessionCompleted = new Set();
-            sessionCompletedSets = {};
-            sessionSeconds = 0;
-            sessionWorkoutTitle = '';
-            sessionCategory = '';
-            sessionWorkoutIcon = null;
-
-            // Переход на тренировки
-            window.navigateTo('workouts');
-
-            // ★★★ ПОКАЗЫВАЕМ PREMIUM ★★★
-            if (showPremium) {
-                markPremiumOfferShown();
-                setTimeout(() => {
-                    enqueueModal({ type: 'premium' });
-                }, 800);
-            }
-
-            // ★★★ ПРОВЕРЯЕМ НАГРАДУ ★★★
-            setTimeout(() => {
-                checkAndGiveCommunityGoalReward(true);  // force = true
-            }, 1000);
-
-        } catch (error) {
-            console.error('❌ Ошибка сохранения тренировки:', error);
-            showToast('❌ Ошибка сохранения тренировки');
-        } finally {
-            btn.disabled = false;
-        }
-    })();
-};
-    container.appendChild(finishBtn);
+            })();
+        };
+    }
     
     window.navigateTo('finish');
 }
@@ -10612,104 +10592,6 @@ document.querySelectorAll('#finishStars i').forEach(star => {
             s.classList.toggle('active', parseInt(s.dataset.value) <= value);
         });
     });
-});
-
-// ===================КНОПКА "ЗАКОНЧИТЬ" ===================
-document.getElementById('finishDoneBtn')?.addEventListener('click', async function() {
-    if (!preventDoubleClick('finishDoneBtn', 3000)) {
-        showToast('⏳ Подождите, тренировка уже сохраняется...');
-        return;
-    }
-
-    const btn = this;
-    btn.disabled = true;
-    btn.textContent = 'Закончить';
-    btn.style.opacity = '1';
-
-    try {
-        const xpText = document.getElementById('finishXp').textContent;
-        const xpEarned = parseFloat(xpText) || 0;
-
-        let finalCategory = sessionCategory;
-        if (!finalCategory || finalCategory === 'Без категории') {
-            const title = sessionWorkoutTitle || '';
-            if (title.includes('Руки')) finalCategory = 'Руки';
-            else if (title.includes('Плечи')) finalCategory = 'Плечи';
-            else if (title.includes('Пресс')) finalCategory = 'Пресс';
-            else if (title.includes('Грудь')) finalCategory = 'Грудь';
-            else if (title.includes('Спина')) finalCategory = 'Спина';
-            else if (title.includes('Ноги')) finalCategory = 'Ноги';
-            else if (title.includes('Кардио')) finalCategory = 'Кардио';
-            else if (title.includes('Растяжка')) finalCategory = 'Гибкость';
-            else if (title.includes('Пилатес') || title.includes('Кроссфит') || title.includes('Всё тело')) finalCategory = 'Всё тело';
-            else if (title.includes('Мужская сила') || title.includes('Женское счастье')) finalCategory = 'Ягодицы';
-            else finalCategory = 'Без категории';
-        }
-
-        const workoutExercises = sessionExercises.map((ex, index) => ({
-            ...ex,
-            icon: ex.icon || null,
-            completed: sessionCompleted.has(index)
-        }));
-
-        // ИКОНКА ТРЕНИРОВКИ — ИСПОЛЬЗУЕМ СОХРАНЁННУЮ В СЕССИИ
-        const workoutIcon = sessionWorkoutIcon || null;
-
-        const workoutData = {
-            title: sessionWorkoutTitle || 'Тренировка',
-            date: new Date().toISOString(),
-            durationSeconds: sessionSeconds,
-            exercises: workoutExercises,
-            xpEarned: xpEarned,
-            category: finalCategory,
-            icon: workoutIcon
-        };
-
-        console.log('Сохраняем тренировку с иконкой:', workoutData.icon);
-
-        const user = await getFirebaseUser();
-        if (user) {
-            const result = await saveWorkoutToFirestore(user.uid, workoutData);
-            if (result.success) {
-                const profileResult = await getUserProfile(user.uid);
-                if (profileResult.success) {
-                    const currentXp = profileResult.data.totalXp || 0;
-                    await updateUserProfile(user.uid, { totalXp: currentXp + xpEarned });
-                }
-                showToast('💾 Тренировка сохранена');
-                await updateAchievementsAfterWorkout();
-                await updateProfileStreak();
-            } else {
-                addPendingWorkout(workoutData);
-                showToast('⚠️ Тренировка сохранена локально, синхронизация позже');
-            }
-        } else {
-            addPendingWorkout(workoutData);
-            showToast('⚠️ Тренировка сохранена локально');
-        }
-
-        sessionExercises = [];
-        sessionCompleted = new Set();
-        sessionSeconds = 0;
-        sessionWorkoutTitle = '';
-        sessionCategory = '';
-        sessionWorkoutIcon = null;
-        
-        window.navigateTo('workouts');
-
-        // ★★★ ПРОВЕРЯЕМ НАГРАДУ ЗА ОБЩУЮ ЦЕЛЬ ★★★
-setTimeout(() => {
-    checkAndGiveCommunityGoalReward();
-}, 1000);
-        
-    } catch (error) {
-        console.error('Ошибка сохранения:', error);
-        showToast('❌ Ошибка сохранения тренировки');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Закончить';
-        btn.style.opacity = '1';
-    }
 });
 
 // =================== ПОЛУЧЕНИЕ ИКОНКИ УПРАЖНЕНИЯ ===================

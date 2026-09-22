@@ -391,7 +391,10 @@
                         <span class="finish-stat-value" id="finishXp">+0 XP</span>
                     </div>
                 </div>
-                <button class="btn btn-primary finish-btn" id="finishDoneBtn">Закончить</button>
+                <div class="finish-btn-container">
+    <button class="btn btn-primary" id="finishShareBtn" style="flex:1;">Поделиться</button>
+    <button class="btn btn-primary" id="finishDoneBtn" style="flex:1;">Закончить</button>
+</div>
             </div>
         </main>
     </div>
@@ -410,8 +413,8 @@
                 <!-- Сюда будут рендериться все участники -->
             </div>
 
-<div id="coopFinishButtons" style="display:flex; gap:0.5rem; width:100%; margin-top:1rem;">
-    <button class="btn btn-secondary" id="coopFinishShareBtn" style="flex:1;">Поделиться</button>
+<div id="coopFinishButtons" class="finish-btn-container">
+    <button class="btn btn-primary" id="coopFinishShareBtn" style="flex:1;">Поделиться</button>
     <button class="btn btn-primary" id="coopFinishDoneBtn" style="flex:1;">Закончить</button>
 </div>
         </div>
