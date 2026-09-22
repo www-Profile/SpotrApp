@@ -703,7 +703,6 @@ body.theme-dark-mode .item-card-light {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* ===================ЕДИНЫЙ СТИЛЬ ДЛЯ МОДАЛЬНЫХ ОКОН ==================== */
 /* =================== МОДАЛЬНЫЕ ОКНА (С АНИМАЦИЕЙ) ==================== */
 .modal-overlay {
     position: fixed;
@@ -719,7 +718,6 @@ body.theme-dark-mode .item-card-light {
 
     /* Анимация фона */
     opacity: 0;
-    visibility: hidden;
     pointer-events: none;
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
@@ -5407,4 +5405,45 @@ body.theme-dark-mode .month-badge.golden {
 
 body.theme-dark-mode .level-bar-modal {
     background: var(--bg-secondary);
+}
+
+/* =================== QR-КОД ПРОФИЛЯ =================== */
+.qr-code-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--white);
+    padding: 1rem;
+    border-radius: 16px;
+    border: 2px solid var(--light-grey);
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.qr-code-wrapper canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.qr-code-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+    margin-bottom: 0.2rem;
+    word-break: break-word;
+}
+
+.qr-code-hint {
+    font-size: 0.75rem;
+    color: var(--slate);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Тёмная тема */
+body.theme-dark-mode .qr-code-wrapper {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
 }

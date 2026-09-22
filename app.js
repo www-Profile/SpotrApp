@@ -1948,7 +1948,7 @@ ${friends.map(f => {
 }).join('')}
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-secondary" onclick="document.getElementById('friendSelectModal').remove()" style="flex: 1;">Закрыть</button>
+                    <button class="btn btn-secondary" onclick="closeModal('friendSelectModal')" style="flex: 1;">Закрыть</button>
                     <button class="btn btn-primary" id="sendInviteBtn" style="flex: 1;">Отправить</button>
                 </div>
         </div>
@@ -1961,56 +1961,51 @@ overlay.classList.add('modal-overlay-visible');
     // Массив выбранных друзей
     window._selectedFriends = [];
     
-    document.getElementById('sendInviteBtn').addEventListener('click', function() {
-        const selectedFriends = window._selectedFriends || [];
-        const count = selectedFriends.length;
-        
-        // 1. Если никто не выбран
-        if (count === 0) {
-            showToast('⚠️ Выберите друга');
-            return;
-        }
-        
-        // 2. Если выбран 1 друг — всегда отправляем (без проверки Premium)
-        if (count === 1) {
-            const friendId = selectedFriends[0];
-            overlay.remove();
-            getUserProfile(friendId).then(result => {
-                if (result.success) {
-                    const friendName = result.data.displayName || 'Пользователь';
-                    sendCoopInvite(friendId, friendName);
-                } else {
-                    showToast('❌ Не удалось загрузить данные друга');
-                }
-            });
-            return;
-        }
-        
-        // 3. Если выбрано 2+ друзей — проверяем Premium
-        if (count >= 2) {
-            if (hasPremium()) {
-                // С Premium можно отправлять до 3 друзей
-                if (count <= 3) {
-                    overlay.remove();
-                    const friendId = selectedFriends[0];
-                    getUserProfile(friendId).then(result => {
-                        if (result.success) {
-                            const friendName = result.data.displayName || 'Пользователь';
-                            sendCoopInvite(friendId, friendName);
-                        } else {
-                            showToast('❌ Не удалось загрузить данные друга');
-                        }
-                    });
-                } else {
-                    showToast(`⚠️ Можно выбрать не более 3 друзей`);
-                }
+document.getElementById('sendInviteBtn').addEventListener('click', function() {
+    const selectedFriends = window._selectedFriends || [];
+    const count = selectedFriends.length;
+
+    if (count === 0) {
+        showToast('⚠️ Выберите друга');
+        return;
+    }
+
+    if (count === 1) {
+        const friendId = selectedFriends[0];
+        closeModal('friendSelectModal');
+        getUserProfile(friendId).then(result => {
+            if (result.success) {
+                const friendName = result.data.displayName || 'Пользователь';
+                sendCoopInvite(friendId, friendName);
             } else {
-                // Нет Premium — показываем модалку
-                overlay.remove();
-                openModal('premiumModal');
+                showToast('❌ Не удалось загрузить данные друга');
             }
+        });
+        return;
+    }
+
+    if (count >= 2) {
+        if (hasPremium()) {
+            if (count <= 3) {
+                closeModal('friendSelectModal');
+                const friendId = selectedFriends[0];
+                getUserProfile(friendId).then(result => {
+                    if (result.success) {
+                        const friendName = result.data.displayName || 'Пользователь';
+                        sendCoopInvite(friendId, friendName);
+                    } else {
+                        showToast('❌ Не удалось загрузить данные друга');
+                    }
+                });
+            } else {
+                showToast(`⚠️ Можно выбрать не более 3 друзей`);
+            }
+        } else {
+            closeModal('friendSelectModal');
+            openModal('premiumModal');
         }
-    });
+    }
+});
 }
 
 window.selectFriendForCoop = function(friendId) {
@@ -3023,7 +3018,7 @@ function clearSeenNotifications() {
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'monthly-badges', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'monthly-badges', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
@@ -3957,7 +3952,7 @@ function closeModal(modalId) {
     setTimeout(() => {
         modal.style.display = 'none';
         modal.classList.remove('modal-overlay-closing');
-    }, 350);
+    }, 600);
 }
 
 // ===================ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК СТАТИСТИКИ ===================
@@ -6207,48 +6202,48 @@ overlay.style.display = 'flex';
 void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
 
-    document.getElementById('resetConfirmYes').addEventListener('click', function() {
-        overlay.remove();
-        // ★★★ УНИЧТОЖАЕМ SORTABLE ★★★
-        destroyEditSortable();
-        
-        const category = editCategory;
-        const level = editLevel || '1 LVL';
-        let parentCategory = null;
-        for (const parent in exercisesDataDefault) {
-            if (exercisesDataDefault[parent] && exercisesDataDefault[parent][category]) {
-                parentCategory = parent;
-                break;
-            }
-        }
-        if (parentCategory) {
-            const defaultExercises = exercisesDataDefault[parentCategory][category][level];
-            if (defaultExercises) {
-                editExercises = JSON.parse(JSON.stringify(defaultExercises));
-                const nameInput = document.getElementById('editWorkoutName');
-                if (nameInput) nameInput.value = category + ' ' + level;
-                renderEditExercises();
-                showToast('✅ Тренировка сброшена');
-                return;
-            }
-        }
-        if (exercisesDataDefault[category] && exercisesDataDefault[category][level]) {
-            const defaultExercises = exercisesDataDefault[category][level];
-            if (defaultExercises) {
-                editExercises = JSON.parse(JSON.stringify(defaultExercises));
-                const nameInput = document.getElementById('editWorkoutName');
-                if (nameInput) nameInput.value = category + ' ' + level;
-                renderEditExercises();
-                showToast('✅ Тренировка сброшена');
-                return;
-            }
-        }
-        showToast('❌ Не удалось найти исходные данные для этой тренировки');
-    });
+document.getElementById('resetConfirmYes').addEventListener('click', function() {
+    closeModal('resetConfirmModal');
 
-    document.getElementById('resetConfirmNo').addEventListener('click', function() {
-        overlay.remove();
-    });
+    destroyEditSortable();
+
+    const category = editCategory;
+    const level = editLevel || '1 LVL';
+    let parentCategory = null;
+    for (const parent in exercisesDataDefault) {
+        if (exercisesDataDefault[parent] && exercisesDataDefault[parent][category]) {
+            parentCategory = parent;
+            break;
+        }
+    }
+    if (parentCategory) {
+        const defaultExercises = exercisesDataDefault[parentCategory][category][level];
+        if (defaultExercises) {
+            editExercises = JSON.parse(JSON.stringify(defaultExercises));
+            const nameInput = document.getElementById('editWorkoutName');
+            if (nameInput) nameInput.value = category + ' ' + level;
+            renderEditExercises();
+            showToast('✅ Тренировка сброшена');
+            return;
+        }
+    }
+    if (exercisesDataDefault[category] && exercisesDataDefault[category][level]) {
+        const defaultExercises = exercisesDataDefault[category][level];
+        if (defaultExercises) {
+            editExercises = JSON.parse(JSON.stringify(defaultExercises));
+            const nameInput = document.getElementById('editWorkoutName');
+            if (nameInput) nameInput.value = category + ' ' + level;
+            renderEditExercises();
+            showToast('✅ Тренировка сброшена');
+            return;
+        }
+    }
+    showToast('❌ Не удалось найти исходные данные для этой тренировки');
+});
+
+document.getElementById('resetConfirmNo').addEventListener('click', function() {
+    closeModal('resetConfirmModal');
+});
 }
 
 // ===================МОИ ТРЕНИРОВКИ (localStorage) ===================
@@ -9738,38 +9733,38 @@ overlay.style.display = 'flex';
 void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
 
-    document.getElementById('confirmYes').addEventListener('click', async function() {
-        const passwordInput = document.getElementById('confirmPassword');
-        const password = passwordInput.value.trim();
-        if (!password) {
-            showToast('⚠️ Введите пароль');
-            passwordInput.classList.add('error');
-            return;
-        }
-        passwordInput.classList.remove('error');
+document.getElementById('confirmYes').addEventListener('click', async function() {
+    const passwordInput = document.getElementById('confirmPassword');
+    const password = passwordInput.value.trim();
+    if (!password) {
+        showToast('⚠️ Введите пароль');
+        passwordInput.classList.add('error');
+        return;
+    }
+    passwordInput.classList.remove('error');
 
-        const user = await getFirebaseUser();
-        if (!user) {
-            showToast('❌ Пользователь не авторизован');
-            overlay.remove();
-            return;
-        }
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Пользователь не авторизован');
+        closeModal('confirmModal');
+        return;
+    }
 
-        try {
-            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
-            await user.reauthenticateWithCredential(credential);
-            overlay.remove();
-            if (typeof onConfirm === 'function') onConfirm();
-        } catch (error) {
-            console.error('Ошибка аутентификации:', error);
-            showToast('❌ Неверный пароль');
-            overlay.remove();
-        }
-    });
+    try {
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+        closeModal('confirmModal');
+        if (typeof onConfirm === 'function') onConfirm();
+    } catch (error) {
+        console.error('Ошибка аутентификации:', error);
+        showToast('❌ Неверный пароль');
+        closeModal('confirmModal');
+    }
+});
 
-    document.getElementById('confirmNo').addEventListener('click', function() {
-        overlay.remove();
-    });
+document.getElementById('confirmNo').addEventListener('click', function() {
+    closeModal('confirmModal');
+});
 }
 
 // ===================МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ (БЕЗ ПАРОЛЯ) ===================
@@ -9795,14 +9790,14 @@ overlay.style.display = 'flex';
 void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
 
-    document.getElementById('confirmYes').addEventListener('click', function() {
-        overlay.remove();
-        if (typeof onConfirm === 'function') onConfirm();
-    });
+document.getElementById('confirmYes').addEventListener('click', function() {
+    closeModal('confirmModal');           // ← было overlay.remove()
+    if (typeof onConfirm === 'function') onConfirm();
+});
 
-    document.getElementById('confirmNo').addEventListener('click', function() {
-        overlay.remove();
-    });
+document.getElementById('confirmNo').addEventListener('click', function() {
+    closeModal('confirmModal');           // ← было overlay.remove()
+});
 }
 
 // ===================НЕВОЗВРАТНЫЕ НАСТРОЙКИ ===================
@@ -10310,7 +10305,7 @@ window.statsEditor = new PageEditor({
     ],
     defaultLayout: {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'monthly-badges', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'monthly-badges', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
@@ -11243,9 +11238,9 @@ overlay.style.display = 'flex';
 void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
     
-    document.getElementById('editEmailCancel').addEventListener('click', function() {
-        overlay.remove();
-    });
+document.getElementById('editEmailCancel').addEventListener('click', function() {
+    closeModal('editEmailModal');
+});
     
     document.getElementById('editEmailSave').addEventListener('click', async function() {
         const newEmail = document.getElementById('newEmailInput').value.trim();
@@ -11302,11 +11297,11 @@ overlay.classList.add('modal-overlay-visible');
             localStorage.setItem('pendingEmailChangeTime', String(Date.now()));
             localStorage.setItem('pendingOldEmail', oldEmail);
             
-            // ★★★ 5. ЗАКРЫВАЕМ ПЕРВУЮ МОДАЛКУ ★★★
-            overlay.remove();
-            
-            // ★★★ 6. ПОКАЗЫВАЕМ МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ★★★
-            showEmailVerificationModal(newEmail);
+// ★★★ 5. ЗАКРЫВАЕМ ПЕРВУЮ МОДАЛКУ ★★★
+closeModal('editEmailModal');
+
+// ★★★ 6. ПОКАЗЫВАЕМ МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ★★★
+showEmailVerificationModal(newEmail);
             
         } catch (error) {
             console.error('Ошибка изменения почты:', error);
@@ -11376,83 +11371,74 @@ void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
     
     // ★★★ КНОПКА "ОТМЕНА" - ВОЗВРАЩАЕМ СТАРУЮ ПОЧТУ ★★★
-    document.getElementById('emailVerifyCancel').addEventListener('click', async function() {
-        const oldEmail = localStorage.getItem('pendingOldEmail');
-        const user = firebase.auth().currentUser;
-        
-        if (user && oldEmail) {
-            try {
-                // ★★★ ВОЗВРАЩАЕМ СТАРУЮ ПОЧТУ ★★★
-                await user.updateEmail(oldEmail);
-                await updateUserProfile(user.uid, { email: oldEmail });
-                document.getElementById('profileEmailDisplay').textContent = oldEmail;
-                showToast('✅ Почта возвращена на ' + oldEmail);
-            } catch (error) {
-                console.error('Ошибка возврата почты:', error);
-                showToast('⚠️ Не удалось вернуть старую почту. Перезайдите в аккаунт.');
-            }
-        }
-        
-        localStorage.removeItem('pendingEmailChange');
-        localStorage.removeItem('pendingEmailChangeTime');
-        localStorage.removeItem('pendingOldEmail');
-        overlay.remove();
-    });
-    
-    // ★★★ КНОПКА "ПРОДОЛЖИТЬ" - ПРОВЕРЯЕМ ПОДТВЕРЖДЕНИЕ ★★★
-    document.getElementById('emailVerifyConfirm').addEventListener('click', async function() {
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = 'Проверка...';
-        
+document.getElementById('emailVerifyCancel').addEventListener('click', async function() {
+    const oldEmail = localStorage.getItem('pendingOldEmail');
+    const user = firebase.auth().currentUser;
+
+    if (user && oldEmail) {
         try {
-            const user = firebase.auth().currentUser;
-            
-            if (!user) {
-                showToast('❌ Пользователь не найден');
-                btn.disabled = false;
-                btn.textContent = 'Продолжить';
-                return;
-            }
-            
-            // ★★★ ПЕРЕЗАГРУЖАЕМ ПОЛЬЗОВАТЕЛЯ ★★★
-            await user.reload();
-            
-            // ★★★ ПРОВЕРЯЕМ, ПОДТВЕРЖДЕНА ЛИ НОВАЯ ПОЧТА ★★★
-            // ★★★ ВАЖНО: проверяем, что email совпадает с новым И подтверждён ★★★
-            if (user.email === newEmail && user.emailVerified) {
-                // ★★★ ПОЧТА ПОДТВЕРЖДЕНА - ОБНОВЛЯЕМ FIRESTORE ★★★
-                try {
-                    await updateUserProfile(user.uid, { email: newEmail });
-                    document.getElementById('profileEmailDisplay').textContent = newEmail;
-                    
-                    localStorage.removeItem('pendingEmailChange');
-                    localStorage.removeItem('pendingEmailChangeTime');
-                    localStorage.removeItem('pendingOldEmail');
-                    
-                    overlay.remove();
-                    showToast('✅ Почта успешно изменена на ' + newEmail);
-                    
-                } catch (error) {
-                    console.error('Ошибка обновления профиля:', error);
-                    showToast('❌ Ошибка обновления профиля');
-                    btn.disabled = false;
-                    btn.textContent = 'Продолжить';
-                }
-            } else {
-                // ★★★ ПОЧТА НЕ ПОДТВЕРЖДЕНА ★★★
-                showToast('⚠️ Подтвердите почту! Проверьте письмо');
-                btn.disabled = false;
-                btn.textContent = 'Продолжить';
-            }
-            
+            await user.updateEmail(oldEmail);
+            await updateUserProfile(user.uid, { email: oldEmail });
+            document.getElementById('profileEmailDisplay').textContent = oldEmail;
+            showToast('✅ Почта возвращена на ' + oldEmail);
         } catch (error) {
-            console.error('Ошибка проверки почты:', error);
-            showToast('❌ Ошибка проверки почты');
+            console.error('Ошибка возврата почты:', error);
+            showToast('⚠️ Не удалось вернуть старую почту. Перезайдите в аккаунт.');
+        }
+    }
+
+    localStorage.removeItem('pendingEmailChange');
+    localStorage.removeItem('pendingEmailChangeTime');
+    localStorage.removeItem('pendingOldEmail');
+    closeModal('emailVerificationModal');
+});
+
+document.getElementById('emailVerifyConfirm').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Проверка...';
+
+    try {
+        const user = firebase.auth().currentUser;
+
+        if (!user) {
+            showToast('❌ Пользователь не найден');
+            btn.disabled = false;
+            btn.textContent = 'Продолжить';
+            return;
+        }
+
+        await user.reload();
+
+        if (user.email === newEmail && user.emailVerified) {
+            try {
+                await updateUserProfile(user.uid, { email: newEmail });
+                document.getElementById('profileEmailDisplay').textContent = newEmail;
+
+                localStorage.removeItem('pendingEmailChange');
+                localStorage.removeItem('pendingEmailChangeTime');
+                localStorage.removeItem('pendingOldEmail');
+
+                closeModal('emailVerificationModal');
+                showToast('✅ Почта успешно изменена на ' + newEmail);
+            } catch (error) {
+                console.error('Ошибка обновления профиля:', error);
+                showToast('❌ Ошибка обновления профиля');
+                btn.disabled = false;
+                btn.textContent = 'Продолжить';
+            }
+        } else {
+            showToast('⚠️ Подтвердите почту! Проверьте письмо');
             btn.disabled = false;
             btn.textContent = 'Продолжить';
         }
-    });
+    } catch (error) {
+        console.error('Ошибка проверки почты:', error);
+        showToast('❌ Ошибка проверки почты');
+        btn.disabled = false;
+        btn.textContent = 'Продолжить';
+    }
+});
 }
 
 /**
@@ -11497,9 +11483,9 @@ overlay.style.display = 'flex';
 void overlay.offsetWidth;
 overlay.classList.add('modal-overlay-visible');
     
-    document.getElementById('editPasswordCancel').addEventListener('click', function() {
-        overlay.remove();
-    });
+document.getElementById('editPasswordCancel').addEventListener('click', function() {
+    closeModal('editPasswordModal');
+});
     
     document.getElementById('editPasswordSave').addEventListener('click', async function() {
         const currentPassword = document.getElementById('currentPasswordInput').value.trim();
@@ -11549,8 +11535,8 @@ overlay.classList.add('modal-overlay-visible');
             await user.reauthenticateWithCredential(credential);
             await user.updatePassword(newPassword);
             
-            showToast('✅ Пароль обновлён!');
-            overlay.remove();
+showToast('✅ Пароль обновлён!');
+closeModal('editPasswordModal');
             
         } catch (error) {
             console.error('Ошибка изменения пароля:', error);
@@ -11890,14 +11876,16 @@ function toggleAchievementsVisibility() {
 
     showConfirmModal(
         newState ? 'Показать достижения?' : 'Скрыть достижения?',
-        newState ? '...' : '...',
+        newState
+            ? 'Достижения снова будут видны в вашем профиле и в рейтингах пользователей.'
+            : 'Достижения будут скрыты из вашего профиля и из рейтингов пользователей.',
         function() {
             localStorage.setItem(ACHIEVEMENTS_VISIBILITY_KEY, String(newState));
             updateAchievementsVisibilityUI(newState);
-            
+
             // ★★★ В FIRESTORE ★★★
             syncSaveToFirestore('achievementsVisible', newState);
-            
+
             showToast(`✅ Достижения ${newState ? 'показаны' : 'скрыты'}`);
         },
         newState ? 'Показать' : 'Скрыть'
@@ -14369,29 +14357,28 @@ function openTaskResultModal(sessionData, actualSeconds) {
         document.getElementById('taskResultValue').textContent = currentValue;
     });
 
-    document.getElementById('taskResultCancel').addEventListener('click', function() {
-        modal.remove();
-        if (taskSessionData) {
-            taskSessionData.isActive = true;
-            startTaskTimer();
-        }
-        const finishBtn = document.getElementById('taskFinishBtn');
-        if (finishBtn) {
-            finishBtn.textContent = 'ФИНИШ';
-            finishBtn.style.background = 'var(--accent)';
-            finishBtn.disabled = false;
-        }
-    });
+document.getElementById('taskResultCancel').addEventListener('click', function() {
+    closeModal('taskResultModal');
+    if (taskSessionData) {
+        taskSessionData.isActive = true;
+        startTaskTimer();
+    }
+    const finishBtn = document.getElementById('taskFinishBtn');
+    if (finishBtn) {
+        finishBtn.textContent = 'ФИНИШ';
+        finishBtn.style.background = 'var(--accent)';
+        finishBtn.disabled = false;
+    }
+});
 
-    document.getElementById('taskResultConfirm').addEventListener('click', async function() {
-        const entered = currentValue;
-        const target = sessionData.target;
-        const isCompleted = entered >= target;
-        const taskId = sessionData.taskId;
-        const exercise = sessionData.exercise;
-        const exerciseName = exercise.name;
+document.getElementById('taskResultConfirm').addEventListener('click', async function() {
+    const entered = currentValue;
+    const target = sessionData.target;
+    const taskId = sessionData.taskId;
+    const exercise = sessionData.exercise;
+    const exerciseName = exercise.name;
 
-        modal.remove();
+    closeModal('taskResultModal');
 
         if (taskSessionData) {
             taskSessionData.isActive = false;
@@ -15161,8 +15148,7 @@ overlay.classList.add('modal-overlay-visible');
 }
 
 function closeFriendHistoryFilterModal() {
-    const modal = document.getElementById('friendHistoryFilterModal');
-    if (modal) modal.remove();
+    closeModal('friendHistoryFilterModal');
 }
 
 function selectFriendHistoryFilter(friendId) {
@@ -17628,7 +17614,7 @@ function showFallbackCopyModal(url) {
 }
 
 // Привязка кнопки
-document.getElementById('shareProfileBtn')?.addEventListener('click', shareProfile);
+document.getElementById('shareProfileBtn')?.addEventListener('click', openQRCodeModal);
 
 window.shareProfile = shareProfile;
 
@@ -18129,3 +18115,120 @@ function openMonthBadgeModal(monthKey) {
 }
 
 window.openMonthBadgeModal = openMonthBadgeModal;
+
+// =================== QR-КОД ПРОФИЛЯ (ТОЛЬКО ЧЕРЕЗ API) ===================
+async function openQRCodeModal() {
+    const user = await getFirebaseUser();
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+
+    const profileResult = await getUserProfile(user.uid);
+    const profile = profileResult.success ? profileResult.data : {};
+    const name = profile.displayName || 'Пользователь';
+
+    const url = `${window.location.origin}${window.location.pathname}?addFriend=${user.uid}`;
+    window._currentQRLink = url;
+
+    document.getElementById('qrCodeUserName').textContent = name;
+
+    const container = document.getElementById('qrCodeContainer');
+    container.innerHTML = '';
+
+    const img = document.createElement('img');
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+    img.width = 240;
+    img.height = 240;
+    img.alt = 'QR-код профиля';
+    img.style.display = 'block';
+    img.style.borderRadius = '8px';
+
+    img.onerror = function() {
+        container.innerHTML = `
+            <div style="color:var(--slate);padding:1.5rem;text-align:center;font-size:0.85rem;">
+                <i class="fa-solid fa-wifi" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+                Не удалось загрузить QR.<br>
+                Проверьте интернет или скопируйте ссылку.
+            </div>
+        `;
+    };
+
+    container.appendChild(img);
+
+    window._currentQRImageUrl = img.src;
+
+    openModal('qrCodeModal');
+}
+
+// ★★★ СКАЧАТЬ ★★★
+function downloadQRCode() {
+    const name = document.getElementById('qrCodeUserName').textContent;
+    const safeName = name.replace(/\s+/g, '-').replace(/[^\w\-]/g, '') || 'profile';
+
+    if (!window._currentQRImageUrl) {
+        showToast('❌ QR не сгенерирован');
+        return;
+    }
+
+    fetch(window._currentQRImageUrl)
+        .then(r => r.blob())
+        .then(blob => {
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `sportapp-qr-${safeName}.png`;
+            link.href = blobUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            showToast('✅ QR-код сохранён');
+        })
+        .catch(() => {
+            window.open(window._currentQRImageUrl, '_blank');
+            showToast('⚠️ Скачайте картинку вручную');
+        });
+}
+
+// ★★★ СКОПИРОВАТЬ ССЫЛКУ ★★★
+async function copyProfileShareLink() {
+    if (!window._currentQRLink) {
+        showToast('❌ Ссылка не готова');
+        return;
+    }
+
+    const user = await getFirebaseUser();
+    const profileResult = user ? await getUserProfile(user.uid) : { success: false };
+    const name = profileResult.success
+        ? (profileResult.data.displayName || 'Пользователь')
+        : 'Пользователь';
+
+    const text = `${name} приглашает тебя в SportApp! Открой ссылку, чтобы добавить в друзья:\n${window._currentQRLink}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast('✅ Ссылка скопирована');
+            return;
+        } catch (err) { /* fallback ниже */ }
+    }
+
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-1000px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast(ok ? '✅ Ссылка скопирована' : '⚠️ Скопируйте: ' + window._currentQRLink);
+    } catch (err) {
+        showConfirmModal('Ваша ссылка', window._currentQRLink, null, 'OK');
+    }
+}
+
+// Привязка кнопок
+document.getElementById('shareProfileBtn')?.addEventListener('click', openQRCodeModal);
+document.getElementById('qrCodeCopyBtn')?.addEventListener('click', copyProfileShareLink);
+document.getElementById('qrCodeDownloadBtn')?.addEventListener('click', downloadQRCode);
