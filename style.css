@@ -5349,14 +5349,13 @@ body.theme-dark-mode .carousel-card-desc {
 }
 
 .month-badge {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     margin: 0 auto;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 2px solid var(--light-grey);
@@ -5372,7 +5371,7 @@ body.theme-dark-mode .carousel-card-desc {
 }
 
 .month-badge-emoji {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     line-height: 1;
     pointer-events: none;
 }
@@ -5395,7 +5394,6 @@ body.theme-dark-mode .month-badge.golden {
     border-radius: 4px;
     overflow: hidden;
     position: relative;
-    border: 1px solid var(--text-primary);
 }
 
 .level-fill-modal {
@@ -5406,6 +5404,5 @@ body.theme-dark-mode .month-badge.golden {
 }
 
 body.theme-dark-mode .level-bar-modal {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
