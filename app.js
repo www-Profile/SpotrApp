@@ -10472,7 +10472,7 @@ const shareBtn = document.createElement('button');
 shareBtn.className = 'btn btn-primary';
 shareBtn.id = 'finishShareBtn';
 shareBtn.style.flex = '1';
-shareBtn.innerHTML = '<i class="fa-solid fa-user-group"></i> Поделиться';
+shareBtn.innerHTML = 'Поделиться';
 shareBtn.onclick = openWorkoutShareModal;
 container.appendChild(shareBtn);
 
@@ -18327,21 +18327,6 @@ document.getElementById('qrCodeDownloadBtn')?.addEventListener('click', download
 // =================== ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ ТРЕНИРОВКИ ===================
 
 // ★★★ ХЕЛПЕРЫ ★★★
-function roundRect(ctx, x, y, w, h, r) {
-    if (typeof r === 'number') r = [r, r, r, r];
-    ctx.beginPath();
-    ctx.moveTo(x + r[0], y);
-    ctx.lineTo(x + w - r[1], y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r[1]);
-    ctx.lineTo(x + w, y + h - r[2]);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
-    ctx.lineTo(x + r[3], y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r[3]);
-    ctx.lineTo(x, y + r[0]);
-    ctx.quadraticCurveTo(x, y, x + r[0], y);
-    ctx.closePath();
-}
-
 function loadImageWithCors(url, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -18351,29 +18336,6 @@ function loadImageWithCors(url, timeoutMs = 5000) {
         img.src = url;
         setTimeout(() => reject(new Error('timeout')), timeoutMs);
     });
-}
-
-// Серия: если тренировка сегодня ещё не сохранена — добавляем +1
-async function getDisplayStreak(userId) {
-    try {
-        const result = await getUserWorkoutsFromFirestore(userId);
-        if (!result.success) return 0;
-
-        const baseStreak = await calculateStreak(userId);
-
-        const today = new Date();
-        const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-
-        const hasToday = result.data.some(w => {
-            const d = new Date(w.date);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            return key === todayKey && getWorkoutIcon(w) !== 'charging';
-        });
-
-        return hasToday ? baseStreak : baseStreak + 1;
-    } catch (e) {
-        return 0;
-    }
 }
 
 // ★★★ ГЕНЕРАЦИЯ PNG ЧЕРЕЗ CANVAS ★★★
@@ -18441,9 +18403,8 @@ async function generateWorkoutShareImage() {
     ctx.fillText('XP', col3X, labelsY);
 
     // ═══════════════════════════════════════
-    //  ЦЕНТР: ПУСТО (можно вставить фото)
+    //  ЦЕНТР: ПУСТО
     // ═══════════════════════════════════════
-    // Ничего не рисуем
 
     // ═══════════════════════════════════════
     //  ВНИЗУ: ИМЯ И ПОДПИСЬ
@@ -18477,14 +18438,58 @@ async function openWorkoutShareModal() {
         const dataUrl = canvas.toDataURL('image/png');
         window._currentShareDataUrl = dataUrl;
 
-preview.innerHTML = `<img src="${dataUrl}" style="
-    max-width:100%;
-    max-height:60vh;
-">`;
+        preview.innerHTML = `<img src="${dataUrl}" style="max-width:100%; max-height:60vh;">`;
     } catch (e) {
         console.error('Ошибка генерации:', e);
         preview.innerHTML = '<div style="color:var(--danger);padding:2rem;">Ошибка</div>';
     }
+}
+
+// ★★★ ПОДЕЛИТЬСЯ — ОТКРЫВАЕТ СИСТЕМНОЕ МЕНЮ ★★★
+async function shareWorkoutImage() {
+    const canvas = window._currentShareCanvas;
+    if (!canvas) {
+        showToast('❌ Изображение не готово');
+        return;
+    }
+
+    const title = sessionWorkoutTitle || 'Тренировка';
+    const text = `Моя тренировка "${title}" в SportApp: ` +
+                 `${sessionCompleted.size} упражнений за ${Math.floor(sessionSeconds / 60)} мин! 💪`;
+
+    try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Blob не создан');
+
+        const file = new File([blob], 'sportapp-workout.png', { type: 'image/png' });
+
+        // Web Share API с файлом
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Моя тренировка в SportApp',
+                text: text
+            });
+            return;
+        }
+
+        // Web Share API без файла (старые браузеры)
+        if (navigator.share) {
+            await navigator.share({
+                title: 'Моя тренировка в SportApp',
+                text: text
+            });
+            showToast('💡 Картинка сохранена отдельно');
+            downloadWorkoutImage();
+            return;
+        }
+    } catch (e) {
+        if (e.name === 'AbortError') return;
+        console.warn('Share API не сработал:', e);
+    }
+
+    // Совсем нет Share API — просто скачиваем
+    downloadWorkoutImage();
 }
 
 // ★★★ СКАЧАТЬ PNG ★★★
@@ -18497,7 +18502,6 @@ function downloadWorkoutImage() {
 
     const fileName = `sportapp-workout-${Date.now()}.png`;
 
-    // ★★★ ИСПОЛЬЗУЕМ toBlob — РАБОТАЕТ НА МОБИЛЬНЫХ ★★★
     canvas.toBlob(function(blob) {
         if (!blob) {
             showToast('❌ Не удалось сохранить');
@@ -18505,37 +18509,22 @@ function downloadWorkoutImage() {
         }
 
         const url = URL.createObjectURL(blob);
-
-        // ★★★ ПРОВЕРЯЕМ ПОДДЕРЖКУ СКАЧИВАНИЯ ★★★
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-        if (isIOS) {
-            // iOS Safari не поддерживает download-атрибут для blob —
-            // открываем в новой вкладке, оттуда Safari предложит «Сохранить в Фото»
-            const newWindow = window.open(url, '_blank');
-            if (!newWindow) {
-                showToast('⚠️ Разрешите всплывающие окна');
-            }
-            setTimeout(() => URL.revokeObjectURL(url), 10000);
-            return;
-        }
-
-        // Android / десктоп — обычное скачивание
         const link = document.createElement('a');
         link.download = fileName;
         link.href = url;
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 1000);
 
         showToast('✅ Изображение сохранено');
     }, 'image/png');
 }
 
 // ★★★ ПРИВЯЗКА КНОПОК ★★★
-document.getElementById('workoutShareDownloadBtn')?.addEventListener('click', function() {
-    downloadWorkoutImage();
-    showToast('✅ Изображение сохранено');
-});
+document.getElementById('workoutShareSendBtn')?.addEventListener('click', shareWorkoutImage);
+document.getElementById('workoutShareDownloadBtn')?.addEventListener('click', downloadWorkoutImage);
