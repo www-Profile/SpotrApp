@@ -3709,17 +3709,18 @@ function applyColor() {
     const isCustom = localStorage.getItem('themeColorCustom') === 'true';
     
     // ★★★ ПРОВЕРЯЕМ, ИЗМЕНИЛСЯ ЛИ ЦВЕТ ★★★
-    const colorChanged = tempColor !== currentColor;
+    const colorChanged = tempColor !== currentColor || isCustom;
     
     if (colorChanged) {
         // ★★★ ПРИМЕНЯЕМ ЦВЕТ ★★★
         localStorage.setItem('themeColor', tempColor);
+        localStorage.removeItem('themeColorCustom');   // ← сбрасываем флаг кастома
+        
         syncSaveToFirestore('settings', {
-    themeMode: localStorage.getItem('appThemeMode') || 'system',
-    themeColor: color,
-    themeColorCustom: true // или false
-});
-        localStorage.removeItem('themeColorCustom');
+            themeMode: localStorage.getItem('appThemeMode') || 'system',
+            themeColor: tempColor,        // ← было color
+            themeColorCustom: false       // ← было true
+        });
         
         // ★★★ ПРИМЕНЯЕМ ВИЗУАЛЬНО ★★★
         document.body.style.removeProperty('--accent');
@@ -3751,8 +3752,6 @@ function applyColor() {
             showToast('✅ Задание "Оформление" выполнено!');
             addTaskXp();
         }
-    } else {
-        // ★★★ ЦВЕТ НЕ ИЗМЕНИЛСЯ ★★★
     }
     
     // ★★★ ОБНОВЛЯЕМ СТАТУС ★★★
@@ -3773,9 +3772,18 @@ function updateColorStatus(color) {
         'green': 'Зеленый', 'darkgreen': 'Темно-зеленый', 'blue': 'Голубой',
         'darkblue': 'Синий', 'purple': 'Фиолетовый', 'pink': 'Розовый', 'gray': 'Серый'
     };
+    
     const statusEl = document.getElementById('colorStatus');
-    if (statusEl) {
-        statusEl.textContent = colorNames[color] || 'Красный';
+    if (!statusEl) return;
+    
+    // ★★★ ЕСЛИ ЦВЕТ ИЗ ПАЛИТРЫ — ПИШЕМ "Из палитры" ★★★
+    const isCustom = localStorage.getItem('themeColorCustom') === 'true';
+    const isHex = typeof color === 'string' && color.startsWith('#');
+    
+    if (isCustom && isHex) {
+        statusEl.textContent = 'Из палитры';
+    } else {
+        statusEl.textContent = colorNames[color];
     }
 }
 
@@ -9458,6 +9466,15 @@ function handlePremiumClick() {
 
 // ===================ВЫБОР ЦВЕТА ЧЕРЕЗ МОДАЛЬНОЕ ОКНО ===================
 function openColorModal() {
+    // ★★★ ЗАЩИТА ОТ ЗАЛИПШЕГО ФЛАГА ★★★
+    const stored = localStorage.getItem('themeColor') || 'red';
+    if (localStorage.getItem('themeColorCustom') === 'true' && !stored.startsWith('#')) {
+        localStorage.removeItem('themeColorCustom');
+        document.body.style.removeProperty('--accent');
+        document.body.style.removeProperty('--accent-dark');
+        document.body.style.removeProperty('--accent-light');
+    }
+    
     const currentColor = localStorage.getItem('themeColor') || 'red';
     const isCustom = localStorage.getItem('themeColorCustom') === 'true';
     
@@ -9484,10 +9501,7 @@ function openColorModal() {
     }
     
     // ★★★ ОБНОВЛЯЕМ АКТИВНУЮ КНОПКУ ★★★
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        const isActive = btn.dataset.color === currentColor;
-        btn.classList.toggle('color-btn-active', isActive);
-    });
+updateColorStatus(currentColor);
     
     // ★★★ ОБНОВЛЯЕМ ПАЛИТРУ ★★★
     const picker = document.getElementById('customColorPicker');
@@ -13135,7 +13149,9 @@ function applyColorToTheme(color) {
 
 // ★★★ УТЕМНЕНИЕ ЦВЕТА ★★★
 function darkenColor(hex, percent) {
+    if (typeof hex !== 'string' || !hex.startsWith('#')) return hex;
     const num = parseInt(hex.replace('#', ''), 16);
+    if (isNaN(num)) return hex;
     const amt = Math.round(2.55 * percent);
     const R = Math.max((num >> 16) - amt, 0);
     const G = Math.max((num >> 8 & 0x00FF) - amt, 0);
