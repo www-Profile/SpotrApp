@@ -18414,13 +18414,13 @@ async function generateWorkoutShareImage() {
     // ═══════════════════════════════════════
     ctx.fillStyle = ACCENT;
     ctx.font = `bold 90px ${SANS}`;
-    ctx.fillText('SportApp', W / 2, 80);
+    ctx.fillText('SportApp', W / 2, 130);
 
     // ═══════════════════════════════════════
     //  ПОД ЗАГОЛОВКОМ: ТАБЛИЧКА СТАТИСТИКИ
     // ═══════════════════════════════════════
-    const numbersY = 200;
-    const labelsY = 260;
+    const numbersY = 250;
+    const labelsY = 320;
 
     const col1X = W * 0.2;
     const col2X = W * 0.5;
@@ -18428,14 +18428,14 @@ async function generateWorkoutShareImage() {
 
     // ЦИФРЫ
     ctx.fillStyle = DARK;
-    ctx.font = `bold 60px ${SANS}`;
+    ctx.font = `bold 70px ${SANS}`;
     ctx.fillText(String(minutes), col1X, numbersY);
     ctx.fillText(`${completed}/${total}`, col2X, numbersY);
     ctx.fillText(`+${xpEarned}`, col3X, numbersY);
 
     // ПОДПИСИ
     ctx.fillStyle = SLATE;
-    ctx.font = `500 26px ${SANS}`;
+    ctx.font = `500 30px ${SANS}`;
     ctx.fillText('минут', col1X, labelsY);
     ctx.fillText('упражнений', col2X, labelsY);
     ctx.fillText('XP', col3X, labelsY);
@@ -18450,11 +18450,11 @@ async function generateWorkoutShareImage() {
     // ═══════════════════════════════════════
     ctx.fillStyle = ACCENT;
     ctx.font = `bold 50px ${SANS}`;
-    ctx.fillText(userName, W / 2, H - 120);
+    ctx.fillText(userName, W / 2, H - 170);
 
     ctx.fillStyle = SLATE;
     ctx.font = `500 30px ${SANS}`;
-    ctx.fillText('Присоединяйся ко мне в SportApp!', W / 2, H - 60);
+    ctx.fillText('Присоединяйся ко мне в SportApp!', W / 2, H - 110);
 
     return canvas;
 }
@@ -18489,18 +18489,49 @@ preview.innerHTML = `<img src="${dataUrl}" style="
 
 // ★★★ СКАЧАТЬ PNG ★★★
 function downloadWorkoutImage() {
-    const dataUrl = window._currentShareDataUrl;
-    if (!dataUrl) {
+    const canvas = window._currentShareCanvas;
+    if (!canvas) {
         showToast('❌ Изображение не готово');
         return;
     }
 
-    const link = document.createElement('a');
-    link.download = `sportapp-workout-${Date.now()}.png`;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fileName = `sportapp-workout-${Date.now()}.png`;
+
+    // ★★★ ИСПОЛЬЗУЕМ toBlob — РАБОТАЕТ НА МОБИЛЬНЫХ ★★★
+    canvas.toBlob(function(blob) {
+        if (!blob) {
+            showToast('❌ Не удалось сохранить');
+            return;
+        }
+
+        const url = URL.createObjectURL(blob);
+
+        // ★★★ ПРОВЕРЯЕМ ПОДДЕРЖКУ СКАЧИВАНИЯ ★★★
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+            // iOS Safari не поддерживает download-атрибут для blob —
+            // открываем в новой вкладке, оттуда Safari предложит «Сохранить в Фото»
+            const newWindow = window.open(url, '_blank');
+            if (!newWindow) {
+                showToast('⚠️ Разрешите всплывающие окна');
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            return;
+        }
+
+        // Android / десктоп — обычное скачивание
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        showToast('✅ Изображение сохранено');
+    }, 'image/png');
 }
 
 // ★★★ ПРИВЯЗКА КНОПОК ★★★

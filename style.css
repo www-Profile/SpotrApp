@@ -5412,7 +5412,7 @@ body.theme-dark-mode .level-bar-modal {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--white);
+    background: var(--light);
     padding: 1rem;
     border-radius: 16px;
     border: 2px solid var(--light-grey);
@@ -5435,6 +5435,10 @@ body.theme-dark-mode .level-bar-modal {
     word-break: break-word;
 }
 
+body.theme-dark-mode .qr-code-name {
+    color: var(--text-primary);
+}
+
 .qr-code-hint {
     font-size: 0.75rem;
     color: var(--slate);
@@ -5444,6 +5448,6 @@ body.theme-dark-mode .level-bar-modal {
 
 /* Тёмная тема */
 body.theme-dark-mode .qr-code-wrapper {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-color: var(--border-color);
 }
