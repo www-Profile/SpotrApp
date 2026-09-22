@@ -2647,10 +2647,7 @@ function getButtonCooldown(buttonId) {
 function formatSets(sets, short = false) {
     const num = parseInt(sets) || 0;
     if (short) return `${num} под`;
-    let word = 'подходов';
-    if (num === 1) word = 'подход';
-    else if (num >= 2 && num <= 4) word = 'подхода';
-    return `${num} ${word}`;
+    return `${num} ${declOfNum(num, ['подход', 'подхода', 'подходов'])}`;
 }
 
 function formatReps(reps, short = false) {
@@ -2658,17 +2655,11 @@ function formatReps(reps, short = false) {
     if (repsStr.includes('сек') || repsStr.includes('с') || repsStr.includes('Секунд')) {
         const num = parseInt(repsStr.replace(/[^0-9.]/g, '')) || 0;
         if (short) return `${num} сек`;
-        let word = 'секунд';
-        if (num === 1) word = 'секунда';
-        else if (num >= 2 && num <= 4) word = 'секунды';
-        return `${num} ${word}`;
+        return `${num} ${declOfNum(num, ['секунда', 'секунды', 'секунд'])}`;
     }
     const num = parseInt(repsStr) || 0;
     if (short) return `${num} пов`;
-    let word = 'повторений';
-    if (num === 1) word = 'повторение';
-    else if (num >= 2 && num <= 4) word = 'повторения';
-    return `${num} ${word}`;
+    return `${num} ${declOfNum(num, ['повторение', 'повторения', 'повторений'])}`;
 }
 
 // ===================МАКСИМАЛЬНОЕ КОЛИЧЕСТВО УПРАЖНЕНИЙ ===================
@@ -3032,7 +3023,7 @@ function clearSeenNotifications() {
 function getDefaultStatsLayout() {
     return {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'monthly-badges', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
@@ -4181,7 +4172,7 @@ if (category === 'ГТО' && params.gtoGender) {
                 <div class="item-icon">${icon ? `<img src="images/${icon}.png">` : ''}</div>
                 <div class="item-info">
                     <h3 class="item-title">${displayName}</h3>
-                    <p class="item-desc">${levelDescs[index] || ''} · ${count} упражнений</p>
+                    <p class="item-desc">${levelDescs[index] || ''} · ${count} ${declOfNum(count, ['упражнение', 'упражнения', 'упражнений'])}</p>
                 </div>
                 <button class="item-action"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
@@ -6300,7 +6291,7 @@ function renderMyWorkouts() {
             ${w.icon ? `<div class="item-icon"><img src="images/${w.icon}.png"></div>` : ''}
             <div class="item-info">
                 <h3 class="item-title">${w.title}</h3>
-                <p class="item-desc">${w.exercises?.length || 0} упражнений</p>
+                <p class="item-desc">${w.exercises?.length || 0} ${declOfNum(w.exercises?.length || 0, ['упражнение', 'упражнения', 'упражнений'])}</p>
             </div>
             <button class="item-action workout-delete" onclick="event.stopPropagation(); deleteCustomWorkout('${w._id}')"><i class="fa-regular fa-trash-can"></i></button>
         </div>
@@ -6435,7 +6426,7 @@ workouts.forEach(w => {
                 const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
                 const xpEarned = w.xpEarned || 0;
                 const minutes = Math.floor((w.durationSeconds || 0) / 60);
-                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP`;
+                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} ${declOfNum(totalEx, ['упражнение', 'упражнения', 'упражнений'])} · ${xpEarned.toFixed(1)} XP`;
                 return `<div class="history-item">
                     <div class="history-item-header">
                         <strong class="history-item-title">${w.title}</strong>
@@ -6446,12 +6437,15 @@ workouts.forEach(w => {
             }).join('');
         }
     }
-    applyStatsTab(activeStatsTab);
-    initAccordion();
-    loadPremiumStats();
-    
-    // ★★★ ПРИМЕНЯЕМ ПОРЯДОК БЛОКОВ (ЕСЛИ НЕТ СОХРАНЁННОГО — ИСПОЛЬЗУЕТ ДЕФОЛТНЫЙ) ★★★
-    applySavedStatsOrder();
+applyStatsTab(activeStatsTab);
+initAccordion();
+loadPremiumStats();
+
+// ★★★ РЕНДЕРИМ ЕЖЕМЕСЯЧНЫЕ ЗНАЧКИ ★★★
+renderMonthlyBadges();
+
+// ★★★ ПРИМЕНЯЕМ ПОРЯДОК БЛОКОВ ★★★
+applySavedStatsOrder();
 }
 
 // =================== КАЛЕНДАРЬ ===================
@@ -7427,11 +7421,14 @@ document.getElementById('loginFormStep2')?.addEventListener('submit', async func
             return;
         }
         
-        switchToPage('page-loading');
-        document.getElementById('bottomNav').style.display = 'none';
-        
-        showToast('✅ Вход выполнен!');
-        loginData = { email: '', password: '' };
+// ★★★ СБРАСЫВАЕМ ФЛАГ БЕТА-МОДАЛКИ ПРИ НОВОМ ВХОДЕ ★★★
+sessionStorage.removeItem('betaModalShownThisSession');
+
+switchToPage('page-loading');
+document.getElementById('bottomNav').style.display = 'none';
+
+showToast('✅ Вход выполнен!');
+loginData = { email: '', password: '' };
         
         // Ждём загрузки данных
         setTimeout(() => {
@@ -7599,7 +7596,10 @@ async function logout() {
                 sessionListener();
                 sessionListener = null;
             }
-            
+
+            // ★★★ СБРАСЫВАЕМ ФЛАГ БЕТА-МОДАЛКИ ★★★
+            sessionStorage.removeItem('betaModalShownThisSession');
+
             firebase.auth().signOut();
         },
         'Выйти'
@@ -7630,21 +7630,32 @@ function enterApp() {
     }, 100);
 
     // ★★★ ЗАПУСКАЕМ ТУТОРИАЛ ТОЛЬКО ПОСЛЕ НАЖАТИЯ КНОПКИ ★★★
-    if (window._tutorialNeeded && !isTutorialCompleted()) {
+    const needsTutorial = window._tutorialNeeded && !isTutorialCompleted();
+    if (needsTutorial) {
         console.log('🎓 Запускаем обучение после нажатия кнопки "Начать тренироваться"');
         setTimeout(() => startTutorial(), 500);
     }
 
+    // ★★★ ОФЛАЙН-МОДАЛКА ★★★
     if (!navigator.onLine) {
         setTimeout(() => {
             showOfflineModal();
         }, 1000);
     }
+
+    // ★★★ БЕТА-МОДАЛКА — ПОКАЗЫВАЕМ ТОЛЬКО ЕСЛИ НЕ НУЖЕН ТУТОРИАЛ ★★★
+    setTimeout(() => {
+        if (!needsTutorial) {
+            showBetaModalOnce();
+        }
+    }, 2000);
+
     // ★★★ ПРОВЕРЯЕМ НАГРАДУ ЗА ОБЩУЮ ЦЕЛЬ ★★★
     setTimeout(() => {
         checkAndGiveCommunityGoalReward();
     }, 1000);
-   // ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ ★★★
+
+    // ★★★ ПРОВЕРЯЕМ ОТЛОЖЕННОЕ ПРИГЛАШЕНИЕ ★★★
     setTimeout(() => {
         tryOpenPendingInvite();
     }, 800);
@@ -8642,7 +8653,7 @@ function checkRankNotification(currentRank, type) {
             
             showNotification(
                 rankText,
-                `В ${rankName} рейтинге вы на ${currentRank} месте!`,
+                `В ${rankName} рейтинге вы на ${currentRank}-м месте!`,
                 null,
                 true,  // autoClose
                 okAction
@@ -9667,6 +9678,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateWeeklyLoadBlocks();
 
+    // Загрузка кулдауна поддержки
+setTimeout(() => loadSupportCooldown(), 2500);
+
         // ★★★ ОБНОВЛЯЕМ СЧЕТЧИК ПРИ ЗАГРУЗКЕ ★★★
     setTimeout(async () => {
         await updatePremiumCounter();
@@ -9830,11 +9844,14 @@ async function resetProgress() {
             console.warn('⚠️ Ошибка при удалении сессий:', error);
         }
 
-        // ★★★ 3. Обнуляем XP в профиле ★★★
-        await updateUserProfile(user.uid, { totalXp: 0 });
+// ★★★ 3. Обнуляем XP в профиле ★★★
+await updateUserProfile(user.uid, { totalXp: 0 });
 
-        // ★★★ 4. Сбрасываем достижения ★★★
-        await updateUserProfile(user.uid, { achievements: {} });
+// ★★★ 4. Сбрасываем достижения ★★★
+await updateUserProfile(user.uid, { achievements: {} });
+
+// ★★★ СБРАСЫВАЕМ ЕЖЕМЕСЯЧНЫЕ ЗНАЧКИ ★★★
+await updateUserProfile(user.uid, { monthlyBadges: {} });
         
         // ★★★ 5. Очищаем уведомления о достижениях ★★★
         for (const ach of ACHIEVEMENTS_CONFIG) {
@@ -9881,11 +9898,13 @@ localStorage.removeItem('blocksState');
 
         console.log('✅ Сохранены: PREMIUM, локальные тренировки');
         console.log('🗑️ Удалены: statsLayout, workoutsLayout, worldStatsLayout, themeColor, appThemeMode, themeColorCustom и все остальные настройки');
+// ★★★ СБРАСЫВАЕМ ФЛАГ БЕТА-МОДАЛКИ ★★★
+sessionStorage.removeItem('betaModalShownThisSession');
 
-        // ★★★ 10. Перезагружаем страницу ★★★
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
+// ★★★ 10. Перезагружаем страницу ★★★
+setTimeout(() => {
+    window.location.reload();
+}, 500);
         
     } catch (error) {
         console.error('❌ Ошибка сброса прогресса:', error);
@@ -9922,11 +9941,13 @@ async function deleteAccount() {
 
         await user.delete();
 
-        localStorage.clear();
+localStorage.clear();
+sessionStorage.removeItem('betaModalShownThisSession');
 
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
+setTimeout(() => {
+    window.location.reload();
+}, 500);
+
     } catch (error) {
         console.error('Ошибка удаления аккаунта:', error);
         if (error.code === 'auth/requires-recent-login') {
@@ -10275,7 +10296,7 @@ window.statsEditor = new PageEditor({
     ],
     defaultLayout: {
         statsSummary: ['minutes', 'workouts', 'exercises'],
-        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'history', 'world-leaderboard', 'friends-leaderboard'],
+        statsBlocksContainer: ['muscles', 'categories', 'calendar', 'weekly-load', 'monthly-badges', 'history', 'world-leaderboard', 'friends-leaderboard'],
         exerciseMuscleStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы'],
         categoriesStats: ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'],
         globalStatsContainer: ['minutes', 'workouts', 'exercises'],  // ★ ДОБАВИЛИ
@@ -11605,7 +11626,7 @@ const ACHIEVEMENTS_CONFIG = [
         id: 'masterOfStyles',
         icon: 'fa-solid fa-award',
         name: 'Мастер всех стилей',
-        description: 'Выполнить 10 тренировок в каждой категорий',
+        description: 'Выполнить 10 тренировок в каждой категории',
         check: async (userId, profile, workouts) => {
             const categories = ['Руки', 'Плечи', 'Пресс', 'Грудь', 'Спина', 'Ноги', 'Ягодицы', 'Кардио', 'Гибкость', 'Всё тело'];
             const counts = {};
@@ -12379,19 +12400,18 @@ function collectAvailableTasks(userLevel, statsData) {
 }
 
 // Выбрать финальный набор заданий
-function selectDailyTasks(tasks, hasPremium) {
-    const count = hasPremium ? 5 : 3;
+function selectDailyTasks(tasks) {
+    const count = 3;
     const selected = [];
     const usedBlocks = {
         friends: false,
         smart_stats: false,
         stats_exercise: false,
         stats_time: false,
-        exercise: 0  // ★★★ СЧЁТЧИК УПРАЖНЕНИЙ ★★★
+        exercise: 0
     };
     
-    // Максимальное количество упражнений
-    const maxExercise = hasPremium ? 2 : 1;  // ★★★ БЕЗ PREMIUM — 1, С PREMIUM — 2 ★★★
+    const maxExercise = 1;
     
     // Перемешиваем задания
     const shuffled = [...tasks].sort(() => Math.random() - 0.5);
@@ -12443,7 +12463,7 @@ function selectDailyTasks(tasks, hasPremium) {
 async function generateDailyTasks() {
     try {
         console.log('🔄 Генерация ежедневных заданий...');
-        
+
         // Получаем уровень пользователя
         const user = await getFirebaseUser();
         let userLevel = 1;
@@ -12486,15 +12506,12 @@ async function generateDailyTasks() {
             }
         }
         
-        const hasPremium = localStorage.getItem(PREMIUM_KEY) === 'true';
-        console.log('👑 Premium:', hasPremium);
-        
         // Собираем все доступные задания
         const allTasks = collectAvailableTasks(userLevel, statsData);
         console.log('📋 Всего доступных заданий:', allTasks.length);
-        
-        // Выбираем финальный набор
-        const selectedTasks = selectDailyTasks(allTasks, hasPremium);
+
+        // Выбираем финальный набор (всегда 3 задания)
+        const selectedTasks = selectDailyTasks(allTasks);
         console.log('✅ Выбрано заданий:', selectedTasks.length);
         
         // Сохраняем
@@ -12589,6 +12606,9 @@ function shouldRefreshDailyTasks() {
 
 async function initDailyTasks() {
     console.log('🔄 Инициализация ежедневных заданий...');
+    
+    // ★★★ СНАЧАЛА ЗАГРУЖАЕМ ЗНАЧКИ ИЗ FIRESTORE ★★★
+    await loadMonthlyBadgesFromFirestore();
     
     if (shouldRefreshDailyTasks()) {
         console.log('📅 Требуется обновление заданий');
@@ -12774,6 +12794,9 @@ async function completeDailyTaskIfExists(taskId) {
     dailyTasksCompleted[task.id] = true;
     saveDailyTasksToStorage();
     renderDailyTasks();
+    
+    // ★★★ НАЧИСЛЯЕМ БАЛЛ ЗА МЕСЯЦ (ЕСЛИ ВСЕ 3 ВЫПОЛНЕНЫ) ★★★
+    await addMonthlyPointIfAllDone();
     
     await addDailyTaskXp();
     
@@ -13309,14 +13332,14 @@ html += `
     const total = values.reduce((a,b) => a+b, 0);
     const minValue = values.length > 0 ? Math.min(...values) : 0;
 
-    html += `
-        <div class="weekly-load-info">
-            <span>Всего: ${total}</span>
-            <span>Средний: ${avg}</span>
-            <span>Макс: ${maxLoad}</span>
-            <span>Минимум: ${minValue}</span>
-        </div>
-    `;
+html += `
+    <div class="weekly-load-info">
+        <span>Всего: ${total} ед.</span>
+        <span>Средний: ${avg} ед.</span>
+        <span>Макс: ${maxLoad} ед.</span>
+        <span>Минимум: ${minValue} ед.</span>
+    </div>
+`;
 
     html += `</div>`;
     container.innerHTML = html;
@@ -14001,7 +14024,7 @@ async function openDayWorkoutsModal(year, month, day) {
                 const completedEx = w.exercises?.filter(e => e.completed === true).length || 0;
                 const xpEarned = w.xpEarned || 0;
                 const minutes = Math.floor((w.durationSeconds || 0) / 60);
-                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP`;
+                const detailsText = `${minutes} мин · ${completedEx}/${totalEx} ${declOfNum(totalEx, ['упражнение', 'упражнения', 'упражнений'])} · ${xpEarned.toFixed(1)} XP`;
                 const workoutTime = new Date(w.date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 
                 return `
@@ -15024,7 +15047,7 @@ function formatRelativeDate(dateString) {
     
     if (diffDays === 0) return 'сегодня';
     if (diffDays === 1) return 'вчера';
-    if (diffDays <= 7) return `${diffDays} дня назад`;
+    if (diffDays <= 7) return `${diffDays} ${declOfNum(diffDays, ['день', 'дня', 'дней'])} назад`;
     
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -15268,7 +15291,7 @@ allItems.forEach(item => {
                     <span class="history-item-date" style="font-size:0.65rem;">${relativeDate}</span>
                 </div>
                 <div class="history-item-details" style="font-size:0.65rem;">
-                    ${minutes} мин · ${completedEx}/${totalEx} упражнений · ${xpEarned.toFixed(1)} XP
+                    ${minutes} мин · ${completedEx}/${totalEx} ${declOfNum(totalEx, ['упражнение', 'упражнения', 'упражнений'])} · ${xpEarned.toFixed(1)} XP
                 </div>
             </div>
         `;
@@ -15337,7 +15360,7 @@ function formatRelativeDateFromTimestamp(timestamp) {
     
     if (diffDays === 0) return 'сегодня';
     if (diffDays === 1) return 'вчера';
-    if (diffDays <= 7) return `${diffDays} дня назад`;
+    if (diffDays <= 7) return `${diffDays} ${declOfNum(diffDays, ['день', 'дня', 'дней'])} назад`;
     
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -15571,9 +15594,9 @@ async function updatePremiumCounter() {
         
         // ★★★ ОБНОВЛЯЕМ ВСЕ ЭЛЕМЕНТЫ С СЧЕТЧИКОМ ★★★
         const counterElements = document.querySelectorAll('#premiumCounter');
-        counterElements.forEach(el => {
-            el.textContent = `PREMIUM оформили: ${premiumCount} пользователей`;
-        });
+counterElements.forEach(el => {
+    el.textContent = `PREMIUM оформили: ${premiumCount} ${declOfNum(premiumCount, ['пользователь', 'пользователя', 'пользователей'])}`;
+});
         
         console.log(`📊 PREMIUM пользователей: ${premiumCount}`);
         return premiumCount;
@@ -16588,7 +16611,7 @@ async function loadCommunityGoalMyPlace() {
         }
 
         // ★★★ ОБНОВЛЯЕМ UI ★★★
-        placeTextEl.textContent = `Вы на ${myPosition}-ом месте`;
+        placeTextEl.textContent = `Вы на ${myPosition}-м месте`;
         rewardEl.textContent = myReward > 0 ? `+${myReward}XP` : 'без награды';
         rewardEl.style.color = myReward > 0 ? 'var(--accent)' : 'var(--slate)';
 
@@ -17211,13 +17234,26 @@ function initAutoCarousel() {
     // ★★★ ОБНОВЛЯЕМ ДИНАМИЧЕСКИЕ КАРТОЧКИ ПЕРЕД РЕНДЕРОМ ★★★
     updateCarouselDynamicCards();
 
+    // ★★★ СЛУЧАЙНЫЙ СТАРТОВЫЙ ИНДЕКС ★★★
+    const totalCards = CAROUSEL_CARDS.length;
+    const randomStart = Math.floor(Math.random() * totalCards);
+    console.log(`🎲 Карусель стартует с карточки №${randomStart} ("${CAROUSEL_CARDS[randomStart].title}")`);
+
+    // ★★★ СДВИГАЕМ МАССИВ, ЧТОБЫ СЛУЧАЙНАЯ КАРТОЧКА БЫЛА ПЕРВОЙ ★★★
+    const rotatedCards = [
+        ...CAROUSEL_CARDS.slice(randomStart),
+        ...CAROUSEL_CARDS.slice(0, randomStart)
+    ];
+
     // Дублируем карточки для бесконечной прокрутки
-    const cardsHtml = CAROUSEL_CARDS.map((card, index) => {
+    const cardsHtml = rotatedCards.map((card, index) => {
+        // ★★★ data-card-index — это ИСХОДНЫЙ индекс в CAROUSEL_CARDS, чтобы клики работали правильно ★★★
+        const originalIndex = CAROUSEL_CARDS.indexOf(card);
         const iconHtml = card.iconImg
             ? `<img src="${card.iconImg}" alt="${card.title}">`
             : `<i class="${card.icon}"></i>`;
         return `
-            <div class="carousel-card" data-card-index="${index}">
+            <div class="carousel-card" data-card-index="${originalIndex}">
                 <div class="carousel-card-icon">${iconHtml}</div>
                 <div class="carousel-card-info">
                     <div class="carousel-card-title">${card.title}</div>
@@ -17250,9 +17286,9 @@ function updateCarouselDynamicCards() {
 
             if (isDaily) {
                 // ★★★ ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ★★★
-                const total = (dailyTasksList && dailyTasksList.length > 0) 
-                    ? dailyTasksList.length 
-                    : (hasPremium() ? 5 : 3);
+const total = (dailyTasksList && dailyTasksList.length > 0) 
+    ? dailyTasksList.length 
+    : 3;
                     
                 const completed = (dailyTasksList && dailyTasksList.length > 0)
                     ? dailyTasksList.filter(t => t.completed).length 
@@ -17284,18 +17320,24 @@ function refreshAutoCarousel() {
     const track = document.getElementById('autoCarouselTrack');
     if (!track) return;
 
-    // Останавливаем анимацию
     track.style.animation = 'none';
-
-    // Обновляем контент
     updateCarouselDynamicCards();
 
-    const cardsHtml = CAROUSEL_CARDS.map((card, index) => {
+    // ★★★ СЛУЧАЙНЫЙ СТАРТ ★★★
+    const totalCards = CAROUSEL_CARDS.length;
+    const randomStart = Math.floor(Math.random() * totalCards);
+    const rotatedCards = [
+        ...CAROUSEL_CARDS.slice(randomStart),
+        ...CAROUSEL_CARDS.slice(0, randomStart)
+    ];
+
+    const cardsHtml = rotatedCards.map((card) => {
+        const originalIndex = CAROUSEL_CARDS.indexOf(card);
         const iconHtml = card.iconImg
             ? `<img src="${card.iconImg}" alt="${card.title}">`
             : `<i class="${card.icon}"></i>`;
         return `
-            <div class="carousel-card" data-card-index="${index}">
+            <div class="carousel-card" data-card-index="${originalIndex}">
                 <div class="carousel-card-icon">${iconHtml}</div>
                 <div class="carousel-card-info">
                     <div class="carousel-card-title">${card.title}</div>
@@ -17307,8 +17349,7 @@ function refreshAutoCarousel() {
 
     track.innerHTML = cardsHtml + cardsHtml;
 
-    // Перезапускаем анимацию
-    void track.offsetWidth; // force reflow
+    void track.offsetWidth;
     track.style.animation = '';
 }
 
@@ -17320,15 +17361,31 @@ document.addEventListener('DOMContentLoaded', function() {
 // =================== СВЯЗЬ С АДМИНИСТРАЦИЕЙ ===================
 
 const SUPPORT_COOLDOWN_KEY = 'supportLastSent';
-const SUPPORT_COOLDOWN_MS = 60 * 1000; // 1 минута между сообщениями
+const SUPPORT_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 часов между сообщениями
 
-function openSupportModal() {
-    // Проверяем кулдаун
+async function openSupportModal() {
+    // ★★★ СИНХРОНИЗИРУЕМ С FIRESTORE ПЕРЕД ПРОВЕРКОЙ ★★★
+    try {
+        const user = await getFirebaseUser();
+        if (user) {
+            const fromFirestore = await syncLoadFromFirestore('supportLastSent');
+            if (fromFirestore !== null) {
+                const firestoreTs = parseInt(fromFirestore);
+                const localTs = parseInt(localStorage.getItem(SUPPORT_COOLDOWN_KEY) || '0');
+                if (firestoreTs > localTs) {
+                    localStorage.setItem(SUPPORT_COOLDOWN_KEY, String(firestoreTs));
+                }
+            }
+        }
+    } catch (e) {}
+
     const lastSent = parseInt(localStorage.getItem(SUPPORT_COOLDOWN_KEY) || '0');
     const now = Date.now();
-    if (now - lastSent < SUPPORT_COOLDOWN_MS) {
-        const remaining = Math.ceil((SUPPORT_COOLDOWN_MS - (now - lastSent)) / 1000);
-        showToast(`⏳ Подождите ${remaining} сек перед новым сообщением`);
+    const elapsed = now - lastSent;
+
+    if (elapsed < SUPPORT_COOLDOWN_MS) {
+        const remainingText = formatCooldownTime(SUPPORT_COOLDOWN_MS - elapsed);
+        showToast(`⏳ Сообщение можно отправить через ${remainingText}`);
         return;
     }
 
@@ -17340,11 +17397,28 @@ function openSupportModal() {
 
     openModal('supportModal');
 
-    // Счётчик символов
     const textarea = document.getElementById('supportMessage');
     textarea.oninput = function() {
         document.getElementById('supportCharCount').textContent = this.value.length;
     };
+}
+
+// ★★★ ФОРМАТИРОВАНИЕ ОСТАВШЕГОСЯ ВРЕМЕНИ КУЛДАУНА ★★★
+function formatCooldownTime(ms) {
+    const totalSeconds = Math.ceil(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    const hoursWord = declOfNum(hours, ['час', 'часа', 'часов']);
+    const minutesWord = declOfNum(minutes, ['минута', 'минуты', 'минут']);
+
+    if (hours > 0) {
+        return `${hours} ${hoursWord} ${minutes} ${minutesWord}`;
+    }
+    if (minutes > 0) {
+        return `${minutes} ${minutesWord}`;
+    }
+    return 'меньше минуты';
 }
 
 async function sendSupportMessage() {
@@ -17366,6 +17440,16 @@ async function sendSupportMessage() {
         return;
     }
 
+    // ★★★ ПОВТОРНАЯ ПРОВЕРКА КУЛДАУНА (на случай гонки) ★★★
+    const lastSent = parseInt(localStorage.getItem(SUPPORT_COOLDOWN_KEY) || '0');
+    const now = Date.now();
+    if (now - lastSent < SUPPORT_COOLDOWN_MS) {
+        const remainingText = formatCooldownTime(SUPPORT_COOLDOWN_MS - (now - lastSent));
+        showToast(`⏳ Сообщение можно отправить через ${remainingText}`);
+        closeModal('supportModal');
+        return;
+    }
+
     const btn = document.getElementById('supportSendBtn');
     btn.disabled = true;
     btn.textContent = 'Отправка...';
@@ -17383,7 +17467,7 @@ async function sendSupportMessage() {
             userId: user.uid
         };
 
-        // ★★★ 1. СОХРАНЯЕМ В FIRESTORE ★★★
+        // 1. Сохраняем в Firestore
         await firebase.firestore().collection('supportMessages').add({
             ...payload,
             status: 'new',
@@ -17391,7 +17475,7 @@ async function sendSupportMessage() {
             deviceInfo: navigator.userAgent.slice(0, 200)
         });
 
-        // ★★★ 2. ОТПРАВЛЯЕМ НА ВЕБХУК NODUL → TELEGRAM ★★★
+        // 2. Отправляем на вебхук Nodul → Telegram
         try {
             await fetch('https://webhook.nodul.ru/27731/dev/7ce0dbd1-82f5-4125-bf98-bbee595b4742', {
                 method: 'POST',
@@ -17400,9 +17484,13 @@ async function sendSupportMessage() {
             });
             console.log('✅ Уведомление отправлено в Nodul');
         } catch (webhookError) {
-            // Не критично — сообщение уже сохранено в Firestore
             console.warn('⚠️ Ошибка отправки вебхука:', webhookError);
         }
+
+        // ★★★ 3. СОХРАНЯЕМ ВРЕМЯ ОТПРАВКИ ★★★
+        const sentAt = Date.now();
+        localStorage.setItem(SUPPORT_COOLDOWN_KEY, String(sentAt));
+        syncSaveToFirestore('supportLastSent', sentAt);
 
         closeModal('supportModal');
         showToast('✅ Сообщение отправлено! Мы свяжемся с вами.');
@@ -17413,6 +17501,27 @@ async function sendSupportMessage() {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Отправить';
+    }
+}
+
+// ★★★ ЗАГРУЗКА КУЛДАУНА ИЗ FIRESTORE ★★★
+async function loadSupportCooldown() {
+    try {
+        const user = await getFirebaseUser();
+        if (!user) return;
+
+        const fromFirestore = await syncLoadFromFirestore('supportLastSent');
+        if (fromFirestore !== null) {
+            const firestoreTs = parseInt(fromFirestore);
+            const localTs = parseInt(localStorage.getItem(SUPPORT_COOLDOWN_KEY) || '0');
+            // Берём максимальное значение (более свежее)
+            const latest = Math.max(firestoreTs, localTs);
+            if (latest > 0) {
+                localStorage.setItem(SUPPORT_COOLDOWN_KEY, String(latest));
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Ошибка загрузки кулдауна поддержки:', error);
     }
 }
 
@@ -17741,3 +17850,266 @@ function renderFriendProfileActions(mode, friendId, status) {
 document.addEventListener('DOMContentLoaded', () => {
     checkFriendInviteLink();
 });
+
+// =================== МОДАЛКА БЕТА-ВЕРСИЯ ===================
+const BETA_SEEN_KEY = 'betaModalSeenAt';
+
+/**
+ * Проверяет, можно ли показать бета-модалку прямо сейчас
+ */
+function canShowBetaModal() {
+    // 1. Не во время туториала
+    if (typeof tutorialActive !== 'undefined' && tutorialActive) {
+        console.log('⏸️ Бета-модалка: туториал активен');
+        return false;
+    }
+
+    // 2. Не во время тренировки
+    const sessionPage = document.getElementById('page-training-session');
+    const taskSessionPage = document.getElementById('page-task-session');
+    if ((sessionPage && sessionPage.classList.contains('page-active')) ||
+        (taskSessionPage && taskSessionPage.classList.contains('page-active'))) {
+        console.log('⏸️ Бета-модалка: тренировка активна');
+        return false;
+    }
+
+    // 3. Не на экранах hero/loading/login/register/inventory
+    const forbidden = [
+        'page-hero', 'page-loading', 'page-login', 'page-login-password',
+        'page-register', 'page-register-email', 'page-register-password',
+        'page-register-verify', 'page-inventory',
+        'page-training-waiting', 'page-coop-waiting', 'page-coop-finish'
+    ];
+    for (const id of forbidden) {
+        const el = document.getElementById(id);
+        if (el && el.classList.contains('page-active')) {
+            console.log('⏸️ Бета-модалка: экран ' + id);
+            return false;
+        }
+    }
+
+    // 4. Не если уже открыта другая модалка
+    const openModalOverlay = document.querySelector(
+        '.modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"]'
+    );
+    if (openModalOverlay) {
+        console.log('⏸️ Бета-модалка: другая модалка открыта');
+        return false;
+    }
+
+    // 5. Не если офлайн-модалка показана
+    const offlineModal = document.getElementById('offlineModal');
+    if (offlineModal && offlineModal.style.display === 'flex') {
+        console.log('⏸️ Бета-модалка: офлайн-модалка открыта');
+        return false;
+    }
+
+    // 6. Не если правила показаны
+    const rulesModal = document.getElementById('rulesModal');
+    if (rulesModal && rulesModal.classList.contains('modal-overlay-visible')) {
+        console.log('⏸️ Бета-модалка: правила открыты');
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Показать бета-модалку (один раз за сессию входа)
+ */
+async function showBetaModalOnce() {
+    // ★★★ ПОКАЗЫВАЕМ ОДИН РАЗ ЗА СЕССИЮ ★★★
+    if (sessionStorage.getItem('betaModalShownThisSession') === 'true') {
+        console.log('ℹ️ Бета-модалка уже показана в этой сессии');
+        return;
+    }
+
+    if (!canShowBetaModal()) {
+        return;
+    }
+
+    // Проверяем, что пользователь авторизован
+    const user = await getFirebaseUser();
+    if (!user) return;
+
+    // Помечаем ДО показа — чтобы не было повторов при гонке
+    sessionStorage.setItem('betaModalShownThisSession', 'true');
+
+    openModal('betaModal');
+    console.log('✅ Бета-модалка показана');
+}
+
+/**
+ * Обработчик кнопки "Понятно"
+ */
+function closeBetaModal() {
+    localStorage.setItem(BETA_SEEN_KEY, String(Date.now()));
+    closeModal('betaModal');
+}
+
+// Привязка кнопки
+document.getElementById('betaAcceptBtn')?.addEventListener('click', closeBetaModal);
+
+// Экспорт
+window.showBetaModalOnce = showBetaModalOnce;
+
+// =================== ЕЖЕМЕСЯЧНЫЕ ЗНАЧКИ ===================
+const MONTHLY_BADGES_KEY = 'sportapp_monthly_badges';
+const MONTHS_GOAL = 15;
+
+const MONTH_EMOJI = ['❄️', '💝', '🌷', '🌧️', '🌸', '☀️', '🏄', '🌻', '🍂', '🎃', '☕', '🎄'];
+const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+/** Получить объект значков */
+function getMonthlyBadges() {
+    try {
+        const saved = localStorage.getItem(MONTHLY_BADGES_KEY);
+        if (saved) return JSON.parse(saved);
+    } catch (e) {
+        console.warn('Ошибка чтения значков:', e);
+    }
+    return {};
+}
+
+/** Загрузить значки из Firestore и обновить кэш + UI */
+async function loadMonthlyBadgesFromFirestore() {
+    try {
+        const badgesData = await syncLoadWithFallback('monthlyBadges', MONTHLY_BADGES_KEY, null);
+        if (badgesData) {
+            const parsed = typeof badgesData === 'string' ? JSON.parse(badgesData) : badgesData;
+            localStorage.setItem(MONTHLY_BADGES_KEY, JSON.stringify(parsed));
+            console.log('✅ Значки загружены из Firestore:', parsed);
+        }
+        renderMonthlyBadges();
+    } catch (e) {
+        console.warn('⚠️ Ошибка загрузки значков:', e);
+    }
+}
+
+/** Сохранить значки */
+function saveMonthlyBadges(badges) {
+    localStorage.setItem(MONTHLY_BADGES_KEY, JSON.stringify(badges));
+    syncSaveToFirestore('monthlyBadges', badges);
+}
+
+/** Получить сегодняшнюю дату в формате "2026-01-15" */
+function getTodayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Получить ключ текущего месяца "2026-01" */
+function getCurrentMonthKey() {
+    return getTodayKey().slice(0, 7);
+}
+
+/** Начислить балл, если все 3 задания сегодня выполнены */
+async function addMonthlyPointIfAllDone() {
+    if (!dailyTasksList || dailyTasksList.length === 0) return;
+
+    // Все задания выполнены?
+    if (!dailyTasksList.every(t => t.completed)) return;
+
+    const todayKey = getTodayKey();
+    const monthKey = getCurrentMonthKey();
+    const badges = getMonthlyBadges();
+    const month = badges[monthKey] || { points: 0, closedDays: [], golden: false };
+
+    // Уже засчитано сегодня?
+    if (month.closedDays.includes(todayKey)) return;
+
+    // Начисляем балл
+    month.closedDays.push(todayKey);
+    month.points = month.closedDays.length;
+
+    const justGotGolden = month.points >= MONTHS_GOAL && !month.golden;
+    if (justGotGolden) {
+        month.golden = true;
+    }
+
+    badges[monthKey] = month;
+    saveMonthlyBadges(badges);
+
+    // Обновляем UI
+    renderMonthlyBadges();
+
+    // Уведомление о золотом значке
+    if (justGotGolden) {
+        const user = await getFirebaseUser();
+        if (user) {
+            const profileResult = await getUserProfile(user.uid);
+            if (profileResult.success) {
+                const currentXp = profileResult.data.totalXp || 0;
+                await updateUserProfile(user.uid, { totalXp: currentXp + 50 });
+            }
+        }
+
+        showNotification(
+            '🏅',
+            `Золотой значок за ${MONTH_NAMES[new Date().getMonth()]} получен! +50 XP`,
+            null,
+            true,
+            function() {
+                TabManager.stats('personal');
+                window.navigateTo('stats');
+                setTimeout(() => {
+                    const block = document.getElementById('monthly-badges-block');
+                    if (block) {
+                        block.classList.add('open');
+                        block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
+        );
+    } else {
+        showToast(`⭐ +1 балл! Всего за месяц: ${month.points}/${MONTHS_GOAL}`);
+    }
+}
+
+/** Рендер значков в блоке */
+function renderMonthlyBadges() {
+    const container = document.getElementById('monthlyBadgesContainer');
+    if (!container) return;
+
+    const badges = getMonthlyBadges();
+    const currentYear = new Date().getFullYear();
+
+    let html = '';
+    for (let m = 0; m < 12; m++) {
+        const monthKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+        const month = badges[monthKey] || { points: 0, golden: false };
+        const emoji = MONTH_EMOJI[m];
+
+        html += `
+            <div class="month-badge ${month.golden ? 'golden' : ''}"
+                 onclick="openMonthBadgeModal('${monthKey}')"
+                 data-month="${m}"
+                 title="${MONTH_NAMES[m]} — ${month.points}/${MONTHS_GOAL}">
+                <span class="month-badge-emoji">${emoji}</span>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+/** Открыть модалку с деталями месяца */
+function openMonthBadgeModal(monthKey) {
+    const [year, monthStr] = monthKey.split('-');
+    const monthIndex = parseInt(monthStr, 10) - 1;
+
+    const badges = getMonthlyBadges();
+    const data = badges[monthKey] || { points: 0, closedDays: [], golden: false };
+
+    document.getElementById('monthBadgeModalTitle').textContent = `${MONTH_NAMES[monthIndex]} ${year}`;
+    document.getElementById('monthBadgeModalEmoji').textContent = MONTH_EMOJI[monthIndex];
+    document.getElementById('monthBadgeModalProgress').textContent = `${data.points}/${MONTHS_GOAL}`;
+
+    const percent = Math.min(100, Math.round((data.points / MONTHS_GOAL) * 100));
+    document.getElementById('monthBadgeModalFill').style.width = percent + '%';
+
+    openModal('monthBadgeModal');
+}
+
+window.openMonthBadgeModal = openMonthBadgeModal;

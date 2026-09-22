@@ -697,7 +697,7 @@
         <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
         <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
     </div>
-    <div class="section-body" style="box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);" onclick="openCommunityGoalModal()">
+    <div class="section-body" style="border-radius: 12px;box-shadow:  0 2px 12px rgba(0, 0, 0, 0.04);" onclick="openCommunityGoalModal()">
         <div class="community-goal">
             <div class="community-goal-row">
                 <div class="community-goal-icon">
@@ -877,6 +877,20 @@
         <!-- Диаграмма -->
         <div id="weeklyLoadChart" class="weekly-load-Chart"></div>
         </div>
+    </div>
+</div>
+
+<!-- ===== БЛОК: ЕЖЕМЕСЯЧНЫЕ ЗАДАНИЯ ===== -->
+<div class="section-block" data-block-id="monthly-badges" id="monthly-badges-block">
+    <div class="section-header">
+        <h2 class="section-title">Ежемесячные задания</h2>
+        <button class="section-toggle"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="section-drag" touch-action="none"><i class="fa-solid fa-grip-lines"></i></button>
+    </div>
+    <div class="section-body">
+            <div class="monthly-badges-grid" id="monthlyBadgesContainer">
+                <!-- 12 значков -->
+            </div>
     </div>
 </div>
 
@@ -1631,6 +1645,77 @@
         </div>
     </nav>
 
+    <!-- ===== МОДАЛКА: ЗНАЧОК МЕСЯЦА ===== -->
+<div id="monthBadgeModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 420px; width: 95%;">
+        <div class="modal-title" id="monthBadgeModalTitle">Январь 2026</div>
+        
+        <div style="text-align: center; margin: 0.8rem 0;">
+            <div id="monthBadgeModalEmoji" style="font-size: 5rem; line-height: 1;">❄️</div>
+        </div>
+        
+        <div style="margin-bottom: 0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.3rem;">
+                <span style="font-size:0.8rem; color:var(--slate);">Прогресс</span>
+                <span id="monthBadgeModalProgress" style="font-size:1rem; font-weight:700; color:var(--accent);">0/15</span>
+            </div>
+            <div class="level-bar-modal">
+                <div class="level-fill-modal" id="monthBadgeModalFill" style="width:0%;"></div>
+            </div>
+        </div>
+        
+        <p class="modal-text" style="font-size:0.75rem; margin-bottom:1rem;">
+            Выполняйте ежедневные задания — это <strong>+1 балл</strong>.<br>
+            Наберите 15 баллов, чтобы получить золотой значок.
+        </p>
+        
+        <button class="btn btn-primary" onclick="closeModal('monthBadgeModal')">Понятно</button>
+    </div>
+</div>
+
+    <!-- ===== МОДАЛКА: БЕТА-ВЕРСИЯ ===== -->
+<div id="betaModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 420px; width: 95%;">
+        <div style="text-align: center;">
+            <div class="modal-title">БЕТА-ВЕРСИЯ</div>
+            <div style="font-size: 3.5rem; color: var(--accent);">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+
+        <p class="modal-text">
+            Вы используете бета-версию SportApp. 
+            Приложение активно развивается, поэтому возможны небольшие ошибки и изменения.
+        </p>
+
+        <p class="section-title" style="text-align: left;">Что это значит:</p>
+
+        <div style="text-align: left; margin-bottom: 0.5rem;">
+            <div class="rules-list">
+                <div style="display:flex; align-items:center; gap:0.5rem; padding: 0.3rem 0.4rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--accent); font-size: 0.9rem;"></i>
+                    <span style="font-size: 0.8rem; color: var(--dark);">Новые функции появляются регулярно</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; padding: 0.3rem 0.4rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--accent); font-size: 0.9rem;"></i>
+                    <span style="font-size: 0.8rem; color: var(--dark);">Возможны временные сбои и баги</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; padding: 0.3rem 0.4rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--accent); font-size: 0.9rem;"></i>
+                    <span style="font-size: 0.8rem; color: var(--dark);">Ваши данные сохраняются и не теряются</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; padding: 0.3rem 0.4rem;">
+                    <i class="fa-solid fa-circle-check" style="color: var(--accent); font-size: 0.9rem;"></i>
+                    <span style="font-size: 0.8rem; color: var(--dark);">О найденных ошибках пишите в поддержку</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="betaAcceptBtn">
+            Понятно
+        </button>
+    </div>
+</div>
 
 <!-- ===== МОДАЛКА: СВЯЗЬ С АДМИНИСТРАЦИЕЙ ===== -->
 <div id="supportModal" class="modal-overlay" style="display:none;">
@@ -2032,13 +2117,6 @@
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">Я + 3 Друга</div>
             </div>
             
-            <!-- Строка 5: Ежедневные задания -->
-            <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Ежедневные задания</div>
-                <div class="premium-table-cell premium-table-cell-center">3 Задания</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 Заданий</div>
-            </div>
-            
             <!-- Строка 6: Акцентные цвета -->
             <div class="premium-table-row premium-table-row-last">
                 <div class="premium-table-cell premium-table-cell-left">Акцентные цвета</div>
@@ -2115,12 +2193,6 @@
                 <div class="premium-table-cell premium-table-cell-left">Совместные тренировки</div>
                 <div class="premium-table-cell premium-table-cell-center">я + 1 друг</div>
                 <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">я + 3 друга</div>
-            </div>
-            
-            <div class="premium-table-row">
-                <div class="premium-table-cell premium-table-cell-left">Ежедневные задания</div>
-                <div class="premium-table-cell premium-table-cell-center">3 задания</div>
-                <div class="premium-table-cell premium-table-cell-center premium-table-cell-highlight">5 заданий</div>
             </div>
             
             <div class="premium-table-row premium-table-row-last">
