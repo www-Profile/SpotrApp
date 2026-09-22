@@ -1426,12 +1426,14 @@ body.theme-dark-mode .level-block {
     border-radius: 16px;
     cursor: pointer;
     border: 2px solid transparent;
-    border: 1px solid var(--light-grey);
+    border: 1.5px solid var(--light-grey);
     margin-bottom: 0.5rem;
 }
 
-.friend-itemMOD.selected {
-    border-color: var(--accent) !important;
+
+.friend-itemMOD.selected,
+body.theme-dark-mode .friend-itemMOD.selected {
+    border: 2px solid var(--accent);
 }
 
 .friend-itemMOD .friend-info {
@@ -3529,6 +3531,10 @@ body.theme-dark-mode .friend-result-item {
     box-shadow: 0 2px 12px var(--shadow-color);
 }
 
+body.theme-dark-mode .friend-itemMOD {
+    border: 1.5px solid var(--border-color);
+}
+
 body.theme-dark-mode .history-item-title {
     color: var(--text-primary);
 }
@@ -5450,4 +5456,59 @@ body.theme-dark-mode .qr-code-name {
 body.theme-dark-mode .qr-code-wrapper {
     background: var(--bg-primary);
     border-color: var(--border-color);
+}
+
+/* =================== УЧАСТНИКИ СОВМЕСТНОЙ ТРЕНИРОВКИ ==================== */
+.coop-participant-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.2rem 0.6rem;
+    background: var(--accent-light);
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+/* Тёмная тема — используем accent-dark */
+body.theme-dark-mode .coop-participant-item {
+    background: var(--accent-dark);
+}
+
+/* =================== СТАТУС ДРУЗЕЙ НА СТРАНИЦЕ ОЖИДАНИЯ ==================== */
+.coop-friend-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+    background: var(--white);
+    border-radius: 10px;
+    border: 1px solid var(--light-grey);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.coop-friend-status-name {
+    font-weight: 500;
+    color: var(--dark);
+    font-size: 0.8rem;
+}
+
+.coop-friend-status-progress {
+    font-weight: 600;
+    color: var(--slate);
+    font-size: 0.8rem;
+}
+
+/* Тёмная тема */
+body.theme-dark-mode .coop-friend-status-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+body.theme-dark-mode .coop-friend-status-name {
+    color: var(--text-primary);
+}
+
+body.theme-dark-mode .coop-friend-status-progress {
+    color: var(--text-secondary);
 }

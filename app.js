@@ -1592,15 +1592,7 @@ function formatTime(seconds) {
         const progressText = `${progress}/${total}`;
         
         const item = document.createElement('div');
-        item.style.cssText = `
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.4rem 0.6rem;
-            background: var(--accent-light);
-            border-radius: 8px;
-            font-size: 0.8rem;
-        `;
+        item.className = 'coop-participant-item';
         
         const leftPart = document.createElement('span');
         leftPart.style.cssText = 'display: flex; align-items: center; gap: 0.3rem;';
@@ -1725,15 +1717,15 @@ function renderFinishPageData(data) {
         container = document.createElement('div');
         container.id = 'coopAllParticipants';
         container.style.cssText = 'width:100%; display:flex; flex-direction:column; gap:0.5rem;';
-        const finishContent = document.querySelector('.finish-content');
-        if (finishContent) {
-            const btn = document.getElementById('coopFinishDoneBtn');
-            if (btn) {
-                finishContent.insertBefore(container, btn);
-            } else {
-                finishContent.appendChild(container);
-            }
-        } else {
+const finishContent = document.querySelector('.finish-content');
+if (finishContent) {
+    const btnWrapper = document.getElementById('coopFinishButtons');
+    if (btnWrapper) {
+        finishContent.insertBefore(container, btnWrapper);
+    } else {
+        finishContent.appendChild(container);
+    }
+} else {
             console.error('❌ [renderFinishPageData] Не найден контейнер .finish-content');
             return;
         }
@@ -1936,7 +1928,7 @@ ${friends.map(f => {
     const level = getCurrentLevel(f.totalXp || 0).id;
     const xp = Math.round(f.totalXp || 0); // ← ИСПРАВЛЕНО: используем f.totalXp
     return `
-        <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendForCoop('${f.id}')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+        <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendForCoop('${f.id}')">
             <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
             <div class="friend-info">
                 <strong>${f.displayName || 'Пользователь'}</strong>
@@ -2009,28 +2001,29 @@ document.getElementById('sendInviteBtn').addEventListener('click', function() {
 }
 
 window.selectFriendForCoop = function(friendId) {
-    const currentSelected = window._selectedFriends || [];
-    
-    // Проверяем, выбран ли уже этот друг
+    console.log('🔵 Клик по другу:', friendId);
+
+    if (!window._selectedFriends) window._selectedFriends = [];
+
+    const currentSelected = window._selectedFriends;
     const index = currentSelected.indexOf(friendId);
-    
+
+    // ★★★ ИЩЕМ ТОЛЬКО ВНУТРИ НУЖНОЙ МОДАЛКИ ★★★
+    const el = document.querySelector(`#friendSelectModal .friend-itemMOD[data-friend-id="${friendId}"]`);
+    console.log('  element:', el ? 'найден' : 'НЕ найден');
+
     if (index !== -1) {
-        // Убираем выделение
         currentSelected.splice(index, 1);
-        const el = document.querySelector(`.friend-itemMOD[data-friend-id="${friendId}"]`);
-        if (el) {
-            el.style.border = '1px solid #E2E8F0';
-        }
+        if (el) el.classList.remove('selected');
+        console.log('  снято выделение');
     } else {
-        // Добавляем выделение (без ограничений при выборе)
         currentSelected.push(friendId);
-        const el = document.querySelector(`.friend-itemMOD[data-friend-id="${friendId}"]`);
-        if (el) {
-            el.style.border = '2px solid var(--accent)';
-        }
+        if (el) el.classList.add('selected');
+        console.log('  выделено');
     }
-    
+
     window._selectedFriends = currentSelected;
+    console.log('  выбрано:', currentSelected);
 };
 
 async function sendCoopInvite(friendId, friendName) {
@@ -2394,11 +2387,11 @@ function renderCoopFriendsStatus() {
         const progress = participantProgress[p.id] || 0;
         const name = p.name || 'Пользователь';
         html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; background:var(--white); border-radius:10px; border:1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
-                <span style="font-weight:500; color:var(--dark);">
+            <div class="coop-friend-status-item">
+                <span class="coop-friend-status-name">
                     👤 ${name}
                 </span>
-                <span style="font-weight:600; color:var(--slate);">
+                <span class="coop-friend-status-progress">
                     ${progress}/${total}
                 </span>
             </div>
@@ -2408,6 +2401,7 @@ function renderCoopFriendsStatus() {
     container.innerHTML = html;
 }
 
+document.getElementById('coopFinishShareBtn')?.addEventListener('click', openCoopShareModal);
 document.getElementById('coopFinishDoneBtn')?.addEventListener('click', async function() {
     console.log('🔥🔥🔥 [coopFinishDoneBtn] НАЖАТА КНОПКА');
     console.log('🔥 [coopFinishDoneBtn] currentSessionId:', currentSessionId);
@@ -15117,7 +15111,7 @@ function openFriendHistoryFilterModal() {
                 <div class="modal-title">Выберите друга</div>
                 <div class="scroll-wrapper" style="max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem;">
                     <!-- Блок "Все" -->
-                    <div class="friend-itemMOD" data-friend-id="all" onclick="selectFriendHistoryFilter('all')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+                    <div class="friend-itemMOD" data-friend-id="all" onclick="selectFriendHistoryFilter('all')">
                         <div class="friend-avatar" style="background: var(--accent-light); color: var(--accent);">
                             <i class="fa-solid fa-users" style="font-size: 1rem;"></i>
                         </div>
@@ -15133,7 +15127,7 @@ function openFriendHistoryFilterModal() {
                         const level = getCurrentLevel(f.totalXp || 0).id;
                         const xp = Math.round(f.totalXp || 0);
                         return `
-                            <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendHistoryFilter('${f.id}')" style="cursor: pointer; border: 1px solid #E2E8F0; transition: border-color 0.2s ease;">
+                            <div class="friend-itemMOD" data-friend-id="${f.id}" onclick="selectFriendHistoryFilter('${f.id}')">
                                 <div class="friend-avatar">${(f.displayName || 'П')[0].toUpperCase()}</div>
                                 <div class="friend-info">
                                     <strong>${f.displayName || 'Пользователь'}</strong>
@@ -15166,12 +15160,13 @@ function closeFriendHistoryFilterModal() {
 }
 
 function selectFriendHistoryFilter(friendId) {
+    console.log('🔵 Клик по фильтру:', friendId);
+
     tempSelectedFriendForHistory = friendId;
-    
+
     document.querySelectorAll('#friendHistoryFilterModal .friend-itemMOD').forEach(el => {
         const isSelected = el.dataset.friendId === friendId;
-        el.style.border = isSelected ? '2px solid var(--accent)' : '1px solid #E2E8F0';
-        el.style.background = isSelected ? 'var(--light)' : 'var(--light)';
+        el.classList.toggle('selected', isSelected);
     });
 }
 
@@ -18355,10 +18350,9 @@ async function generateWorkoutShareImage() {
     // ★★★ ЦВЕТА ★★★
     const ACCENT = '#DC143C';
     const DARK   = '#0F172A';
-    const SLATE  = '#64748B';
 
     // ★★★ РАЗМЕР: ФОРМАТ ТЕЛЕФОНА (9:19.5) ★★★
-    const W = 900, H = 1900;
+    const W = 900, H = 1800;
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -18396,7 +18390,7 @@ async function generateWorkoutShareImage() {
     ctx.fillText(`+${xpEarned}`, col3X, numbersY);
 
     // ПОДПИСИ
-    ctx.fillStyle = SLATE;
+    ctx.fillStyle = DARK;
     ctx.font = `500 30px ${SANS}`;
     ctx.fillText('минут', col1X, labelsY);
     ctx.fillText('упражнений', col2X, labelsY);
@@ -18413,7 +18407,7 @@ async function generateWorkoutShareImage() {
     ctx.font = `bold 50px ${SANS}`;
     ctx.fillText(userName, W / 2, H - 170);
 
-    ctx.fillStyle = SLATE;
+    ctx.fillStyle = DARK;
     ctx.font = `500 30px ${SANS}`;
     ctx.fillText('Присоединяйся ко мне в SportApp!', W / 2, H - 110);
 
@@ -18528,3 +18522,176 @@ function downloadWorkoutImage() {
 // ★★★ ПРИВЯЗКА КНОПОК ★★★
 document.getElementById('workoutShareSendBtn')?.addEventListener('click', shareWorkoutImage);
 document.getElementById('workoutShareDownloadBtn')?.addEventListener('click', downloadWorkoutImage);
+
+// =================== ГЕНЕРАЦИЯ PNG ДЛЯ СОВМЕСТНОЙ ТРЕНИРОВКИ ===================
+async function generateCoopShareImage() {
+    const user = await getFirebaseUser();
+    if (!user) return null;
+
+    const profileResult = await getUserProfile(user.uid);
+    const profile = profileResult.success ? profileResult.data : {};
+    const userName = profile.displayName || 'Пользователь';
+
+    // ★★★ УЧАСТНИКИ ★★★
+    const participants = sessionData?.participants || [];
+    const names = participants.map(p => p.name || 'Пользователь');
+
+    // ★★★ МОИ СТАТЫ ★★★
+    const completed = sessionCompleted.size;
+    const total = sessionData?.totalExercises || coopExercises.length || 0;
+    const xpEarned = Math.round(calculateWorkoutXp(coopExercises, sessionCompletedSets));
+    const minutes = Math.floor(sessionSeconds / 60);
+
+    // ★★★ ЦВЕТА ★★★
+    const ACCENT = '#DC143C';
+    const DARK   = '#0F172A';
+
+    // ★★★ РАЗМЕР (телефон 9:19.5) ★★★
+    const W = 900, H = 1800;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // ═══════════════════════════════════════
+    //  ВЕРХ: SportApp
+    // ═══════════════════════════════════════
+    ctx.fillStyle = ACCENT;
+    ctx.font = `bold 90px ${SANS}`;
+    ctx.fillText('SportApp', W / 2, 130);
+
+    // ═══════════════════════════════════════
+    //  ТАБЛИЧКА СТАТИСТИКИ
+    // ═══════════════════════════════════════
+    const numbersY = 250;
+    const labelsY = 320;
+
+    const col1X = W * 0.2;
+    const col2X = W * 0.5;
+    const col3X = W * 0.8;
+
+    ctx.fillStyle = DARK;
+    ctx.font = `bold 70px ${SANS}`;
+    ctx.fillText(String(minutes), col1X, numbersY);
+    ctx.fillText(`${completed}/${total}`, col2X, numbersY);
+    ctx.fillText(`+${xpEarned}`, col3X, numbersY);
+
+    ctx.fillStyle = DARK;
+    ctx.font = `500 30px ${SANS}`;
+    ctx.fillText('минут', col1X, labelsY);
+    ctx.fillText('упражнений', col2X, labelsY);
+    ctx.fillText('XP', col3X, labelsY);
+
+    // ═══════════════════════════════════════
+    //  ЦЕНТР: ПУСТО
+    // ═══════════════════════════════════════
+
+    // ═══════════════════════════════════════
+    //  ВНИЗУ: ИМЕНА УЧАСТНИКОВ + ПОДПИСЬ
+    // ═══════════════════════════════════════
+
+    // ★★★ ФОРМИРУЕМ СПИСОК ИМЁН: Я ПЕРВЫЙ, ПОТОМ ДРУЗЬЯ ★★★
+    const currentUserId = user ? user.uid : null;
+    const otherNames = participants
+        .filter(p => p.id !== currentUserId)
+        .map(p => p.name || 'Пользователь');
+
+    const allNames = [userName, ...otherNames];
+
+    // ★★★ РАСПРЕДЕЛЯЕМ ПО СТРОКАМ ★★★
+    let line1 = '';
+    let line2 = '';
+
+    if (allNames.length === 1) {
+        // Только я — одна строка
+        line1 = allNames[0];
+    } else if (allNames.length === 2) {
+        // 2 участника: я / друг
+        line1 = allNames[0];
+        line2 = allNames[1];
+    } else if (allNames.length === 3) {
+        // 3 участника: я / друг1 · друг2
+        line1 = allNames[0];
+        line2 = `${allNames[1]} · ${allNames[2]}`;
+    } else {
+        // 4 участника: я · друг1 / друг2 · друг3
+        line1 = `${allNames[0]} · ${allNames[1]}`;
+        line2 = `${allNames[2]} · ${allNames[3]}`;
+    }
+
+    // ★★★ ПОДБИРАЕМ РАЗМЕР ШРИФТА ПОД ШИРИНУ ★★★
+    const maxTextWidth = W - 100; // отступы 50px с каждой стороны
+
+    function fitNameFont(text, baseSize = 50, minSize = 28) {
+        let size = baseSize;
+        while (size > minSize) {
+            ctx.font = `bold ${size}px ${SANS}`;
+            if (ctx.measureText(text).width <= maxTextWidth) return size;
+            size -= 2;
+        }
+        ctx.font = `bold ${minSize}px ${SANS}`;
+        return minSize;
+    }
+
+    const footerTextY = H - 120;              // где стоит "Мы тренировались вместе!"
+    const lineHeight = 70;
+    const line2Y = footerTextY - 80;
+    const line1Y = line2Y - lineHeight;
+
+    // ★★★ РИСУЕМ ИМЕНА ★★★
+    ctx.fillStyle = ACCENT;
+    ctx.textAlign = 'center';
+
+    if (line2) {
+        // Две строки
+        const size1 = fitNameFont(line1);
+        ctx.font = `bold ${size1}px ${SANS}`;
+        ctx.fillText(line1, W / 2, line1Y);
+
+        const size2 = fitNameFont(line2);
+        ctx.font = `bold ${size2}px ${SANS}`;
+        ctx.fillText(line2, W / 2, line2Y);
+    } else {
+        // Одна строка
+        const size1 = fitNameFont(line1);
+        ctx.font = `bold ${size1}px ${SANS}`;
+        ctx.fillText(line1, W / 2, line2Y);
+    }
+
+    // ПОДПИСЬ
+    ctx.fillStyle = DARK;
+    ctx.font = `500 30px ${SANS}`;
+    ctx.fillText('Мы тренировались вместе!', W / 2, footerTextY);
+
+    return canvas;
+}
+
+// ★★★ ОТКРЫТЬ МОДАЛКУ ДЛЯ СОВМЕСТНОЙ ★★★
+async function openCoopShareModal() {
+    const preview = document.getElementById('workoutSharePreview');
+    preview.innerHTML = '<div style="color:var(--slate);padding:2rem;">Генерация...</div>';
+
+    openModal('workoutShareModal');
+
+    try {
+        const canvas = await generateCoopShareImage();
+        if (!canvas) {
+            preview.innerHTML = '<div style="color:var(--danger);padding:2rem;">Ошибка генерации</div>';
+            return;
+        }
+
+        window._currentShareCanvas = canvas;
+        const dataUrl = canvas.toDataURL('image/png');
+        window._currentShareDataUrl = dataUrl;
+
+        preview.innerHTML = `<img src="${dataUrl}" style="max-width:100%; max-height:60vh;">`;
+    } catch (e) {
+        console.error('Ошибка генерации:', e);
+        preview.innerHTML = '<div style="color:var(--danger);padding:2rem;">Ошибка</div>';
+    }
+}

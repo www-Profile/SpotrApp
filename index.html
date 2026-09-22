@@ -410,7 +410,10 @@
                 <!-- Сюда будут рендериться все участники -->
             </div>
 
-            <button class="btn btn-primary finish-btn" id="coopFinishDoneBtn" style="margin-top: 1rem;">Закончить</button>
+<div id="coopFinishButtons" style="display:flex; gap:0.5rem; width:100%; margin-top:1rem;">
+    <button class="btn btn-secondary" id="coopFinishShareBtn" style="flex:1;">Поделиться</button>
+    <button class="btn btn-primary" id="coopFinishDoneBtn" style="flex:1;">Закончить</button>
+</div>
         </div>
     </main>
 </div>
@@ -601,7 +604,7 @@
     <main class="training-session-container" style="justify-content: center;">
         <div style="text-align: center; padding: 2rem;">
             <i class="fa-solid fa-user-group" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem;"></i>
-            <h2 style="color: var(--dark); margin-bottom: 2rem;">Ожидание участников...</h2>
+            <h2 class="modal-title" style="margin-bottom: 2rem;">Ожидание участников...</h2>
             <button class="btn btn-primary" onclick="cancelInvite()">
                 Отменить приглашение
             </button>
@@ -619,7 +622,7 @@
             </div>
             <!-- Моя статистика -->
             <div style="width:100%; margin-bottom: 0.5rem;">
-                <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
+                <div class="item-title" style="color: var(--slate); font-size: 0.9rem; margin-left: 1rem; margin-bottom: 0.5rem;">
                     <i class="fa-solid fa-user"></i> Вы
                 </div>
                 <div class="finish-stats" style="margin-bottom: 0.5rem;">
@@ -640,7 +643,7 @@
 
             <!-- СПИСОК ДРУЗЕЙ С ИХ СТАТУСОМ -->
             <div style="width:100%;">
-                <div class="item-title" style="color: var(--slate); margin-left: 1rem; margin-bottom: 0.5rem;">
+                <div class="item-title" style="color: var(--slate); font-size: 0.9rem; margin-left: 1rem; margin-bottom: 0.5rem;">
                     <i class="fa-solid fa-user-group"></i> Друзья
                 </div>
                 <div id="coopFriendsStatus" style="display:flex;flex-direction:column;gap:0.5rem;width:100%;"></div>
