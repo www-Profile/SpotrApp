@@ -1645,6 +1645,36 @@
         </div>
     </nav>
 
+    <!-- ===== МОДАЛКА: ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ ===== -->
+<div id="workoutShareModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:440px; width:95%;">
+        <div class="modal-title">Поделиться результатом</div>
+
+        <div id="workoutSharePreview" style="
+            width:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:180px;
+            margin-bottom:1rem;
+            background:var(--light);
+            border-radius:12px;
+            overflow:hidden;
+        ">
+            <div style="color:var(--slate);padding:2rem;">Генерация...</div>
+        </div>
+
+<div style="display:flex; gap:0.5rem; width:100%;">
+    <button class="btn btn-secondary" onclick="closeModal('workoutShareModal')" style="flex:1;">
+        Закрыть
+    </button>
+    <button class="btn btn-primary" id="workoutShareDownloadBtn" style="flex:1;">
+        <i class="fa-solid fa-download"></i> Скачать
+    </button>
+</div>
+    </div>
+</div>
+
     <!-- ===== МОДАЛКА: QR-КОД ПРОФИЛЯ ===== -->
 <div id="qrCodeModal" class="modal-overlay" style="display:none;">
     <div class="modal-content" style="max-width: 400px; width: 95%;">

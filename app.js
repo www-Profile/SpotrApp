@@ -10461,13 +10461,27 @@ function showFinishPage(exercisesCount, completedCount, seconds, xpEarned) {
         finishContent.appendChild(container);
     }
     
-    const container = document.querySelector('.finish-btn-container');
-    container.innerHTML = '';
-    
-    const finishBtn = document.createElement('button');
-    finishBtn.className = 'btn btn-primary finish-btn';
-    finishBtn.id = 'finishDoneBtn';
-    finishBtn.textContent = 'Закончить';
+const container = document.querySelector('.finish-btn-container');
+container.innerHTML = '';
+container.style.display = 'flex';
+container.style.gap = '0.5rem';
+container.style.width = '100%';
+
+// ★★★ КНОПКА "ПОДЕЛИТЬСЯ" ★★★
+const shareBtn = document.createElement('button');
+shareBtn.className = 'btn btn-primary';
+shareBtn.id = 'finishShareBtn';
+shareBtn.style.flex = '1';
+shareBtn.innerHTML = '<i class="fa-solid fa-user-group"></i> Поделиться';
+shareBtn.onclick = openWorkoutShareModal;
+container.appendChild(shareBtn);
+
+// ★★★ КНОПКА "ЗАКОНЧИТЬ" ★★★
+const finishBtn = document.createElement('button');
+finishBtn.className = 'btn btn-primary';
+finishBtn.id = 'finishDoneBtn';
+finishBtn.style.flex = '1';
+finishBtn.textContent = 'Закончить';
 
 finishBtn.onclick = function() {
     // ★★★ ЕСЛИ 0 УПРАЖНЕНИЙ — НЕ СОХРАНЯЕМ ★★★
@@ -18198,37 +18212,299 @@ async function copyProfileShareLink() {
     }
 
     const user = await getFirebaseUser();
-    const profileResult = user ? await getUserProfile(user.uid) : { success: false };
+    if (!user) {
+        showToast('❌ Вы не авторизованы');
+        return;
+    }
+
+    const profileResult = await getUserProfile(user.uid);
     const name = profileResult.success
         ? (profileResult.data.displayName || 'Пользователь')
         : 'Пользователь';
 
-    const text = `${name} приглашает тебя в SportApp! Открой ссылку, чтобы добавить в друзья:\n${window._currentQRLink}`;
+    const url = window._currentQRLink;
+    const text = `${name} приглашает тебя в SportApp! Открой ссылку, чтобы добавить в друзья:`;
+
+    // ★★★ ПРОБУЕМ НАТИВНОЕ МЕНЮ "ПОДЕЛИТЬСЯ" ★★★
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'SportApp',
+                text: text,
+                url: url
+            });
+            console.log('✅ Открыто системное меню «Поделиться»');
+            return;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                // Пользователь сам закрыл меню — ничего не делаем
+                return;
+            }
+            // Реальная ошибка — идём в fallback
+            console.warn('Web Share API не сработал:', error);
+        }
+    }
+
+    // ★★★ FALLBACK — КОПИРУЕМ В БУФЕР ★★★
+    const fullText = `${text}\n${url}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(fullText);
             showToast('✅ Ссылка скопирована');
             return;
-        } catch (err) { /* fallback ниже */ }
+        } catch (err) { /* идём дальше */ }
     }
 
+    // Старый способ через textarea
     try {
         const textarea = document.createElement('textarea');
-        textarea.value = text;
+        textarea.value = fullText;
         textarea.style.position = 'fixed';
         textarea.style.top = '-1000px';
         document.body.appendChild(textarea);
         textarea.select();
         const ok = document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast(ok ? '✅ Ссылка скопирована' : '⚠️ Скопируйте: ' + window._currentQRLink);
+
+        if (ok) {
+            showToast('✅ Ссылка скопирована');
+        } else {
+            showLinkForManualCopy(url);
+        }
     } catch (err) {
-        showConfirmModal('Ваша ссылка', window._currentQRLink, null, 'OK');
+        showLinkForManualCopy(url);
     }
+}
+
+// ★★★ РЕЗЕРВ — МОДАЛКА С ПОЛЕМ ДЛЯ КОПИРОВАНИЯ ★★★
+function showLinkForManualCopy(url) {
+    const old = document.getElementById('manualCopyModal');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'manualCopyModal';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:420px; width:95%;">
+            <div class="modal-title">Ваша ссылка</div>
+            <p class="modal-text" style="margin-bottom:1rem;">
+                Выделите ссылку и скопируйте вручную
+            </p>
+            <input
+                type="text"
+                id="manualCopyInput"
+                class="form-input"
+                value="${url}"
+                readonly
+                style="margin-bottom:1rem; text-align:center; font-size:0.8rem;"
+                onclick="this.select();"
+            />
+            <button class="btn btn-primary" onclick="closeModal('manualCopyModal')">
+                Понятно
+            </button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.style.display = 'flex';
+    void overlay.offsetWidth;
+    overlay.classList.add('modal-overlay-visible');
+
+    setTimeout(() => {
+        const input = document.getElementById('manualCopyInput');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }, 100);
 }
 
 // Привязка кнопок
 document.getElementById('shareProfileBtn')?.addEventListener('click', openQRCodeModal);
 document.getElementById('qrCodeCopyBtn')?.addEventListener('click', copyProfileShareLink);
 document.getElementById('qrCodeDownloadBtn')?.addEventListener('click', downloadQRCode);
+
+// =================== ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ ТРЕНИРОВКИ ===================
+
+// ★★★ ХЕЛПЕРЫ ★★★
+function roundRect(ctx, x, y, w, h, r) {
+    if (typeof r === 'number') r = [r, r, r, r];
+    ctx.beginPath();
+    ctx.moveTo(x + r[0], y);
+    ctx.lineTo(x + w - r[1], y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r[1]);
+    ctx.lineTo(x + w, y + h - r[2]);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
+    ctx.lineTo(x + r[3], y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r[3]);
+    ctx.lineTo(x, y + r[0]);
+    ctx.quadraticCurveTo(x, y, x + r[0], y);
+    ctx.closePath();
+}
+
+function loadImageWithCors(url, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('load error'));
+        img.src = url;
+        setTimeout(() => reject(new Error('timeout')), timeoutMs);
+    });
+}
+
+// Серия: если тренировка сегодня ещё не сохранена — добавляем +1
+async function getDisplayStreak(userId) {
+    try {
+        const result = await getUserWorkoutsFromFirestore(userId);
+        if (!result.success) return 0;
+
+        const baseStreak = await calculateStreak(userId);
+
+        const today = new Date();
+        const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+        const hasToday = result.data.some(w => {
+            const d = new Date(w.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            return key === todayKey && getWorkoutIcon(w) !== 'charging';
+        });
+
+        return hasToday ? baseStreak : baseStreak + 1;
+    } catch (e) {
+        return 0;
+    }
+}
+
+// ★★★ ГЕНЕРАЦИЯ PNG ЧЕРЕЗ CANVAS ★★★
+async function generateWorkoutShareImage() {
+    const user = await getFirebaseUser();
+    if (!user) return null;
+
+    const profileResult = await getUserProfile(user.uid);
+    const profile = profileResult.success ? profileResult.data : {};
+    const userName = profile.displayName || 'Пользователь';
+
+    const completed = sessionCompleted.size;
+    const total = sessionExercises.length;
+    const xpEarned = Math.round(calculateWorkoutXp(sessionExercises, sessionCompletedSets));
+    const minutes = Math.floor(sessionSeconds / 60);
+
+    // ★★★ ЦВЕТА ★★★
+    const ACCENT = '#DC143C';
+    const DARK   = '#0F172A';
+    const SLATE  = '#64748B';
+
+    // ★★★ РАЗМЕР: ФОРМАТ ТЕЛЕФОНА (9:19.5) ★★★
+    const W = 900, H = 1900;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+    // Фон прозрачный — НЕ заливаем
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // ═══════════════════════════════════════
+    //  ВЕРХ: SportApp
+    // ═══════════════════════════════════════
+    ctx.fillStyle = ACCENT;
+    ctx.font = `bold 90px ${SANS}`;
+    ctx.fillText('SportApp', W / 2, 80);
+
+    // ═══════════════════════════════════════
+    //  ПОД ЗАГОЛОВКОМ: ТАБЛИЧКА СТАТИСТИКИ
+    // ═══════════════════════════════════════
+    const numbersY = 200;
+    const labelsY = 260;
+
+    const col1X = W * 0.2;
+    const col2X = W * 0.5;
+    const col3X = W * 0.8;
+
+    // ЦИФРЫ
+    ctx.fillStyle = DARK;
+    ctx.font = `bold 60px ${SANS}`;
+    ctx.fillText(String(minutes), col1X, numbersY);
+    ctx.fillText(`${completed}/${total}`, col2X, numbersY);
+    ctx.fillText(`+${xpEarned}`, col3X, numbersY);
+
+    // ПОДПИСИ
+    ctx.fillStyle = SLATE;
+    ctx.font = `500 26px ${SANS}`;
+    ctx.fillText('минут', col1X, labelsY);
+    ctx.fillText('упражнений', col2X, labelsY);
+    ctx.fillText('XP', col3X, labelsY);
+
+    // ═══════════════════════════════════════
+    //  ЦЕНТР: ПУСТО (можно вставить фото)
+    // ═══════════════════════════════════════
+    // Ничего не рисуем
+
+    // ═══════════════════════════════════════
+    //  ВНИЗУ: ИМЯ И ПОДПИСЬ
+    // ═══════════════════════════════════════
+    ctx.fillStyle = ACCENT;
+    ctx.font = `bold 50px ${SANS}`;
+    ctx.fillText(userName, W / 2, H - 120);
+
+    ctx.fillStyle = SLATE;
+    ctx.font = `500 30px ${SANS}`;
+    ctx.fillText('Присоединяйся ко мне в SportApp!', W / 2, H - 60);
+
+    return canvas;
+}
+
+// ★★★ ОТКРЫТЬ МОДАЛКУ С ПРЕВЬЮ ★★★
+async function openWorkoutShareModal() {
+    const preview = document.getElementById('workoutSharePreview');
+    preview.innerHTML = '<div style="color:var(--slate);padding:2rem;">Генерация...</div>';
+
+    openModal('workoutShareModal');
+
+    try {
+        const canvas = await generateWorkoutShareImage();
+        if (!canvas) {
+            preview.innerHTML = '<div style="color:var(--danger);padding:2rem;">Ошибка генерации</div>';
+            return;
+        }
+
+        window._currentShareCanvas = canvas;
+        const dataUrl = canvas.toDataURL('image/png');
+        window._currentShareDataUrl = dataUrl;
+
+preview.innerHTML = `<img src="${dataUrl}" style="
+    max-width:100%;
+    max-height:60vh;
+">`;
+    } catch (e) {
+        console.error('Ошибка генерации:', e);
+        preview.innerHTML = '<div style="color:var(--danger);padding:2rem;">Ошибка</div>';
+    }
+}
+
+// ★★★ СКАЧАТЬ PNG ★★★
+function downloadWorkoutImage() {
+    const dataUrl = window._currentShareDataUrl;
+    if (!dataUrl) {
+        showToast('❌ Изображение не готово');
+        return;
+    }
+
+    const link = document.createElement('a');
+    link.download = `sportapp-workout-${Date.now()}.png`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ★★★ ПРИВЯЗКА КНОПОК ★★★
+document.getElementById('workoutShareDownloadBtn')?.addEventListener('click', function() {
+    downloadWorkoutImage();
+    showToast('✅ Изображение сохранено');
+});
